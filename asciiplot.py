@@ -1,5 +1,6 @@
 #!/usr/bin/python
 from topology import *
+from util import *
 
 class CharGrid(dict):
     """ Grid of single characters for drawing ascii art.
@@ -50,6 +51,40 @@ class CharGrid(dict):
             self[key] = c
             key = (key[0],key[1]+1)
 
+    def insertRowAbove(self,row):
+        """ add a new row above 'row' (shifting existing rows down) """
+        keys = filter(lambda k: k[0] >= row,self.keys())
+        self.__moveCells(keys,(1,0))
+
+    def insertColToLeft(self,col):
+        """ add a new column to the left of 'col' (shifting existing cols right """
+        keys = filter(lambda k: k[1] >= col,self.keys())
+        self.__moveCells(keys,(0,1))
+
+    def __moveCells(self,keys,direction):
+        """ Called by insertRowAbove...
+        Moves all cells in 'keys' in 'direction'.
+        Each key is 'keys' specified by (row,col). Direction specified by 
+        (rowOffset,colOffset).
+        """
+        while len(keys) > 0:
+            keys = self.__moveCell(keys[0],keys,direction)
+
+    def __moveCell(self,srcKey,keys,direction):
+        """ Called by __moveCells - recursively moves cells to move srcKey cell """
+        self.__checkkey(srcKey)
+        self.__checkkey(direction)
+        destKey = (srcKey[0]+direction[0],srcKey[1]+direction[1])
+#         print "Call to move %s"%str(srcKey)
+        # If destination already exists
+        if destKey in self:
+            keys = self.__moveCell(destKey,keys,direction)
+        # copy contents and pop key from self and tmp keylist
+        self[destKey] = self[srcKey]
+        self.pop(srcKey)
+        keys.pop(keys.index(srcKey))
+        return keys
+
 
     def __str__(self):
         imgbuf = ""
@@ -61,9 +96,6 @@ class CharGrid(dict):
         return imgbuf
 
 
-
-
-
 def draw(topology):
     """ Draw a topology """
     typecheck(topology,Topology,"topology")
@@ -71,20 +103,31 @@ def draw(topology):
     # Initialize Grid to use as a canvas
     grid = CharGrid()
 
-    vertices = topology.vertices()
     
     # Draw the vertices boxes
+    vertices = topology.vertices()
     cidx = 0 # the leftmost column in which to draw the box
     for v in vertices:
         # Figure out how many connections are going inside this box
-        conns = len(v._emitters)+len(v._collectors)
+        conns = len(v.emitters)+len(v.collectors)
         grid.writeStr((0,cidx),"+-"+"--"*conns+"+")
         grid.writeStr((1,cidx),"| "+"  "*conns+"|")
         grid.writeStr((2,cidx),"+-"+"--"*conns+"+")
         # Move leftmost drawing index to start for next box
         cidx += 2+(2*conns)
         cidx += 5 # TODO: Add spacing according to specification
-        
+
+    # Draw the edges
+#     edges = topology.edges()
+#     vridx = 1  # The center vertex row index
+#     for e in edges:
+#         p = e.pAltitude
+#         n = e.nAltitude
+
+
+
+
+
     print grid
 
 

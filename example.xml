@@ -84,7 +84,7 @@
           <caption> Topic C </caption>
           <width> 5 </width>
           <altitudes> 
-              <negative> 1 </negative>
+              <negative> -1 </negative>
           </altitudes>
       </edge>
   
