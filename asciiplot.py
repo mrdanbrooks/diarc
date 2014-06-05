@@ -76,18 +76,11 @@ def draw(topology):
     # Draw the vertices boxes
     cidx = 0 # the leftmost column in which to draw the box
     for v in vertices:
-        # Draw left side of box
-        grid.writeStr((0,cidx),"+-")
-        grid.writeStr((1,cidx),"| ")
-        grid.writeStr((2,cidx),"+-")
-        # Expand to fit connections
+        # Figure out how many connections are going inside this box
         conns = len(v._emitters)+len(v._collectors)
-        grid.writeStr((0,cidx+2),"--"*conns)
-        grid.writeStr((2,cidx+2),"--"*conns)
-        # Draw right side of box
-        grid[(0,cidx+2+(2*conns))] = "+"
-        grid[(1,cidx+2+(2*conns))] = "|"
-        grid[(2,cidx+2+(2*conns))] = "+"
+        grid.writeStr((0,cidx),"+-"+"--"*conns+"+")
+        grid.writeStr((1,cidx),"| "+"  "*conns+"|")
+        grid.writeStr((2,cidx),"+-"+"--"*conns+"+")
         # Move leftmost drawing index to start for next box
         cidx += 2+(2*conns)
         cidx += 5 # TODO: Add spacing according to specification
