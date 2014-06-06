@@ -10,6 +10,7 @@
       <source> 0 </source>
       <sink> 1 </sink>
       <sink> 2 </sink>
+      <sink> 3 </sink>
     </edge>
     <edge altitude='3' >
       <source> 0 </source>
@@ -17,12 +18,19 @@
       <sink> 2 </sink>
     </edge>
     <edge altitude='-1' >
+      <source> 3 </source>
       <source> 2 </source>
-      <sink> 0 </sink>
+      <sink> 1 </sink>
     </edge>
     <edge altitude='2' >
       <source> 2 </source>
-      <sink> 4 </sink>
+      <sink> 3 </sink>
+    </edge>
+    <edge altitude='-2' >
+      <source> 2 </source>
+      <source> 3 </source>
+      <sink> 0 </sink>
+      <sink> 1 </sink>
     </edge>
   </edges>
 </topology>

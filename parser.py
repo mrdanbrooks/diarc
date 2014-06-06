@@ -26,11 +26,15 @@ def parseTree(tree):
     for edge in edges:
         altitude = int(edge.attrib["altitude"].strip())
         e = Edge(t,altitude)
+#         print "Looking for sources in altitude",altitude
         for src in edge.findall("source"):
             index = int(src.text.strip())
+#             print "Found source index",index
             e.addSource(t.getVertexByIndex(index))
+#         print "Looking for sinks in altitude",altitude
         for sink in edge.findall("sink"):
-            index = int(src.text.strip())
+            index = int(sink.text.strip())
+#             print "Found sink index",index
             e.addSink(t.getVertexByIndex(index))
 
     return t
