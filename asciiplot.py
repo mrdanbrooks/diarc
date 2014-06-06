@@ -22,9 +22,21 @@ def draw(topology):
         cidx += 2+(2*conns)
         cidx += 5 # TODO: Add spacing according to specification
 
-    # Draw the edges
-#     edges = topology.edges()
-#     vridx = 1  # The center vertex row index
+    # Draw the edges in order of |altitude|, connections from right to left
+
+    # Calculate the new size of the grid
+    altitudes = [e.altitude for e in topology.edges]
+    maxAltitude = max(altitudes)
+    minAltitude = min(altitudes)
+    print "Max Altitudes:", maxAltitude
+    print "Min Altitudes:", minAltitude
+    grid.insertRowsAbove(0,maxAltitude+1)
+
+    # calculate the row that has the center of the vertex boxes`
+    vridx = 1+maxAltitude+1 
+    print "Center",vridx
+#     for e in topology.edges:
+
 #     for e in edges:
 #         p = e.pAltitude
 #         n = e.nAltitude

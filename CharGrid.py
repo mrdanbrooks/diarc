@@ -49,15 +49,15 @@ class CharGrid(dict):
             self[key] = c
             key = (key[0],key[1]+1)
 
-    def insertRowAbove(self,row):
+    def insertRowsAbove(self,row,num):
         """ add a new row above 'row' (shifting existing rows down) """
         keys = filter(lambda k: k[0] >= row,self.keys())
-        self.__moveCells(keys,(1,0))
+        self.__moveCells(keys,(num,0))
 
-    def insertColToLeft(self,col):
+    def insertColsToLeft(self,col,num):
         """ add a new column to the left of 'col' (shifting existing cols right """
         keys = filter(lambda k: k[1] >= col,self.keys())
-        self.__moveCells(keys,(0,1))
+        self.__moveCells(keys,(0,num))
 
     def __moveCells(self,keys,direction):
         """ Called by insertRowAbove...
