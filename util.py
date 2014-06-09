@@ -54,6 +54,20 @@ class IndexedList(dict):
         raise Exception("Cannot assign directly to list")
 
 
+class TypedDict(dict):
+    def __init__(self,_keyType,_objType):
+        super(TypedDict,self).__init__()
+        typecheck(_keyType,type,"_keyType")
+        typecheck(_objType,type,"_objType")
+        self._keyType = _keyType
+        self._objType = _objType
+
+    def __setitem__(self,key,val):
+        typecheck(key,self._keyType,"key")
+        typecheck(val,self._objType,"val")
+        super(TypedDict,self).__setitem__(key,val)
+
+
 
 class TypedList(list):
     def __init__(self,_type):
