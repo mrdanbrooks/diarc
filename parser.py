@@ -12,7 +12,16 @@ def parseTree(tree):
     # Get XML Tree root and initialize topology
     root = tree.getroot()
     t = Topology()
-    
+ 
+    # Populate Edges
+    edges = root.find("edges").findall("edge")
+    print "Num Edges Detected: %d"%len(edges)
+    for edge in edges:
+        altitude = int(edge.attrib["altitude"].strip())
+        rank = int(edge.attrib["rank"].strip())
+        e = Edge(t,altitude,rank)
+
+   
     # Populate Vertices
     vertices = root.find("vertices").findall("vertex")
     print "Num Vertices Detected: %d"%len(vertices)
@@ -20,22 +29,26 @@ def parseTree(tree):
         index = int(vertex.attrib['index'].strip())
         v = Vertex(t,index)
 
-    # Populate Edges
-    edges = root.find("edges").findall("edge")
-    print "Num Edges Detected: %d"%len(edges)
-    for edge in edges:
-        altitude = int(edge.attrib["altitude"].strip())
-        e = Edge(t,altitude)
-#         print "Looking for sources in altitude",altitude
-        for src in edge.findall("source"):
-            index = int(src.text.strip())
-#             print "Found source index",index
-            e.addSource(t.getVertexByIndex(index))
-#         print "Looking for sinks in altitude",altitude
-        for sink in edge.findall("sink"):
-            index = int(sink.text.strip())
-#             print "Found sink index",index
-            e.addSink(t.getVertexByIndex(index))
+        # Make connections
+        for collector in vertex.find("collectors").findall("collector"):
+            order = int(collector.attrib["order"].strip())
+            altitude = int(collector.attrib["altitude"].strip())
+
+            #TODO Handle case in which we read in from multiple directions
+#             if order in v.collectors:
+#                 v.collectors[order]
+
+            v.collectors[order] = t.edges[altitude]
+
+        for emitter in vertex.find("emitters").findall("emitter"):
+            order = int(emitter.attrib["order"].strip())
+            altitude = int(emitter.attrib["altitude"].strip())
+
+            #TODO Handle case in which we output in multiple directions
+#             if order in v.emitters:
+#                 v.emitters[order]
+            v.emitters[order] = t.edges[altitude]
+
 
     return t
 

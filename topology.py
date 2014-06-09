@@ -23,8 +23,8 @@ class Vertex(object):
         typecheck(topology,Topology,"topology")
         typecheck(index,int,"index")
         self._topology = topology
-        self.emitters = Vertex.Emitters(self) 
-        self.collectors = Vertex.Collectors(self)
+        self.emitters = Vertex.Emitters(self)       # orderNum: edge
+        self.collectors = Vertex.Collectors(self)   # orderNum: edge
         self.index = index
 
         # Add to Topology
