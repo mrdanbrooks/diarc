@@ -89,7 +89,7 @@ class Vertex(object):
             self._vertex = vertex
         
         def __getitem__(self,orderNum):
-            return super(Vertex.Collectors,self).__getitem(orderNum).get()
+            return super(Vertex.Collectors,self).__getitem__(orderNum).get()
 
         def values(self):
             values = list()
