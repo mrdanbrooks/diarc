@@ -29,24 +29,16 @@ def parseTree(tree):
         index = int(vertex.attrib['index'].strip())
         v = Vertex(t,index)
 
-        # Make connections
+        # Make edge connections to this vertex
         for collector in vertex.find("collectors").findall("collector"):
             order = int(collector.attrib["order"].strip())
             altitude = int(collector.attrib["altitude"].strip())
-
-            #TODO Handle case in which we read in from multiple directions
-#             if order in v.collectors:
-#                 v.collectors[order]
             v.collectors[order] = t.edges[altitude]
 
         for emitter in vertex.find("emitters").findall("emitter"):
             order = int(emitter.attrib["order"].strip())
             altitude = int(emitter.attrib["altitude"].strip())
-            #TODO Handle case in which we output in multiple directions
-#             if order in v.emitters:
-#                 v.emitters[order]
             v.emitters[order] = t.edges[altitude]
-
 
     return t
 
