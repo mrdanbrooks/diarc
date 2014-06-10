@@ -127,8 +127,9 @@ class Edge(object):
 
 
     class Sources(TypedDict):
-        """ A List of references to source vertices. A Vertex cannot be added to 
+        """ A dict of references to source vertices. A Vertex cannot be added to 
         this list prior to this Edge object being added to Vertex's emitters.
+        Keys are vertex index values.
         """
 
         def __init__(self,edge):
@@ -153,6 +154,7 @@ class Edge(object):
     class Sinks(TypedDict):
         """ A List of references to sink vertices. A Vertex cannot be added to 
         this list prior to this Edge object being added to Vertex's collectors.
+        Keys are vertex index values.
         """
         def __init__(self,edge):
             super(Edge.Sinks,self).__init__(int,Vertex)
