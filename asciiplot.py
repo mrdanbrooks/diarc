@@ -56,8 +56,8 @@ def draw(topology):
     width = vertexSpacing*(len(topology.vertices)-1) + sum([calcVertexWidth(v) for v in topology.vertices.values()])
     print "width=",width
 
-    # Draw the vertex boxes - count number of positive altitude lines, add 3
-    vline = len(filter(lambda x: x.altitude >0,topology.edges.values())) + 3
+    # Draw the vertex boxes - count number of positive altitude lines, add 2
+    vline = len(filter(lambda x: x.altitude >0,topology.edges.values())) + 2
     print "vline=",vline
 
     # TODO: These keys need to be sorted before printing
@@ -76,13 +76,15 @@ def draw(topology):
 
         # Draw Collector connections
         for o in vertex.collectors:
-            edge = vertex.collectors[o]
-            if edge.altitude > 0:
-                grid[(vline-1,leftCol+2+(o*2))] = 'V-'
-                grid[(vline+1,leftCol+2+(o*2))] = '--'
-            elif edge.altitude < 0:
-                grid[(vline+1,leftCol+2+(o*2))] = 'A-'
-                grid[(vline-1,leftCol+2+(o*2))] = '--'
+            for edge in vertex.collectors[o]:
+                if edge is None:
+                    continue
+                if edge.altitude > 0:
+                    grid[(vline-1,leftCol+2+(o*2))] = 'V-'
+                    grid[(vline+1,leftCol+2+(o*2))] = '--'
+                elif edge.altitude < 0:
+                    grid[(vline+1,leftCol+2+(o*2))] = 'A-'
+                    grid[(vline-1,leftCol+2+(o*2))] = '--'
 
         # Draw the middle line
         centerCol = leftCol+4+(2*max(vertex.collectors))
@@ -92,13 +94,18 @@ def draw(topology):
 
         # Draw the emitter connections
         for o in vertex.emitters:
-            edge = vertex.emitters[o]
-            if edge.altitude > 0:
-                grid[(vline-1,centerCol+2+(o*2))] = 'A-'
-                grid[(vline+1,centerCol+2+(o*2))] = '--'
-            elif edge.altitude < 0:
-                grid[(vline+1,centerCol+2+(o*2))] = 'V-'
-                grid[(vline-1,centerCol+2+(o*2))] = '--'
+            for edge in vertex.emitters[o]:
+                print o,edge
+                if edge is None:
+                    continue
+                if edge.altitude > 0:
+                    grid[(vline-1,centerCol+2+(o*2))] = 'A-'
+                    if not (vline+1,centerCol+2+(o*2)) in grid:
+                        grid[(vline+1,centerCol+2+(o*2))] = '--'
+                elif edge.altitude < 0:
+                    grid[(vline+1,centerCol+2+(o*2))] = 'V-'
+                    if not (vline-1,centerCol+2+(o*2)) in grid:
+                        grid[(vline-1,centerCol+2+(o*2))] = '--'
 
         # Draw the right line
         rightCol = centerCol+4+(2*max(vertex.emitters))
