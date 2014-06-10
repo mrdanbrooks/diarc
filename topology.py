@@ -176,9 +176,26 @@ class Edge(object):
 
 class EdgeTuple(tuple):
     """ A 2-tuple of edges (positive,negative) for a vertex emitter or collector """
-    def __new__(cls,pAltitude,nAltitude):
+
+    def __new__(cls,*args):
+        """ If only one argument is supplied, automatically configure the EdgeTuple.
+        If two arguments are supplied, they must be in the correct order. """
+        pAltitude, nAltitude = None,None
+        if len(args) <= 0:
+            raise Exception("You must supply at least one Edge argument")
+        elif len(args) == 1:
+            typecheck(args[0],Edge,"argument")
+            if args[0].altitude > 0:
+                pAltitude = args[0]
+            else:
+                nAltitude = args[0]
+        elif len(args) == 2:
+            pAltitude,nAltitude = args
+        elif len(args) > 2:
+            raise Exception("Too many arguments - you can at most have EdgeTuple(positive,negative)")
         EdgeTuple.__checkTuple(pAltitude,nAltitude)
         return super(EdgeTuple,cls).__new__(cls,(pAltitude,nAltitude))
+
 
     @staticmethod
     def __checkTuple(p,n):
@@ -190,5 +207,16 @@ class EdgeTuple(tuple):
             raise Exception("Positive Edge altitude must be greater then 0")
         if n and n.altitude > -1:
             raise Exception("Negative Edge altitude must be less then 0")
+
+    def __add__(self,other):
+        """ Combine an EdgeTuple with only postive value with EdgeTuple with
+        only negative value. """
+        if self[0] is None and other[1] is None:
+            return EdgeTuple(self[1],other[0])
+        elif self[1] is None and other[0] is None:
+            return EdgeTuple(self[0],other[1])
+        raise Exception("Unsupported")
+
+
 
 
