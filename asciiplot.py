@@ -29,14 +29,48 @@ class GEdge(object):
         self.row = row
 
 
-def calcVertexWidth(vertex):
-    """ Calculate the total width of a vertex. Base width is 5
-    +-+-+ with additional 2 spaces per connection.
-    | | |
-    +-+-+
-    """
-    return 5+2*(len(vertex.emitters)+len(vertex.collectors))
-    
+
+# def calcVertexWidth(vertex):
+#     """ Calculate the total width of a vertex. Base width is 5
+#     +-+-+ with additional 2 spaces per connection.
+#     | | |
+#     +-+-+
+#     """
+#     return 5+2*(len(vertex.emitters)+len(vertex.collectors))
+
+class Plot(object):
+    def __init__(self,topology):
+        self.topology = topology
+        # Width of the entire plot
+        self.height =  len(self.topology.edges)+5
+        # height of the entire plot
+        self.width =  vertexSpacing*(len(self.topology.vertices)-1) + sum([self.vertexWidth(v) for v in self.topology.vertices])
+        # Row of the center of the vertex boxes
+        self.vline = len(filter(lambda x: x.altitude >0,self.topology.edges.values())) + 2
+
+    def vertexWidth(self,index):
+        """ Calculate the total width of a vertex. Base width is 5
+        +-+-+ with additional 2 spaces per connection.
+        | | |
+        +-+-+
+        """
+        vertex = self.topology.vertices[index]
+        return 5+2*(len(vertex.emitters)+len(vertex.collectors))
+
+    def vertexLeftCol(self,index):
+        """ Calculates the left column index for this vertex index """
+        vertex = self.topology.vertices[index]
+        return sum([self.vertexWidth(i) for i in range(index)]) + vertexSpacing*index
+
+    def vertexCenterCol(self,index):
+        """ Calculates the center column index for this vertex index """
+        vertex = self.topology.vertices[index]
+        return self.vertexLeftCol(index)+4+(2*max(vertex.collectors))
+
+    def vertexRightCol(self,index):
+        """ Calculates the right column index for this vertex index """
+        vertex = self.topology.vertices[index]
+        return self.vertexCenterCol(index)+4+(2*max(vertex.emitters))
 
 def draw(topology):
     """ Draw a topology """
@@ -49,30 +83,27 @@ def draw(topology):
     # 3 rows for vertices
     # 2 rows as space (for above above and below vertices)
     # 1 row per edge
-    height = len(topology.edges)+5
-    print "height=",height
+    p = Plot(topology)
+    print "height=",p.height
 
     # Calculate the number of columns needed
-    width = vertexSpacing*(len(topology.vertices)-1) + sum([calcVertexWidth(v) for v in topology.vertices.values()])
-    print "width=",width
+    print "width=",p.width
 
     # Draw the vertex boxes - count number of positive altitude lines, add 2
-    vline = len(filter(lambda x: x.altitude >0,topology.edges.values())) + 2
-    print "vline=",vline
+    print "vline=",p.vline
+    vline = p.vline
 
-    # TODO: These keys need to be sorted before printing
-    vkeys = topology.vertices.keys()
     
     # TODO: Check that there are no negative value keys
 
-    for k in vkeys:
+    for k in topology.vertices.keys():
         vertex = topology.vertices[k]
-        leftCol = sum([calcVertexWidth(topology.vertices[i]) for i in range(k)]) + vertexSpacing*k
+        leftCol = p.vertexLeftCol(k)
 
         # Draw the left side of the box
-        grid[(vline-1,leftCol)] = '+-'
-        grid[(vline,leftCol)] = '| '
-        grid[(vline+1,leftCol)] = '+-'
+        grid[(p.vline-1,leftCol)] = '+-'
+        grid[(p.vline,leftCol)] = '| '
+        grid[(p.vline+1,leftCol)] = '+-'
 
         # Draw Collector connections
         for o in vertex.collectors:
@@ -80,38 +111,44 @@ def draw(topology):
                 if edge is None:
                     continue
                 if edge.altitude > 0:
-                    grid[(vline-1,leftCol+2+(o*2))] = 'V-'
-                    grid[(vline+1,leftCol+2+(o*2))] = '--'
+                    grid[(p.vline-1,leftCol+2+(o*2))] = 'V-'
+                    grid[(p.vline+1,leftCol+2+(o*2))] = '--'
                 elif edge.altitude < 0:
-                    grid[(vline+1,leftCol+2+(o*2))] = 'A-'
-                    grid[(vline-1,leftCol+2+(o*2))] = '--'
+                    grid[(p.vline+1,leftCol+2+(o*2))] = 'A-'
+                    grid[(p.vline-1,leftCol+2+(o*2))] = '--'
 
         # Draw the middle line
-        centerCol = leftCol+4+(2*max(vertex.collectors))
-        grid[(vline-1,centerCol)] = '+-'
-        grid[(vline,centerCol)] = '| '
-        grid[(vline+1,centerCol)] = '+-'
+        centerCol = p.vertexCenterCol(k)
+        grid[(p.vline-1,centerCol)] = '+-'
+        grid[(p.vline,centerCol)] = '| '
+        grid[(p.vline+1,centerCol)] = '+-'
 
         # Draw the emitter connections
         for o in vertex.emitters:
             for edge in vertex.emitters[o]:
-                print o,edge
                 if edge is None:
                     continue
                 if edge.altitude > 0:
-                    grid[(vline-1,centerCol+2+(o*2))] = 'A-'
-                    if not (vline+1,centerCol+2+(o*2)) in grid:
-                        grid[(vline+1,centerCol+2+(o*2))] = '--'
+                    grid[(p.vline-1,centerCol+2+(o*2))] = 'A-'
+                    if not (p.vline+1,centerCol+2+(o*2)) in grid:
+                        grid[(p.vline+1,centerCol+2+(o*2))] = '--'
                 elif edge.altitude < 0:
-                    grid[(vline+1,centerCol+2+(o*2))] = 'V-'
-                    if not (vline-1,centerCol+2+(o*2)) in grid:
-                        grid[(vline-1,centerCol+2+(o*2))] = '--'
+                    grid[(p.vline+1,centerCol+2+(o*2))] = 'V-'
+                    if not (p.vline-1,centerCol+2+(o*2)) in grid:
+                        grid[(p.vline-1,centerCol+2+(o*2))] = '--'
 
         # Draw the right line
-        rightCol = centerCol+4+(2*max(vertex.emitters))
-        grid[(vline-1,rightCol)] = '+'
-        grid[(vline,rightCol)] = '|'
-        grid[(vline+1,rightCol)] = '+'
+        rightCol = p.vertexRightCol(k)
+        grid[(p.vline-1,rightCol)] = '+'
+        grid[(p.vline,rightCol)] = '|'
+        grid[(p.vline+1,rightCol)] = '+'
+
+
+    # Draw Edge Lines
+    for key in topology.edges:
+        edge = topology.edges[key]
+        altitude = edge.altitude
+
 
 
 
