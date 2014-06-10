@@ -37,13 +37,11 @@ def parseTree(tree):
             #TODO Handle case in which we read in from multiple directions
 #             if order in v.collectors:
 #                 v.collectors[order]
-
             v.collectors[order] = t.edges[altitude]
 
         for emitter in vertex.find("emitters").findall("emitter"):
             order = int(emitter.attrib["order"].strip())
             altitude = int(emitter.attrib["altitude"].strip())
-
             #TODO Handle case in which we output in multiple directions
 #             if order in v.emitters:
 #                 v.emitters[order]

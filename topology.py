@@ -23,7 +23,7 @@ class Vertex(object):
         typecheck(topology,Topology,"topology")
         typecheck(index,int,"index")
         self._topology = topology
-        self.emitters = Vertex.Emitters(self)       # orderNum: edge
+        self.emitters = Vertex.Emitters(self)       # orderNum: [edge, ...]
         self.collectors = Vertex.Collectors(self)   # orderNum: edge
         self.index = index
 
@@ -35,31 +35,76 @@ class Vertex(object):
 
     class Emitters(TypedDict):
         def __init__(self,vertex):
-            super(Vertex.Emitters,self).__init__(int,Edge)
+            super(Vertex.Emitters,self).__init__(int,EdgePair)
             self._vertex = vertex
         
+        def __getitem__(self,orderNum):
+            # The edge pair will return the one correct value, or both
+            return super(Vertex.Emitters,self).__getitem__(orderNum).get()
+
+        def values(self):
+            values = list()
+            for x in super(Vertex.Emitters,self).values():
+                val = x.get()
+                if isinstance(val,list):
+                    values+=val
+                else:
+                    values.append(val)
+            return values
+
         def __setitem__(self,orderNum,edge):
 #             if orderNum in self.keys() and self.values().count(self[orderNum]) == 1:
 #                 print "removing only occurance of ",self[orderNum]
 #                 edge.sources.remove(self[orderNum])
-            super(Vertex.Emitters,self).__setitem__(orderNum,edge)
+
+            # Initialize the list if this is the first item
+            if not orderNum in self.keys():
+                super(Vertex.Emitters,self).__setitem__(orderNum,EdgePair())
+
+            # Inset the value into the Edge pair
+            super(Vertex.Emitters,self).__getitem__(orderNum).set(edge)
             if not self._vertex in edge.sources:
                 edge.sources.append(self._vertex)
 
-
- 
     class Collectors(TypedDict):
         def __init__(self,vertex):
-            super(Vertex.Collectors,self).__init__(int,Edge)
+            super(Vertex.Collectors,self).__init__(int,EdgePair)
             self._vertex = vertex
         
+        def __getitem__(self,orderNum):
+            return super(Vertex.Collectors,self).__getitem(orderNum).get()
+
+        def values(self):
+            values = list()
+            for x in super(Vertex.Collectors,self).values():
+                val = x.get()
+                if isinstance(val,list):
+                    values+=val
+                else:
+                    values.append(val)
+            return values
+
         def __setitem__(self,orderNum,edge):
-#             if orderNum in self.keys() and self.values().count(self[orderNum]) == 1:
-#                 print "removing only occurance of "
-#                 edge.sinks.remove(self[orderNum])
-            super(Vertex.Collectors,self).__setitem__(orderNum,edge)
+            # Initialize list if empty
+            if not orderNum is self.keys():
+                super(Vertex.Collectors,self).__setitem__(orderNum,EdgePair())
+
+            # Insert the value
+            super(Vertex.Collectors,self).__getitem__(orderNum).set(edge)
             if not self._vertex in edge.sources:
                 edge.sinks.append(self._vertex)
+ 
+#     # Old Style Emitter/Collector - was much cleaner but didn't let you have
+#     # two values (positive and negative) for a single dictionary key :( 
+#     class Collectors(TypedDict):
+#         def __init__(self,vertex):
+#             super(Vertex.Collectors,self).__init__(int,Edge)
+#             self._vertex = vertex
+#         
+#         def __setitem__(self,orderNum,edge):
+#             super(Vertex.Collectors,self).__setitem__(orderNum,edge)
+#             if not self._vertex in edge.sources:
+#                 edge.sinks.append(self._vertex)
 
 class Edge(object):
     """ An edge represents a single 'class' of directional connections between
@@ -102,7 +147,7 @@ class Edge(object):
             if vertex in self: 
                 raise Exception("List already contains the value being set",vertex)
             if not self._edge in vertex.emitters.values():
-                raise Exception("Edge must be added to vertex using Vertex.emitters first")
+                raise Exception("Edge must be added to vertex using Vertex.emitters first %r"%vertex.emitters.values())
 
         def __setitem__(self,index,vertex):
             self.__checkForValue(vertex)
@@ -139,5 +184,33 @@ class Edge(object):
         def append(self,vertex):
             self.__checkForValue(vertex)
             super(Edge.Sinks,self).append(vertex)
+
+
+class EdgePair(object):
+    """ A pair of two edges, one with positive altitude, one with negative"""
+    # TODO: Should I enfore matching ranks?
+    def __init__(self):
+        self.pAltitude = None
+        self.nAltitude = None
+
+    def get(self):
+        if isinstance(self.pAltitude ,Edge) and not isinstance(self.nAltitude,Edge):
+            return self.pAltitude
+        elif not isinstance(self.pAltitude ,Edge) and isinstance(self.nAltitude,Edge):
+            return self.nAltitude
+        elif isinstance(self.pAltitude ,Edge) and isinstance(self.nAltitude,Edge):
+            return [self.pAltitude,self.nAltitude]
+        else:
+            raise Exception("wow")
+
+    def set(self,edge):
+        """ Automatically track positive and negative edges """ 
+        typecheck(edge,Edge,"edge")
+        if edge.altitude >= 1:
+            self.pAltitude = edge
+        elif edge.altitude <= -1:
+            self.nAltitude = edge
+        else:
+            raise Exception("Invalid Edge altitude %d"%edge.altitude)
 
 
