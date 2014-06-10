@@ -33,13 +33,18 @@ def parseTree(tree):
         for collector in vertex.find("collectors").findall("collector"):
             order = int(collector.attrib["order"].strip())
             altitude = int(collector.attrib["altitude"].strip())
-            v.collectors[order] = t.edges[altitude]
+            if order in v.collectors:
+                v.collectors[order] += EdgeTuple(t.edges[altitude])
+            else:
+                v.collectors[order] = EdgeTuple(t.edges[altitude])
 
         for emitter in vertex.find("emitters").findall("emitter"):
             order = int(emitter.attrib["order"].strip())
             altitude = int(emitter.attrib["altitude"].strip())
-            v.emitters[order] = t.edges[altitude]
-
+            if order in v.emitters:
+                v.emitters[order] += EdgeTuple(t.edges[altitude])
+            else:
+                v.emitters[order] = EdgeTuple(t.edges[altitude])
     return t
 
 
