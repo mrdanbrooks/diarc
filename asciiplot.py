@@ -34,6 +34,28 @@ def draw(topology):
     # Initialize Grid to use as a canvas
     grid = CharGrid()
 
+    # Calculate the number of rows needed for the drawing:
+    # 3 rows for vertices
+    # 2 rows as space (for above above and below vertices)
+    # 1 row per edge
+    height = len(topology.edges)+5
+    print "height=",height
+
+    # Calculate the number of columns needed
+    width = 5*len(topology.vertices)+5*(len(topology.vertices)-1)
+    width += sum([2*(len(topology.vertices[v].emitters)+len(topology.vertices[v].collectors)) for v in topology.vertices])
+    print "width=",width
+
+    # Draw the vertex boxes - count number of positive altitude lines, add 3
+    vline = len(filter(lambda x: x.altitude >0,topology.edges.values())) + 3
+    print "vline=",vline
+
+    # TODO: These keys need to be sorted before printing
+
+
+
+
+    exit(0)
     vboxes = dict() # TypedList(GVertex)
     gedges = list() # TypedList(GEdge)
     
@@ -47,17 +69,9 @@ def draw(topology):
         grid.writeStr((0,cidx),"+-"+"--"*conns+"+")
         grid.writeStr((1,cidx),"| "+"  "*conns+"|")
         grid.writeStr((2,cidx),"+-"+"--"*conns+"+")
-        # Label collector and emitter columns
-#         for col in vbox.collectorCols.values():
-#             grid[(1,cidx+col)] = 'C'
-#         for col in vbox.emitterCols.values():
-#             grid[(1,cidx+col)] = 'E'
-
         # Move leftmost drawing index to start for next box
         cidx += 2+(2*conns)
-        cidx += 5 # TODO: Add spacing according to specification
-
-    # NOTE: Draw the edges in order of |altitude|, connections from right to left
+        cidx += 5
 
     # Calculate the new size of the grid
     altitudes = [e.altitude for e in topology.edges]
@@ -78,16 +92,12 @@ def draw(topology):
             for sinkVertex in edge.sinks():
                 sink = vboxes[sinkVertex.index]
                 sinkCol = sink.collectorCols[altitude]+sink.leftIdx
-                gedges.append(GEdge(srcCol,sinkCol,row)) #TODO: This should be a row
-
+                gedges.append(GEdge(srcCol,sinkCol,row)) 
     # Draw edges
     for gedge in gedges:
         if gedge.row < vridx:
            grid[(vridx-1,gedge.srcCol)] = 'A' 
-#            grid[(vridx-2,gedge.srcCol)] = str(gedge.row)
            grid[(vridx-1,gedge.sinkCol)] = 'V'
-#            grid[(vridx-2,gedge.sinkCol)] = str(gedge.row)
-
            dist = gedge.sinkCol - gedge.srcCol - 1
            # Draw altitude lines. The end of each line wraps down with a '.' and
            # the middle has '-' filling. Do not let the fill overwrite the end
@@ -105,9 +115,7 @@ def draw(topology):
 
         if gedge.row > vridx:
            grid[(vridx+1,gedge.srcCol)] = 'V' 
-#            grid[(vridx+2,gedge.srcCol)] = str(abs(gedge.row))
            grid[(vridx+1,gedge.sinkCol)] = 'A' 
-#            grid[(vridx+2,gedge.sinkCol)] = str(abs(gedge.row))
 
            dist = gedge.srcCol - gedge.sinkCol - 1
            # Draw altitude lines. The end of each line wraps down with a '.' and
@@ -128,7 +136,7 @@ def draw(topology):
 
 
 if __name__ == "__main__":
-    topology = parseFile("full.xml")
+    topology = parseFile("v3.xml")
     draw(topology)
 
 

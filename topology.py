@@ -3,6 +3,22 @@
 from util import *
 
 class Topology(object):
+    """
+    t = Topology()
+
+    # Create two vertices
+    v0 = Vertex(t,0)
+    v1 = Vertex(t,1)
+
+    # Add an edge with altitude 1 and rank 0
+    e = Edge(t,1,0)
+    
+    # Connect v0 as source and v1 as sink for edge.
+    v0.emitters[0] = e
+    v1.collectors[0] = e
+
+    """
+
     def __init__(self):
         self.vertices = TypedDict(int,Vertex)   # index: Vertex
         self.edges = TypedDict(int,Edge)        # altitude: Edge
@@ -67,6 +83,7 @@ class Vertex(object):
                 edge.sources.append(self._vertex)
 
     class Collectors(TypedDict):
+        """ Dictionary of collectors, with keys representing the ordering """
         def __init__(self,vertex):
             super(Vertex.Collectors,self).__init__(int,EdgePair)
             self._vertex = vertex
@@ -88,7 +105,6 @@ class Vertex(object):
             # Initialize list if empty
             if not orderNum is self.keys():
                 super(Vertex.Collectors,self).__setitem__(orderNum,EdgePair())
-
             # Insert the value
             super(Vertex.Collectors,self).__getitem__(orderNum).set(edge)
             if not self._vertex in edge.sources:
@@ -138,6 +154,10 @@ class Edge(object):
 
 
     class Sources(TypedList):
+        """ A List of references to source vertices. A Vertex cannot be added to 
+        this list prior to this Edge object being added to Vertex's emitters.
+        """
+
         def __init__(self,edge):
             super(Edge.Sources,self).__init__(Vertex)
             self._edge = edge
@@ -162,6 +182,9 @@ class Edge(object):
             super(Edge.Sources,self).append(vertex)
 
     class Sinks(TypedList):
+        """ A List of references to sink vertices. A Vertex cannot be added to 
+        this list prior to this Edge object being added to Vertex's collectors.
+        """
         def __init__(self,edge):
             super(Edge.Sinks,self).__init__(Vertex)
             self._edge = edge
