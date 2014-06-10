@@ -50,6 +50,11 @@ class Vertex(object):
         self._topology.vertices[index] = self
 
     class Emitters(TypedDict):
+        """ A dict of EdgeTuples representing edge sources. Key values represent
+        the 0-indexed order in which the emitters are drawn. Because an emitter
+        can be connected to both a positive and negative altitude, the values
+        are stored as EdgeTuples.
+        """
         def __init__(self,vertex):
             super(Vertex.Emitters,self).__init__(int,EdgeTuple)
             self._vertex = vertex
@@ -57,17 +62,21 @@ class Vertex(object):
         def __setitem__(self,orderNum,edgeTuple):
             super(Vertex.Emitters,self).__setitem__(orderNum,edgeTuple)
             pEdge,nEdge = edgeTuple
-            if pEdge and not self._vertex in pEdge.sources:
-                pEdge.sources.append(self._vertex)
-            if nEdge and not self._vertex in nEdge.sources:
-                nEdge.sources.append(self._vertex)
+            if pEdge and not self._vertex in pEdge.sources.values():
+                pEdge.sources.insert(self._vertex)
+            if nEdge and not self._vertex in nEdge.sources.values():
+                nEdge.sources.insert(self._vertex)
 
         def allEdges(self):
             """ List all edges (not in tuple sets) """
             return [item for t in self.values() for item in t if item is not None]
 
     class Collectors(TypedDict):
-        """ Dictionary of collectors, with keys representing the ordering """
+        """ A dict of EdgeTuples representing edge sinks. Key values represent
+        the 0-indexed order in which the collectors are drawn. Because a collector
+        can be connected to both a positive and negative altitude, the values
+        are stored as EdgeTuples.
+        """
         def __init__(self,vertex):
             super(Vertex.Collectors,self).__init__(int,EdgeTuple)
             self._vertex = vertex
@@ -75,10 +84,10 @@ class Vertex(object):
         def __setitem__(self,orderNum,edgeTuple):
             super(Vertex.Collectors,self).__setitem__(orderNum,edgeTuple)
             pEdge,nEdge = edgeTuple
-            if pEdge and not self._vertex in pEdge.sinks:
-                pEdge.sinks.append(self._vertex)
-            if nEdge and not self._vertex in nEdge.sinks:
-                nEdge.sinks.append(self._vertex)
+            if pEdge and not self._vertex in pEdge.sinks.values():
+                pEdge.sinks.insert(self._vertex)
+            if nEdge and not self._vertex in nEdge.sinks.values():
+                nEdge.sinks.insert(self._vertex)
 
         def allEdges(self):
             """ List all edges (not in tuple sets) """
@@ -117,19 +126,19 @@ class Edge(object):
         self._topology.edges[altitude] = self
 
 
-    class Sources(TypedList):
+    class Sources(TypedDict):
         """ A List of references to source vertices. A Vertex cannot be added to 
         this list prior to this Edge object being added to Vertex's emitters.
         """
 
         def __init__(self,edge):
-            super(Edge.Sources,self).__init__(Vertex)
+            super(Edge.Sources,self).__init__(int,Vertex)
             self._edge = edge
         
         def __checkForValue(self,vertex):
             typecheck(vertex,Vertex,"vertex")
-            if vertex in self: 
-                raise Exception("List already contains the value being set",vertex)
+            if vertex in self.values(): 
+                raise Exception("Dict already contains the value being set",vertex)
             if not self._edge in vertex.emitters.allEdges():
                 raise Exception("Edge must be added to vertex using Vertex.emitters first %r"%vertex.emitters.values())
 
@@ -137,26 +146,22 @@ class Edge(object):
             self.__checkForValue(vertex)
             super(Edge.Sources,self).__setitem__(index,vertex)
 
-        def insert(self,index,vertex):
+        def insert(self,vertex):
             self.__checkForValue(vertex)
-            super(Edge.Sources,self).insert(index,vertex)
+            super(Edge.Sources,self).__setitem__(vertex.index,vertex)
 
-        def append(self,vertex):
-            self.__checkForValue(vertex)
-            super(Edge.Sources,self).append(vertex)
-
-    class Sinks(TypedList):
+    class Sinks(TypedDict):
         """ A List of references to sink vertices. A Vertex cannot be added to 
         this list prior to this Edge object being added to Vertex's collectors.
         """
         def __init__(self,edge):
-            super(Edge.Sinks,self).__init__(Vertex)
+            super(Edge.Sinks,self).__init__(int,Vertex)
             self._edge = edge
         
         def __checkForValue(self,vertex):
             typecheck(vertex,Vertex,"vertex")
-            if vertex in self: 
-                raise Exception("List already contains the value being set",vertex)
+            if vertex in self.values(): 
+                raise Exception("Dict already contains the value being set",vertex)
             if not self._edge in vertex.collectors.allEdges():
                 raise Exception("Edge must be added to vertex using Vertex.collectors first")
 
@@ -164,14 +169,9 @@ class Edge(object):
             self.__checkForValue(vertex)
             super(Edge.Sinks,self).__setitem__(index,vertex)
 
-        def insert(self,index,vertex):
+        def insert(self,vertex):
             self.__checkForValue(vertex)
-            super(Edge.Sinks,self).insert(index,vertex)
-
-        def append(self,vertex):
-            self.__checkForValue(vertex)
-            super(Edge.Sinks,self).append(vertex)
-
+            super(Edge.Sinks,self).__setitem__(vertex.index,vertex)
 
 
 class EdgeTuple(tuple):
