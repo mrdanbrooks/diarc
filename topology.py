@@ -62,10 +62,14 @@ class Vertex(object):
             if nEdge and not self._vertex in nEdge.sources:
                 nEdge.sources.append(self._vertex)
 
+        def allEdges(self):
+            """ List all edges (not in tuple sets) """
+            return [item for t in self.values() for item in t if item is not None]
+
     class Collectors(TypedDict):
         """ Dictionary of collectors, with keys representing the ordering """
         def __init__(self,vertex):
-            super(Vertex.Collectors,self).__init__(int,EdgePair)
+            super(Vertex.Collectors,self).__init__(int,EdgeTuple)
             self._vertex = vertex
 
         def __setitem__(self,orderNum,edgeTuple):
@@ -75,6 +79,12 @@ class Vertex(object):
                 pEdge.sinks.append(self._vertex)
             if nEdge and not self._vertex in nEdge.sinks:
                 nEdge.sinks.append(self._vertex)
+
+        def allEdges(self):
+            """ List all edges (not in tuple sets) """
+            return [item for t in self.values() for item in t if item is not None]
+
+
 
 class Edge(object):
     """ An edge represents a single 'class' of directional connections between
@@ -120,7 +130,7 @@ class Edge(object):
             typecheck(vertex,Vertex,"vertex")
             if vertex in self: 
                 raise Exception("List already contains the value being set",vertex)
-            if not self._edge in [item for t in vertex.emitters.values() for item in t]:
+            if not self._edge in vertex.emitters.allEdges():
                 raise Exception("Edge must be added to vertex using Vertex.emitters first %r"%vertex.emitters.values())
 
         def __setitem__(self,index,vertex):
@@ -147,7 +157,7 @@ class Edge(object):
             typecheck(vertex,Vertex,"vertex")
             if vertex in self: 
                 raise Exception("List already contains the value being set",vertex)
-            if not self._edge in [item for t in vertex.collectors.values() for item in t]:
+            if not self._edge in vertex.collectors.allEdges():
                 raise Exception("Edge must be added to vertex using Vertex.collectors first")
 
         def __setitem__(self,index,vertex):
