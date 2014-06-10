@@ -72,6 +72,16 @@ class Plot(object):
         vertex = self.topology.vertices[index]
         return self.vertexCenterCol(index)+4+(2*max(vertex.emitters))
 
+    def vertexCollectorCol(self,vIndex,order):
+        """ Calculates the column index for a collector at 'order' in vertex vIndex """
+        return self.vertexLeftCol(vIndex)+2+(order*2)
+
+    def vertexEmitterCol(self,vIndex,order):
+        """ Calculates the column index for an emitter at 'order' in vertex vIndex """
+        return self.vertexCenterCol(vIndex)+2+(order*2)
+
+
+
 def draw(topology):
     """ Draw a topology """
     typecheck(topology,Topology,"topology")
@@ -110,12 +120,13 @@ def draw(topology):
             for edge in vertex.collectors[o]:
                 if edge is None:
                     continue
+                col = p.vertexCollectorCol(k,o)
                 if edge.altitude > 0:
-                    grid[(p.vline-1,leftCol+2+(o*2))] = 'V-'
-                    grid[(p.vline+1,leftCol+2+(o*2))] = '--'
+                    grid[(p.vline-1,col)] = 'V-'
+                    grid[(p.vline+1,col)] = '--'
                 elif edge.altitude < 0:
-                    grid[(p.vline+1,leftCol+2+(o*2))] = 'A-'
-                    grid[(p.vline-1,leftCol+2+(o*2))] = '--'
+                    grid[(p.vline+1,col)] = 'A-'
+                    grid[(p.vline-1,col)] = '--'
 
         # Draw the middle line
         centerCol = p.vertexCenterCol(k)
@@ -128,14 +139,15 @@ def draw(topology):
             for edge in vertex.emitters[o]:
                 if edge is None:
                     continue
+                col = p.vertexEmitterCol(k,o)
                 if edge.altitude > 0:
-                    grid[(p.vline-1,centerCol+2+(o*2))] = 'A-'
-                    if not (p.vline+1,centerCol+2+(o*2)) in grid:
-                        grid[(p.vline+1,centerCol+2+(o*2))] = '--'
+                    grid[(p.vline-1,col)] = 'A-'
+                    if not (p.vline+1,col) in grid:
+                        grid[(p.vline+1,col)] = '--'
                 elif edge.altitude < 0:
-                    grid[(p.vline+1,centerCol+2+(o*2))] = 'V-'
-                    if not (p.vline-1,centerCol+2+(o*2)) in grid:
-                        grid[(p.vline-1,centerCol+2+(o*2))] = '--'
+                    grid[(p.vline+1,col)] = 'V-'
+                    if not (p.vline-1,col) in grid:
+                        grid[(p.vline-1,col)] = '--'
 
         # Draw the right line
         rightCol = p.vertexRightCol(k)
