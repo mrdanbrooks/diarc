@@ -3,6 +3,8 @@ from CharGrid import *
 from topology import *
 from parser import *
 
+vertexSpacing = 5
+
 class GVertex(object):
     def __init__(self,vertex,leftIdx):
         typecheck(vertex,Vertex,"vertex")
@@ -27,6 +29,15 @@ class GEdge(object):
         self.row = row
 
 
+def calcVertexWidth(vertex):
+    """ Calculate the total width of a vertex. Base width is 5
+    +-+-+ with additional 2 spaces per connection.
+    | | |
+    +-+-+
+    """
+    return 5+2*(len(vertex.emitters)+len(vertex.collectors))
+    
+
 def draw(topology):
     """ Draw a topology """
     typecheck(topology,Topology,"topology")
@@ -42,8 +53,7 @@ def draw(topology):
     print "height=",height
 
     # Calculate the number of columns needed
-    width = 5*len(topology.vertices)+5*(len(topology.vertices)-1)
-    width += sum([2*(len(topology.vertices[v].emitters)+len(topology.vertices[v].collectors)) for v in topology.vertices])
+    width = vertexSpacing*(len(topology.vertices)-1) + sum([calcVertexWidth(v) for v in topology.vertices.values()])
     print "width=",width
 
     # Draw the vertex boxes - count number of positive altitude lines, add 3
@@ -51,6 +61,58 @@ def draw(topology):
     print "vline=",vline
 
     # TODO: These keys need to be sorted before printing
+    vkeys = topology.vertices.keys()
+    
+    # TODO: Check that there are no negative value keys
+
+    for k in vkeys:
+        vertex = topology.vertices[k]
+        leftCol = sum([calcVertexWidth(topology.vertices[i]) for i in range(k)]) + vertexSpacing*k
+
+        # Draw the left side of the box
+        grid[(vline-1,leftCol)] = '+-'
+        grid[(vline,leftCol)] = '| '
+        grid[(vline+1,leftCol)] = '+-'
+
+        # Draw Collector connections
+        for o in vertex.collectors:
+            edge = vertex.collectors[o]
+            if edge.altitude > 0:
+                grid[(vline-1,leftCol+2+(o*2))] = 'V-'
+                grid[(vline+1,leftCol+2+(o*2))] = '--'
+            elif edge.altitude < 0:
+                grid[(vline+1,leftCol+2+(o*2))] = 'A-'
+                grid[(vline-1,leftCol+2+(o*2))] = '--'
+
+        # Draw the middle line
+        centerCol = leftCol+4+(2*max(vertex.collectors))
+        grid[(vline-1,centerCol)] = '+-'
+        grid[(vline,centerCol)] = '| '
+        grid[(vline+1,centerCol)] = '+-'
+
+        # Draw the emitter connections
+        for o in vertex.emitters:
+            edge = vertex.emitters[o]
+            if edge.altitude > 0:
+                grid[(vline-1,centerCol+2+(o*2))] = 'A-'
+                grid[(vline+1,centerCol+2+(o*2))] = '--'
+            elif edge.altitude < 0:
+                grid[(vline+1,centerCol+2+(o*2))] = 'V-'
+                grid[(vline-1,centerCol+2+(o*2))] = '--'
+
+        # Draw the right line
+        rightCol = centerCol+4+(2*max(vertex.emitters))
+        grid[(vline-1,rightCol)] = '+'
+        grid[(vline,rightCol)] = '|'
+        grid[(vline+1,rightCol)] = '+'
+
+
+
+            
+
+    print grid
+        
+    
 
 
 
