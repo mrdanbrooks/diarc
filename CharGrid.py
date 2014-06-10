@@ -30,24 +30,26 @@ class CharGrid(dict):
         return super(CharGrid,self).__getitem__(key)
 
     def __setitem__(self,key,val):
-        """ Set a single character into the grid """
+        """ Set a single character or string into the grid starting at key"""
         self.__checkkey(key)
         if not isinstance(val,str):
             raise Exception("Val must be 'str', got %r"%val)
-        if len(val) > 1 or len(val) < 1:
-            raise Exception("Val must be 1 character long, got %d (%s)"%(len(val),val))
-        # Update size values if necessary
-        if not key in self:
-            self.maxRow = max(key[0],self.maxRow)
-            self.maxCol = max(key[1],self.maxCol)
-        # Set value
-        super(CharGrid,self).__setitem__(key,val)
+#         if len(val) > 1 or len(val) < 1:
+#             raise Exception("Val must be 1 character long, got %d (%s)"%(len(val),val))
+        if len(val) < 1:
+            raise Exception("Val must be at least 1 character long, got %d (%s)"%(len(val),val))
 
-    def writeStr(self,key,val):
-        """ write a string of multiple characters from left to right starting at key """
+        cOffset = 0
         for c in val:
-            self[key] = c
-            key = (key[0],key[1]+1)
+            row = key[0]
+            col = key[1]+cOffset
+            # Update size values if necessary
+            if not (row,col) in self:
+                self.maxRow = max(row,self.maxRow)
+                self.maxCol = max(col,self.maxCol)
+            # Set value
+            super(CharGrid,self).__setitem__((row,col),c)
+            cOffset += 1
 
     def insertRowsAbove(self,row,num):
         """ add a new row above 'row' (shifting existing rows down) """
