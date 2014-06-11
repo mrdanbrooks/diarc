@@ -80,7 +80,10 @@ class Plot(object):
         """ Calculates the column index for an emitter at 'order' in vertex vIndex """
         return self.vertexCenterCol(vIndex)+2+(order*2)
 
-
+    def edgeRow(self,altitude):
+        """ Returns the row index for this altitude """
+        magnitude = 2 + abs(altitude)
+        return self.vline-magnitude if altitude > 0 else self.vline+magnitude
 
 def draw(topology):
     """ Draw a topology """
@@ -157,10 +160,65 @@ def draw(topology):
 
 
     # Draw Edge Lines
+    # Go through each line segment (a source to a sink) and draw the line
     for key in topology.edges:
         edge = topology.edges[key]
         altitude = edge.altitude
+        row = p.edgeRow(altitude)
+        grid[(row,0)] = str(altitude)
+        if altitude > 0:
+            # Drawing Routings for lines above the vertex boxes
+            for src in edge.sources:
+                srcOrder = edge.sources[src].emitters.reverseLookup(edge)
+                srcCol = p.vertexEmitterCol(src,srcOrder)
 
+                # Draw the vertical source line
+                grid[(row,srcCol+1)] = '.'
+                for i in range(vline-2-row):
+                    grid[(vline-2-i,srcCol)] = '|'
+
+                for sink in edge.sinks:
+                    sinkOrder = edge.sinks[sink].collectors.reverseLookup(edge)
+                    sinkCol = p.vertexCollectorCol(sink,sinkOrder)
+
+                    # Draw the vertical sink line
+                    grid[(row,sinkCol-1)] = '.'
+                    for i in range(vline-2-row):
+                        grid[(vline-2-i,sinkCol)] = '|'
+
+                    # Draw the horizontal filler
+                    for x in range(sinkCol-srcCol-2):
+                        if not (row,srcCol+2+x) in grid:
+                            grid[(row,srcCol+2+x)] = '-'
+
+        elif altitude < 0:
+            # Drawing routines for linse below the vertex boxes
+            for src in edge.sources:
+                srcOrder = edge.sources[src].emitters.reverseLookup(edge)
+                srcCol = p.vertexEmitterCol(src,srcOrder)
+
+                # Draw the vertical source line
+                grid[(row,srcCol-1)] = "'"
+                for i in range(row-(vline+2)):
+                    grid[(vline+2+i,srcCol)] = '|'
+
+                for sink in edge.sinks:
+                    sinkOrder = edge.sinks[sink].collectors.reverseLookup(edge)
+                    sinkCol = p.vertexCollectorCol(sink,sinkOrder)
+
+                    # Draw the vertical sink line
+                    grid[(row,sinkCol+1)] = "'"
+                    for i in range(row-(vline+2)):
+                        grid[(vline+2+i,sinkCol)] = '|'
+
+                    # Draw the horizontal filler
+                    for x in range(srcCol-sinkCol-2):
+                        if not (row,sinkCol+2+x) in grid:
+                            grid[(row,sinkCol+2+x)] = '-'
+
+
+        else:
+            raise Exception("invalid altitude")
 
 
 
