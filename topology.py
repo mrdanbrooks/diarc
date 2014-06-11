@@ -67,6 +67,13 @@ class Vertex(object):
             if nEdge and not self._vertex in nEdge.sources.values():
                 nEdge.sources.insert(self._vertex)
 
+        def reverseLookup(self,edge):
+            """ returns the reverse lookup dictionary """
+            for val,key in dict((v,k) for k,v in self.items()).items():
+                if edge in val:
+                    return key
+            raise Exception("Edge not found")
+
         def allEdges(self):
             """ List all edges (not in tuple sets) """
             return [item for t in self.values() for item in t if item is not None]
@@ -88,6 +95,13 @@ class Vertex(object):
                 pEdge.sinks.insert(self._vertex)
             if nEdge and not self._vertex in nEdge.sinks.values():
                 nEdge.sinks.insert(self._vertex)
+
+        def reverseLookup(self,edge):
+            """ returns the reverse lookup dictionary """
+            for val,key in dict((v,k) for k,v in self.items()).items():
+                if edge in val:
+                    return key
+            raise Exception("Edge not found")
 
         def allEdges(self):
             """ List all edges (not in tuple sets) """
