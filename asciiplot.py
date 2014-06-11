@@ -64,13 +64,9 @@ def draw(topology):
     # 2 rows as space (for above above and below vertices)
     # 1 row per edge
     p = Plot(topology)
-    print "height=",p.height
 
-    # Calculate the number of columns needed
-    print "width=",p.width
 
     # Draw the vertex boxes - count number of positive altitude lines, add 2
-    print "vline=",p.vline
     vline = p.vline
 
     
@@ -132,7 +128,7 @@ def draw(topology):
         edge = topology.edges[key]
         altitude = edge.altitude
         row = p.edgeRow(altitude)
-        grid[(row,0)] = str(altitude)
+#         grid[(row,0)] = str(altitude)
         if altitude > 0:
             # Drawing Routings for lines above the vertex boxes
             for src in edge.sources:
@@ -192,6 +188,7 @@ def draw(topology):
     
 if __name__ == "__main__":
     topology = parseFile("v3.xml")
+    print ""
     draw(topology)
 
 

@@ -34,8 +34,6 @@ class CharGrid(dict):
         self.__checkkey(key)
         if not isinstance(val,str):
             raise Exception("Val must be 'str', got %r"%val)
-#         if len(val) > 1 or len(val) < 1:
-#             raise Exception("Val must be 1 character long, got %d (%s)"%(len(val),val))
         if len(val) < 1:
             raise Exception("Val must be at least 1 character long, got %d (%s)"%(len(val),val))
 
@@ -75,7 +73,6 @@ class CharGrid(dict):
         self.__checkkey(srcKey)
         self.__checkkey(direction)
         destKey = (srcKey[0]+direction[0],srcKey[1]+direction[1])
-#         print "Call to move %s"%str(srcKey)
         # If destination already exists
         if destKey in self:
             keys = self.__moveCell(destKey,keys,direction)
