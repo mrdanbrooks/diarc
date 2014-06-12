@@ -37,6 +37,7 @@ def typecheck(obj,objtype,varname=None):
     var = varname or ""
     if not isinstance(obj,objtype):
         raise Exception("%s must be of type '%s', got %r"%(var, objtype.__name__, obj.__class__.__name__))
+    return obj
 
 
 
