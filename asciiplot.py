@@ -184,11 +184,10 @@ def draw(topology):
             raise Exception("invalid altitude")
 
     print grid
-        
+ 
     
 if __name__ == "__main__":
-    topology = parseFile("v3.xml")
+    topology = parseFile("data/v3.xml")
     print ""
     draw(topology)
-
 

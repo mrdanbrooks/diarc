@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 from util import *
 
 class Topology(object):
