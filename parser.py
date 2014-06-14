@@ -1,6 +1,6 @@
 import xml.etree.ElementTree as ET
 import xml.dom.minidom
-from topology3 import *
+from topology import *
 
 def parseFile(filename):
     return parseTree(ET.parse(filename))
