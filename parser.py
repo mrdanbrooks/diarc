@@ -1,6 +1,6 @@
 import xml.etree.ElementTree as ET
 import xml.dom.minidom
-from topology import *
+from topology3 import *
 
 def parseFile(filename):
     return parseTree(ET.parse(filename))
@@ -15,11 +15,23 @@ def parseTree(tree):
  
     # Populate Edges
     edges = root.find("edges").findall("edge")
-    print "Num Edges Detected: %d"%len(edges)
+
+    print "Num Edges Detected:",len(edges)
+
     for edge in edges:
         altitude = int(edge.attrib["altitude"].strip())
         rank = int(edge.attrib["rank"].strip())
-        e = Edge(t,altitude,rank)
+        matches = filter(lambda x: x.rank==rank,t.bands)
+        if len(matches) <= 0:
+            print "creating new edge",
+            e = Edge(t)
+            print e
+        else:
+            print "found %d matches"%len(matches)
+            e = matches[0].edge
+        band = e.posBand if altitude > 0 else e.negBand
+        band.altitude = altitude
+        band.rank = rank
 
    
     # Populate Vertices
@@ -27,24 +39,33 @@ def parseTree(tree):
     print "Num Vertices Detected: %d"%len(vertices)
     for vertex in vertices:
         index = int(vertex.attrib['index'].strip())
-        v = Vertex(t,index)
+        print "Creating Vertex with index=",index,
+        v = Vertex(t)
+        print v
+        v.block.index = index
 
         # Make edge connections to this vertex
-        for collector in vertex.find("collectors").findall("collector"):
-            order = int(collector.attrib["order"].strip())
-            altitude = int(collector.attrib["altitude"].strip())
-            if order in v.collectors:
-                v.collectors[order] += EdgeTuple(t.edges[altitude])
+        for sink in vertex.find("collector").findall("sink"):
+            order = int(sink.attrib["order"].strip())
+            altitude = int(sink.attrib["altitude"].strip())
+            e = t.findBand(altitude).edge
+            if v in [s.vertex for s in e.sinks]:
+                print "Existing Vertex found!"
             else:
-                v.collectors[order] = EdgeTuple(t.edges[altitude])
+                tmp = Sink(t,v,e)
+                tmp.snap.order = order
+                print "Creating sink with order=",order,"altitude=",altitude,tmp
 
-        for emitter in vertex.find("emitters").findall("emitter"):
-            order = int(emitter.attrib["order"].strip())
-            altitude = int(emitter.attrib["altitude"].strip())
-            if order in v.emitters:
-                v.emitters[order] += EdgeTuple(t.edges[altitude])
+        for source in vertex.find("emitter").findall("source"):
+            order = int(source.attrib["order"].strip())
+            altitude = int(source.attrib["altitude"].strip())
+            e = t.findBand(altitude).edge
+            if v in [src.vertex for src in e.sources]:
+                print "Existing Vertex found"
             else:
-                v.emitters[order] = EdgeTuple(t.edges[altitude])
+                tmp = Source(t,v,e)
+                tmp.snap.order = order
+                print "Creating source with order=",order,"altitude=",altitude,tmp
     return t
 
 

@@ -1,236 +1,250 @@
 from util import *
+import types
 
 class Topology(object):
-    """
-    t = Topology()
-
-    # Create two vertices
-    v0 = Vertex(t,0)
-    v1 = Vertex(t,1)
-
-    # Add an edge with altitude 1 and rank 0
-    e = Edge(t,1,0)
-    
-    # Connect v0 as source and v1 as sink for edge.
-    v0.emitters[0] = EdgeTuple(e,None)
-    v1.collectors[0] = EdgeTuple(e,None)
-
-    """
-
     def __init__(self):
-        self.vertices = TypedDict(int,Vertex)   # index: Vertex
-        self.edges = TypedDict(int,Edge)        # altitude: Edge
+        self._vertices = TypedList(Vertex)
+        self._edges = TypedList(Edge)
 
-               
+
+    def findBand(self,altitude):
+        """ returns the band matching the queried altitude, or None """
+        for band in self.bands:
+            if band.altitude == altitude:
+                return band
+        return None
+
+    @property
+    def blocks(self):
+        return [v.block for v in self._vertices]
+
+    @property
+    def bands(self):
+        return [band for edge in self._edges for band in edge.bands]
+
 
 class Vertex(object):
+    """ A Vertex in a directional graph. 
+    Sources - outgoing connections to Edges
+    Sinks - incomming connections from Edges
     """
-    Vertices are drawn as a line of boxes through the middle of the plot. 
-
-    INDEX: The horizontal ordering value of vertices. Left most value must be 0,
-        with index values increasing towards the right. Must be unique.
-    EMITTERS: A set of ordered EdgeTuples output from the vertex. 
-    COLLECTORS: A set of ordered incoming EdgeTuples to the vertex.
-
-    """
-    def __init__(self,topology,index):
-        typecheck(topology,Topology,"topology")
-        typecheck(index,int,"index")
-        self._topology = topology
-        self.emitters = Vertex.Emitters(self)       # orderNum: [edge, ...]
-        self.collectors = Vertex.Collectors(self)   # orderNum: edge
-        self.index = index
-
-        # Add to Topology
-        # Check that this vertex has a unique index
-        if index in self._topology.vertices:
-            raise Exception("Vertex with same index already exists")
-        self._topology.vertices[index] = self
-
-    class Emitters(TypedDict):
-        """ A dict of EdgeTuples representing edge sources. Key values represent
-        the 0-indexed order in which the emitters are drawn. Because an emitter
-        can be connected to both a positive and negative altitude, the values
-        are stored as EdgeTuples.
-        """
-        def __init__(self,vertex):
-            super(Vertex.Emitters,self).__init__(int,EdgeTuple)
-            self._vertex = vertex
-
-        def __setitem__(self,orderNum,edgeTuple):
-            super(Vertex.Emitters,self).__setitem__(orderNum,edgeTuple)
-            pEdge,nEdge = edgeTuple
-            if pEdge and not self._vertex in pEdge.sources.values():
-                pEdge.sources.insert(self._vertex)
-            if nEdge and not self._vertex in nEdge.sources.values():
-                nEdge.sources.insert(self._vertex)
-
-        def reverseLookup(self,edge):
-            """ returns the reverse lookup dictionary """
-            for val,key in dict((v,k) for k,v in self.items()).items():
-                if edge in val:
-                    return key
-            raise Exception("Edge not found")
-
-        def allEdges(self):
-            """ List all edges (not in tuple sets) """
-            return [item for t in self.values() for item in t if item is not None]
-
-    class Collectors(TypedDict):
-        """ A dict of EdgeTuples representing edge sinks. Key values represent
-        the 0-indexed order in which the collectors are drawn. Because a collector
-        can be connected to both a positive and negative altitude, the values
-        are stored as EdgeTuples.
-        """
-        def __init__(self,vertex):
-            super(Vertex.Collectors,self).__init__(int,EdgeTuple)
-            self._vertex = vertex
-
-        def __setitem__(self,orderNum,edgeTuple):
-            super(Vertex.Collectors,self).__setitem__(orderNum,edgeTuple)
-            pEdge,nEdge = edgeTuple
-            if pEdge and not self._vertex in pEdge.sinks.values():
-                pEdge.sinks.insert(self._vertex)
-            if nEdge and not self._vertex in nEdge.sinks.values():
-                nEdge.sinks.insert(self._vertex)
-
-        def reverseLookup(self,edge):
-            """ returns the reverse lookup dictionary """
-            for val,key in dict((v,k) for k,v in self.items()).items():
-                if edge in val:
-                    return key
-            raise Exception("Edge not found")
-
-        def allEdges(self):
-            """ List all edges (not in tuple sets) """
-            return [item for t in self.values() for item in t if item is not None]
-
-
+    def __init__(self,topology):
+        self._topology = typecheck(topology,Topology,"topology")
+        self._topology._vertices.append(self)
+        # Visual Component
+        self.block = Block(self)
+        # Connections
+        self.sources = TypedList(Source)
+        self.sinks = TypedList(Sink)
 
 class Edge(object):
-    """ An edge represents a single 'class' of directional connections between
-        vertices in a graph. It can be thought of as a MIMO connection.
-
-    SOURCES: input vertices to this edge. Must be at least one source.
-    SINKS: output vertices to this edge. Must be at least one sink.
-    ALTITUDE: 'height' ordering of edge. Non-0 int value. Positive values are 
-        above the vertex line, negave values are below. the larger the absolute
-        value of the altitude the further away from the vertex line.
-    RANK: 'z order' of edges. Positive, int values, edges with larger 
-        values are drawn over top of of edges with lower values. Edges with the 
-        same rank are considered to be the same edge. Therefore, each positive
-        altitude edge must have a unique rank, and similar with negative edges.
-
+    """ A directional multiple-input multiple-output edge in the graph.
+    Sources - inputs from vertices
+    Sinks - outputs to vertices
     """
-    def __init__(self,topology,altitude,rank):
-        typecheck(topology,Topology,"topology")
-        typecheck(altitude,int,"altitude")
-        self._topology = topology
-        self.sources = Edge.Sources(self)
-        self.sinks = Edge.Sinks(self)
-        self.altitude = altitude
-        self.rank = rank
+    def __init__(self,topology):
+        self._topology = typecheck(topology,Topology,"topology")
+        self._topology._edges.append(self)
+        # Visual Component
+        self._pBand = None
+        self._nBand = None
+        # Connections
+        self.sources = TypedList(Source)
+        self.sinks = TypedList(Sink)
 
-        # Add to Topology
-        # Check that this edge has a unique altitude
-        if altitude in self._topology.edges:
-            raise Exception("Edge with same altitude already exists!")
-        self._topology.edges[altitude] = self
+    def __get_posBand(self):
+        # Initialize on first request
+        if self._pBand is None:
+            self._pBand = Band(self)
+            print type(self._pBand)
+        return self._pBand
 
+    def __get_negBand(self):
+        # Initialize on first request
+        if self._nBand is None:
+            self._nBand = Band(self)
+        return self._nBand
 
-    class Sources(TypedDict):
-        """ A dict of references to source vertices. A Vertex cannot be added to 
-        this list prior to this Edge object being added to Vertex's emitters.
-        Keys are vertex index values.
-        """
+    def __get_bands(self):
+        return filter(lambda x: isinstance(x,Band), [self._pBand,self._nBand])
 
-        def __init__(self,edge):
-            super(Edge.Sources,self).__init__(int,Vertex)
-            self._edge = edge
-        
-        def __checkForValue(self,vertex):
-            typecheck(vertex,Vertex,"vertex")
-            if vertex in self.values(): 
-                raise Exception("Dict already contains the value being set",vertex)
-            if not self._edge in vertex.emitters.allEdges():
-                raise Exception("Edge must be added to vertex using Vertex.emitters first %r"%vertex.emitters.values())
+    posBand = property(__get_posBand)
+    negBand = property(__get_negBand)
+    bands = property(__get_bands)
 
-        def __setitem__(self,index,vertex):
-            self.__checkForValue(vertex)
-            super(Edge.Sources,self).__setitem__(index,vertex)
+class Connection(object):
+    """ Use Source or Sink """
+    def __init__(self,topology,vertex,edge):
+        self._topology = typecheck(topology,Topology,"topology")
+        self._vertex = typecheck(vertex,Vertex,"vertex")
+        self._edge = typecheck(edge,Edge,"edge")
+        if not (isinstance(self,Source) or isinstance(self,Sink)):
+            raise Exception("Do not create connections directly! Use Source or Sink")
+        self._snap = Snap(self)
 
-        def insert(self,vertex):
-            self.__checkForValue(vertex)
-            super(Edge.Sources,self).__setitem__(vertex.index,vertex)
+    @property
+    def snap(self):
+        return self._snap
 
-    class Sinks(TypedDict):
-        """ A List of references to sink vertices. A Vertex cannot be added to 
-        this list prior to this Edge object being added to Vertex's collectors.
-        Keys are vertex index values.
-        """
-        def __init__(self,edge):
-            super(Edge.Sinks,self).__init__(int,Vertex)
-            self._edge = edge
-        
-        def __checkForValue(self,vertex):
-            typecheck(vertex,Vertex,"vertex")
-            if vertex in self.values(): 
-                raise Exception("Dict already contains the value being set",vertex)
-            if not self._edge in vertex.collectors.allEdges():
-                raise Exception("Edge must be added to vertex using Vertex.collectors first")
+    @property
+    def edge(self): 
+        return self._edge
 
-        def __setitem__(self,index,vertex):
-            self.__checkForValue(vertex)
-            super(Edge.Sinks,self).__setitem__(index,vertex)
+    @property
+    def vertex(self): 
+        return self._vertex
 
-        def insert(self,vertex):
-            self.__checkForValue(vertex)
-            super(Edge.Sinks,self).__setitem__(vertex.index,vertex)
+class Source(Connection):
+    """ Connection from Vertex to Edge """
+    def __init__(self,topology,vertex,edge):
+        super(Source,self).__init__(topology,vertex,edge)
+        # Check to make sure there is not already a source going from this vertex to this edge
+        for source in vertex.sources + edge.sources:
+            if vertex == source.vertex and edge == source.edge:
+                raise Exception("Duplicate Source!")
+        # Add to Vertex and Edge. 
+        vertex.sources.append(self)
+        edge.sources.append(self)
 
+class Sink(Connection):
+    """ Connection from Edge to Vertex """
+    def __init__(self,topology,vertex,edge):
+        super(Sink,self).__init__(topology,vertex,edge)
+        # Check to make sure there is not already a sink going from this edge to this vertex
+        for sink in vertex.sinks + edge.sinks:
+            if vertex == sink.vertex and edge == sink.edge:
+                raise Exception("Duplicate Sink!")
 
-class EdgeTuple(tuple):
-    """ A 2-tuple of edges (positive,negative) for a vertex emitter or collector """
-
-    def __new__(cls,*args):
-        """ If only one argument is supplied, automatically configure the EdgeTuple.
-        If two arguments are supplied, they must be in the correct order. """
-        pAltitude, nAltitude = None,None
-        if len(args) <= 0:
-            raise Exception("You must supply at least one Edge argument")
-        elif len(args) == 1:
-            typecheck(args[0],Edge,"argument")
-            if args[0].altitude > 0:
-                pAltitude = args[0]
-            else:
-                nAltitude = args[0]
-        elif len(args) == 2:
-            pAltitude,nAltitude = args
-        elif len(args) > 2:
-            raise Exception("Too many arguments - you can at most have EdgeTuple(positive,negative)")
-        EdgeTuple.__checkTuple(pAltitude,nAltitude)
-        return super(EdgeTuple,cls).__new__(cls,(pAltitude,nAltitude))
+        vertex.sinks.append(self)
+        edge.sinks.append(self)
 
 
-    @staticmethod
-    def __checkTuple(p,n):
-        if not isinstance(p,Edge) and not isinstance(p,types.NoneType):
-            raise Exception("Bad positive type")
-        if not isinstance(n,Edge) and not isinstance(n,types.NoneType):
-            raise Exception("Bad negative type")
-        if p and p.altitude < 1:
-            raise Exception("Positive Edge altitude must be greater then 0")
-        if n and n.altitude > -1:
-            raise Exception("Negative Edge altitude must be less then 0")
+class Block(object):
+    """ Visual Representation of a Vertex 
+    Visual Parameters
+    Index - 0-indexed order in which draw blocks
+    """
+    def __init__(self,vertex):
+        self._vertex = typecheck(vertex,Vertex,"vertex")
+        self._topology = vertex._topology
+        # Visual Properties
+        self._index = None
 
-    def __add__(self,other):
-        """ Combine an EdgeTuple with only postive value with EdgeTuple with
-        only negative value. """
-        if self[0] is None and other[1] is None:
-            return EdgeTuple(self[1],other[0])
-        elif self[1] is None and other[0] is None:
-            return EdgeTuple(self[0],other[1])
-        raise Exception("Unsupported")
+    @property
+    def emitter(self):
+        return dict(filter(lambda x: isinstance(x[0],int),[(s.snap.order,s.snap) for s in self._vertex.sources]))
+
+    @property
+    def collector(self):
+        return dict(filter(lambda x: isinstance(x[0],int),[(s.snap.order,s.snap) for s in self._vertex.sinks]))
+
+    def __get_index(self):
+        return self._index
+    def __set_index(self,value):
+        """ Check to see if a block with the same index already exists """
+        if self._index == value:
+            return
+        allVertices = self._topology._vertices
+        allBlocks = [v.block for v in allVertices]
+        if value in [b.index for b in allBlocks]:
+            raise Exception("Block with index %d already exists!"%value)
+        self._index = value
+
+    index = property(__get_index,__set_index)
+
+class Band(object):
+    """ Visual Representation of an Edge.
+    An Edge can have up to two Bands - one with positive altitude and one negative.
+    Visual Parameters
+    Rank - the Z drawing order
+    Altitude - the distance above or below the Block ribbon
+    """
+    def __init__(self,edge):
+        self._edge = typecheck(edge,Edge,"edge")
+        self._topology = edge._topology
+        # Visual Properties
+        self._altitude = None
+        self._rank = None
+        # Visual Connections 
+        self.sources = TypedList(Snap)
+        self.sinks = TypedList(Snap)
+
+    def __get_edge(self):
+        return self._edge
+    def __get_rank(self):
+        return self._rank
+    def __set_rank(self,val):
+        self._rank = val
+    
+    def __get_altitude(self):
+        return self._altitude
+    def __set_altitude(self,value):
+        # Make sure the altitude is unique among all bands 
+        if self._altitude == value:
+            return
+        allEdges = self._topology._edges
+        allBands = filter(lambda x: isinstance(x,Band),[band for edge in allEdges for band in edge.bands])
+        if value in [b.altitude for b in allBands]:
+            raise Exception("Band with altitude %d already exists!"%value)
+        self._altitude = value
+
+    edge = property(__get_edge)
+    rank = property(__get_rank,__set_rank)
+    altitude = property(__get_altitude,__set_altitude)
+
+class Snap(object):
+    """ Visual Representation of a Source or Sink.
+    Snaps are layedout horizontally inside of an Emitter or Collector of a Block.
+    A Snap provides a mapping between a Source/Sink and one or two Bands associated with a single Edge.
+    Visual Layout Paramters
+    Order - 0-indexed order in which to draw snaps within an Emitter or Collector 
+    """
+    def __init__(self,connection):
+        self._connection = typecheck(connection,Connection,"connection")
+        if isinstance(self._connection,Source):
+            for band in self._connection.edge.bands:
+                band.sources.append(self)
+        if isinstance(self._connection,Sink):
+            for band in self._connection.edge.bands:
+                band.sinks.append(self)
+        self._order = None
+
+    @property
+    def posBand(self):
+        # use pBand instead of posBand to keep from instantiating the Band object
+        return self._connection.edge._pBand
+
+    @property
+    def negBand(self):
+        # use nBand instead of negBand to keep from instantiating the Band object
+        return self._connection.edge._nBand
+
+    def __get_block(self):
+        return self._connection.vertex.block
+
+    def __get_bands(self):
+        return filter(lambda x: isinstance(x,Band), [self.posBand,self.negBand])
+
+    def __get_order(self):
+        return self._order
+    def __set_order(self,value):
+        """ Check to see if a snap with the same order already exists """
+        if self._order == value:
+            return
+        snaps = list()
+        # Check to see if the order value exists in this emitter or collector
+        if isinstance(self._connection,Source):
+            snaps = [e.snap for e in self._connection.vertex.sources]
+        if isinstance(self._connection,Sink):
+            snaps = [e.snap for e in self._connection.vertex.sinks]
+        orders = filter(lambda x: not isinstance(x,types.NoneType),[s.order for s in snaps])
+        if value in orders:
+            raise Exception("Order value %d already exists!"%value)
+        # Update value
+        self._order = value
 
 
-
-
+    bands = property(__get_bands)
+    block = property(__get_block)
+    order = property(__get_order,__set_order)
+ 
