@@ -15,12 +15,23 @@ class Topology(object):
         return None
 
     @property
+    def vertices(self):
+        return self._vertices
+
+    @property 
+    def edges(self):
+        return self._edges
+
+    @property
     def blocks(self):
-        return [v.block for v in self._vertices]
+        """ Returns dictionary of all blocks who have a proper index value assigned """
+        return dict(filter(lambda x: isinstance(x[0],int),[(v.block.index,v.block) for v in self._vertices]))
 
     @property
     def bands(self):
-        return [band for edge in self._edges for band in edge.bands]
+        """ Returns dictionary of all bands who have a proper altitude assigned """
+        return dict([(band.altitude,band) for edge in self._edges for band in edge.bands])
+
 
 
 class Vertex(object):

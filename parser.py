@@ -21,7 +21,7 @@ def parseTree(tree):
     for edge in edges:
         altitude = int(edge.attrib["altitude"].strip())
         rank = int(edge.attrib["rank"].strip())
-        matches = filter(lambda x: x.rank==rank,t.bands)
+        matches = filter(lambda x: x.rank==rank,t.bands.values())
         if len(matches) <= 0:
             print "creating new edge",
             e = Edge(t)
@@ -48,7 +48,7 @@ def parseTree(tree):
         for sink in vertex.find("collector").findall("sink"):
             order = int(sink.attrib["order"].strip())
             altitude = int(sink.attrib["altitude"].strip())
-            e = t.findBand(altitude).edge
+            e = t.bands[altitude].edge
             if v in [s.vertex for s in e.sinks]:
                 print "Existing Vertex found!"
             else:
@@ -59,7 +59,7 @@ def parseTree(tree):
         for source in vertex.find("emitter").findall("source"):
             order = int(source.attrib["order"].strip())
             altitude = int(source.attrib["altitude"].strip())
-            e = t.findBand(altitude).edge
+            e = t.bands[altitude].edge
             if v in [src.vertex for src in e.sources]:
                 print "Existing Vertex found"
             else:
