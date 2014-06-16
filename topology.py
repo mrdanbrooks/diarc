@@ -37,6 +37,9 @@ class Vertex(object):
         # Visual Component
         self.block = Block(self)
         # Connections
+        # TODO: Connections should be stored as a top level element of the topology
+        # and these values should be queried dynamically from that list?
+        # This would be good because the items are shared by both vertices and edges
         self.sources = TypedList(Source)
         self.sinks = TypedList(Sink)
 
