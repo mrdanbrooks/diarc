@@ -6,14 +6,6 @@ class Topology(object):
         self._vertices = TypedList(Vertex)
         self._edges = TypedList(Edge)
 
-
-    def findBand(self,altitude):
-        """ returns the band matching the queried altitude, or None """
-        for band in self.bands:
-            if band.altitude == altitude:
-                return band
-        return None
-
     @property
     def vertices(self):
         return self._vertices
