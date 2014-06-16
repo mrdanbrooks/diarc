@@ -6,21 +6,24 @@ class Topology(object):
         self._vertices = TypedList(Vertex)
         self._edges = TypedList(Edge)
 
+    @property
+    def vertices(self):
+        return self._vertices
 
-    def findBand(self,altitude):
-        """ returns the band matching the queried altitude, or None """
-        for band in self.bands:
-            if band.altitude == altitude:
-                return band
-        return None
+    @property 
+    def edges(self):
+        return self._edges
 
     @property
     def blocks(self):
-        return [v.block for v in self._vertices]
+        """ Returns dictionary of all blocks who have a proper index value assigned """
+        return dict(filter(lambda x: isinstance(x[0],int),[(v.block.index,v.block) for v in self._vertices]))
 
     @property
     def bands(self):
-        return [band for edge in self._edges for band in edge.bands]
+        """ Returns dictionary of all bands who have a proper altitude assigned """
+        return dict([(band.altitude,band) for edge in self._edges for band in edge.bands])
+
 
 
 class Vertex(object):
@@ -34,6 +37,9 @@ class Vertex(object):
         # Visual Component
         self.block = Block(self)
         # Connections
+        # TODO: Connections should be stored as a top level element of the topology
+        # and these values should be queried dynamically from that list?
+        # This would be good because the items are shared by both vertices and edges
         self.sources = TypedList(Source)
         self.sinks = TypedList(Sink)
 
@@ -56,7 +62,6 @@ class Edge(object):
         # Initialize on first request
         if self._pBand is None:
             self._pBand = Band(self)
-            print type(self._pBand)
         return self._pBand
 
     def __get_negBand(self):
@@ -93,6 +98,10 @@ class Connection(object):
     @property
     def vertex(self): 
         return self._vertex
+
+    @property
+    def block(self):
+        return self.vertex.block
 
 class Source(Connection):
     """ Connection from Vertex to Edge """
@@ -131,6 +140,10 @@ class Block(object):
         self._index = None
 
     @property
+    def vertex(self):
+        return self._vertex
+
+    @property
     def emitter(self):
         return dict(filter(lambda x: isinstance(x[0],int),[(s.snap.order,s.snap) for s in self._vertex.sources]))
 
@@ -144,10 +157,13 @@ class Block(object):
         """ Check to see if a block with the same index already exists """
         if self._index == value:
             return
+        if value is None:
+            self._index = value
+            return
         allVertices = self._topology._vertices
         allBlocks = [v.block for v in allVertices]
         if value in [b.index for b in allBlocks]:
-            raise Exception("Block with index %d already exists!"%value)
+            raise Exception("Block with index %r already exists!"%value)
         self._index = value
 
     index = property(__get_index,__set_index)
@@ -179,9 +195,13 @@ class Band(object):
     def __get_altitude(self):
         return self._altitude
     def __set_altitude(self,value):
-        # Make sure the altitude is unique among all bands 
         if self._altitude == value:
             return
+        # Always allow "unsetting" value
+        if value is None:
+            self._altitude = value
+            return
+        # Make sure the altitude is unique among all bands 
         allEdges = self._topology._edges
         allBands = filter(lambda x: isinstance(x,Band),[band for edge in allEdges for band in edge.bands])
         if value in [b.altitude for b in allBands]:
@@ -211,11 +231,17 @@ class Snap(object):
 
     @property
     def posBand(self):
+        """ returns the positive band connection - if it exists. 
+        Just because a positive band link exists does not mean that it should
+        be drawn. The check for if we should draw the connection happens at drawing
+        time when we decide if we should be using positive or negative"""
         # use pBand instead of posBand to keep from instantiating the Band object
         return self._connection.edge._pBand
 
     @property
     def negBand(self):
+        """ returns the negative band connection - if it exists. See posBand for
+        more details."""
         # use nBand instead of negBand to keep from instantiating the Band object
         return self._connection.edge._nBand
 
@@ -230,6 +256,10 @@ class Snap(object):
     def __set_order(self,value):
         """ Check to see if a snap with the same order already exists """
         if self._order == value:
+            return
+        # Always allow "unsetting values"
+        if value is None:
+            self._order = value
             return
         snaps = list()
         # Check to see if the order value exists in this emitter or collector

@@ -12,8 +12,8 @@
     <vertex index='1'>
       <collector>
         <sink order='0' altitude='1' />
-        <sink order='2' altitude='-1' />
-        <sink order='1' altitude='-2' />
+        <sink order='1' altitude='-1' />
+        <sink order='2' altitude='-2' />
       </collector>
       <emitter>
         <source order='0' altitude='3' />
