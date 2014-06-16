@@ -228,12 +228,17 @@ class Snap(object):
 
     @property
     def posBand(self):
-        """ returns the positive band connection - if it exists.   """
+        """ returns the positive band connection - if it exists. 
+        Just because a positive band link exists does not mean that it should
+        be drawn. The check for if we should draw the connection happens at drawing
+        time when we decide if we should be using positive or negative"""
+        # use pBand instead of posBand to keep from instantiating the Band object
         return self._connection.edge._pBand
 
     @property
     def negBand(self):
-        """ returns the negative band connection - if it exists.  """
+        """ returns the negative band connection - if it exists. See posBand for
+        more details."""
         # use nBand instead of negBand to keep from instantiating the Band object
         return self._connection.edge._nBand
 
