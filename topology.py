@@ -130,6 +130,10 @@ class Block(object):
         self._index = None
 
     @property
+    def vertex(self):
+        return self._vertex
+
+    @property
     def emitter(self):
         return dict(filter(lambda x: isinstance(x[0],int),[(s.snap.order,s.snap) for s in self._vertex.sources]))
 
