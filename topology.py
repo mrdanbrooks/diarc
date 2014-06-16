@@ -56,7 +56,6 @@ class Edge(object):
         # Initialize on first request
         if self._pBand is None:
             self._pBand = Band(self)
-            print type(self._pBand)
         return self._pBand
 
     def __get_negBand(self):
@@ -144,10 +143,13 @@ class Block(object):
         """ Check to see if a block with the same index already exists """
         if self._index == value:
             return
+        if value is None:
+            self._index = value
+            return
         allVertices = self._topology._vertices
         allBlocks = [v.block for v in allVertices]
         if value in [b.index for b in allBlocks]:
-            raise Exception("Block with index %d already exists!"%value)
+            raise Exception("Block with index %r already exists!"%value)
         self._index = value
 
     index = property(__get_index,__set_index)
@@ -179,9 +181,13 @@ class Band(object):
     def __get_altitude(self):
         return self._altitude
     def __set_altitude(self,value):
-        # Make sure the altitude is unique among all bands 
         if self._altitude == value:
             return
+        # Always allow "unsetting" value
+        if value is None:
+            self._altitude = value
+            return
+        # Make sure the altitude is unique among all bands 
         allEdges = self._topology._edges
         allBands = filter(lambda x: isinstance(x,Band),[band for edge in allEdges for band in edge.bands])
         if value in [b.altitude for b in allBands]:
@@ -230,6 +236,10 @@ class Snap(object):
     def __set_order(self,value):
         """ Check to see if a snap with the same order already exists """
         if self._order == value:
+            return
+        # Always allow "unsetting values"
+        if value is None:
+            self._order = value
             return
         snaps = list()
         # Check to see if the order value exists in this emitter or collector
