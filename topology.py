@@ -96,6 +96,10 @@ class Connection(object):
     def vertex(self): 
         return self._vertex
 
+    @property
+    def block(self):
+        return self.vertex.block
+
 class Source(Connection):
     """ Connection from Vertex to Edge """
     def __init__(self,topology,vertex,edge):
@@ -224,13 +228,49 @@ class Snap(object):
 
     @property
     def posBand(self):
+        """ returns the positive band connection - if it exists. 
+        For the positive band connection to exist, 
+        - the connecting edge must first have a positive band. 
+        - if snap is sink, there must be a source with a lowered block index, or
+        - if snap is source, there must be a sink with a higher block index
+        """
         # use pBand instead of posBand to keep from instantiating the Band object
-        return self._connection.edge._pBand
+        pBand = self._connection.edge._pBand
+        if pBand is None:
+            return None
+        if isinstance(self._connection,Source):
+            for sink in pBand.sinks:
+                if sink.block.index > self.block.index:
+                    return pBand
+        if isinstance(self._connection,Sink):
+            for source in pBand.sources:
+                if source.block.index < self.block.index:
+                    return pBand
+        return None
+#         return self._connection.edge._pBand
 
     @property
     def negBand(self):
+        """ returns the negative band connection - if it exists. 
+        For the negative band connection to exist,
+        - the connecting edge must first have a negative band.
+        - if snap is a sink, there must be a source with a higher block index, or
+        - if snap is a source, there must be a sink with a lower block index
+        """
         # use nBand instead of negBand to keep from instantiating the Band object
-        return self._connection.edge._nBand
+        nBand = self._connection.edge._nBand
+        if nBand is None:
+            return None
+        if isinstance(self._connection,Source):
+            for sink in nBand.sinks:
+                if sink.block.index < self.block.index:
+                    return nBand
+        if isinstance(self._connection,Sink):
+            for source in nBand.sources:
+                if source.block.index > self.block.index:
+                    return nBand
+        return None
+#         return self._connection.edge._nBand
 
     def __get_block(self):
         return self._connection.vertex.block
