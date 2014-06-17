@@ -2,6 +2,9 @@
 # [db] dan@danbrooks.net 
 # Draws an ascii art graph of the visualization
 #
+# BUGS: 
+# snaps must begin with index 0 and not skip values, also must only be positive values. - no errors to reflect this
+
 
 from CharGrid import *
 from topology import *
