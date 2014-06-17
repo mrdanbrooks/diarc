@@ -1,6 +1,7 @@
 import xml.etree.ElementTree as ET
 import xml.dom.minidom
 from topology import *
+""" v5 topology parser and serializer """
 
 def parseFile(filename):
     return parseTree(ET.parse(filename))
@@ -18,8 +19,13 @@ def parseTree(tree):
 
     print "Num Edges Detected:",len(edges)
 
+    # Keep track of edges for reference later
+    edgeList = dict()
+
     for edge in edges:
         e = Edge(t)
+        eid = int(edge.attrib['id'].strip())
+        edgeList[eid] = e
         for band in edge.findall("band"):
             altitude = int(band.attrib["altitude"].strip())
             rank = int(band.attrib["rank"].strip())
@@ -41,8 +47,8 @@ def parseTree(tree):
         # Make edge connections to this vertex
         for sink in vertex.find("collector").findall("sink"):
             order = int(sink.attrib["order"].strip())
-            altitude = int(sink.attrib["altitude"].strip())
-            e = t.bands[altitude].edge
+            edgeid = int(sink.attrib["edge"].strip())
+            e = edgeList[edgeid]
             if v in [s.vertex for s in e.sinks]:
                 pass
                 print "Existing Vertex found!"
@@ -53,8 +59,8 @@ def parseTree(tree):
 
         for source in vertex.find("emitter").findall("source"):
             order = int(source.attrib["order"].strip())
-            altitude = int(source.attrib["altitude"].strip())
-            e = t.bands[altitude].edge
+            edgeid = int(source.attrib["edge"].strip())
+            e = edgeList[edgeid]
             if v in [src.vertex for src in e.sources]:
                 pass
                 print "Existing Vertex found"
@@ -63,6 +69,32 @@ def parseTree(tree):
                 tmp.snap.order = order
                 print "Creating source with order=",order,"altitude=",altitude,tmp
     return t
+
+def serialize(topology):
+    """ Generate xml from topology """
+    xmlRoot = ET.Element('topology')
+    xmlVertices = ET.SubElement(xmlRoot,'vertices')
+    xmlEdges = ET.SubElement(xmlRoot,'edges')
+
+    # Serialize Edges
+    for edge in topology.edges:
+        xmlEdge = ET.SubElement(xmlEdges,'edge')
+        for band in edge.bands:
+            b = ET.SubElement(xmlEdge,'band')
+            b.attrib["altitude"] = str(band.altitude)
+            b.attrib["rank"] = str(band.rank)
+
+    # Serialize Vertices
+    for vertex in topology.vertices:
+        xmlVertex = ET.SubElement(xmlVertices,'vertex')
+#         for source in vertex.sources:
+# 
+# 
+#         for sink in vertex.sinks:
+
+    return xmlify(xmlRoot)
+
+
 
 
 # Search children of ETree 
