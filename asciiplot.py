@@ -2,6 +2,10 @@
 # [db] dan@danbrooks.net 
 # Draws an ascii art graph of the visualization
 #
+# TODO: 
+# - allow collapsing altitudes (if the smallest altitude on the negative side is
+#   -4, draw it at -1, draw  -7 at -2, -8 at -3, etc...
+#
 # BUGS: 
 # snaps must begin with index 0 and not skip values, also must only be positive values. - no errors to reflect this
 
