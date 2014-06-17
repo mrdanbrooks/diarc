@@ -134,7 +134,7 @@ def draw(topology):
                             grid[(row,srcCol+2+x)] = '-'
 
                 # Negative band connection
-                elif source.block.index > sink.block.index and edge._nBand is not None: 
+                elif source.block.index >= sink.block.index and edge._nBand is not None: 
                     altitude = edge.negBand.altitude
                     row = p.bandRow(altitude)
                     grid[(row,0)] = str(altitude)
