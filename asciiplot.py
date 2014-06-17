@@ -1,9 +1,15 @@
 #!/usr/bin/python
+# [db] dan@danbrooks.net 
+# Draws an ascii art graph of the visualization
+#
+
 from CharGrid import *
 from topology import *
 from parser import *
 
 vertexSpacing = 5
+
+
 
 class Plot(object):
     def __init__(self,topology):
@@ -99,6 +105,9 @@ def draw(topology):
 
 
     # Draw Edge Lines
+    # Calculate Edge Lines (but don't draw yet)
+    pBands = dict() # rank: [(srcCol,sinkCol,row,altitude), (x,x,x,x), ...]
+    nBands = dict() # rank: [(srcCol,sinkCol,row,altitude), 
     for edge in topology.edges:
         for source in edge.sources:
             srcSnap = source.snap
@@ -114,49 +123,71 @@ def draw(topology):
                 if source.block.index < sink.block.index and edge._pBand is not None:
                     altitude = edge.posBand.altitude
                     row = p.bandRow(altitude)
-                    grid[(row,0)] = str(altitude)
-
-                    # Draw the vertical source line
-                    grid[(p.vline-1,srcCol)] = 'A-'
-                    grid[(row,srcCol+1)] = '.'
-                    for i in range(vline-2-row):
-                        grid[(vline-2-i,srcCol)] = '|'
-
-                    # Draw the vertical sink line
-                    grid[(p.vline-1,sinkCol)] = 'V-'
-                    grid[(row,sinkCol-1)] = '.'
-                    for i in range(vline-2-row):
-                        grid[(vline-2-i,sinkCol)] = '|'
-
-                    # Draw the horizontal filler
-                    for x in range(sinkCol-srcCol-2):
-                        if not (row,srcCol+2+x) in grid:
-                            grid[(row,srcCol+2+x)] = '-'
+                    # Initialize rank if it does not already exist
+                    if edge.posBand.rank not in pBands:
+                        pBands[edge.posBand.rank] = list()
+                    # Add arc to rank
+                    pBands[edge.posBand.rank] += [(srcCol,sinkCol,row,altitude)]
 
                 # Negative band connection
                 elif source.block.index >= sink.block.index and edge._nBand is not None: 
                     altitude = edge.negBand.altitude
                     row = p.bandRow(altitude)
-                    grid[(row,0)] = str(altitude)
-
-                    # Draw the vertical source line
-                    grid[(p.vline+1,srcCol)] = 'V-'
-                    grid[(row,srcCol-1)] = "'"
-                    for i in range(row-(vline+2)):
-                        grid[(vline+2+i,srcCol)] = '|'
-
-                    # Draw the vertical sink line
-                    grid[(p.vline+1,sinkCol)] = 'A-'
-                    grid[(row,sinkCol+1)] = "'"
-                    for i in range(row-(vline+2)):
-                        grid[(vline+2+i,sinkCol)] = '|'
-
-                    # Draw the horizontal filler
-                    for x in range(srcCol-sinkCol-2):
-                        if not (row,sinkCol+2+x) in grid:
-                            grid[(row,sinkCol+2+x)] = '-'
+                    if edge.negBand.rank not in nBands:
+                        nBands[edge.negBand.rank] = list()
+                    nBands[edge.negBand.rank] += [(srcCol,sinkCol,row,altitude)]
                 else:
+                    print "WARNING: Could not place band!"
                     continue
+
+    # Draw Positive Edges in rank order
+    bands = pBands.keys()
+    bands.sort(lambda x,y: x-y)
+    for rank in bands:
+        for srcCol,sinkCol,row,altitude in pBands[rank]:
+#             grid[(row,0)] = str(altitude)
+
+            # Draw the vertical source line
+            grid[(p.vline-1,srcCol)] = 'A-'
+            grid[(row,srcCol+1)] = '.'
+            for i in range(vline-2-row):
+                grid[(vline-2-i,srcCol)] = '|'
+
+            # Draw the vertical sink line
+            grid[(p.vline-1,sinkCol)] = 'V-'
+            grid[(row,sinkCol-1)] = '.'
+            for i in range(vline-2-row):
+                grid[(vline-2-i,sinkCol)] = '|'
+
+            # Draw the horizontal filler
+            for x in range(sinkCol-srcCol-3):
+                if not (row,srcCol+2+x) in grid or grid[(row,srcCol+2+x)] == "|":
+                    grid[(row,srcCol+2+x)] = '-'
+
+    # Draw Negative Edges in rank order
+    bands = nBands.keys()
+    bands.sort(lambda x,y: x-y)
+    for rank in bands:
+        for srcCol,sinkCol,row,altitude in nBands[rank]:
+#             grid[(row,0)] = str(altitude)
+
+            # Draw the vertical source line
+            grid[(p.vline+1,srcCol)] = 'V-'
+            grid[(row,srcCol-1)] = "'"
+            for i in range(row-(vline+2)):
+                grid[(vline+2+i,srcCol)] = '|'
+
+            # Draw the vertical sink line
+            grid[(p.vline+1,sinkCol)] = 'A-'
+            grid[(row,sinkCol+1)] = "'"
+            for i in range(row-(vline+2)):
+                grid[(vline+2+i,sinkCol)] = '|'
+
+            # Draw the horizontal filler
+            for x in range(srcCol-sinkCol-3):
+                if not (row,sinkCol+2+x) in grid or grid[(row,sinkCol+2+x)] == "|":
+                    grid[(row,sinkCol+2+x)] = '-'
+
 
     print grid
  
