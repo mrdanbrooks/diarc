@@ -172,7 +172,7 @@ class Band(object):
     """ Visual Representation of an Edge.
     An Edge can have up to two Bands - one with positive altitude and one negative.
     Visual Parameters
-    Rank - the Z drawing order
+    Rank - the Z drawing order (higher values closer to user)
     Altitude - the distance above or below the Block ribbon
     """
     def __init__(self,edge):
