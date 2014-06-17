@@ -1,3 +1,15 @@
+# [db] dan@danbrooks.net
+#
+# diarc topology data structures for ROS
+# This renames some things into ROS terminology to be more conveient, and also
+# adds some attributes we want to track. 
+#
+# Renaming Looks like this
+#   Vertex = Node
+#   Edge = Topic
+#   Sink = Subscriber
+#   Source = Publisher
+#
 from topology import *
 
 class RosSystemGraph(Topology):

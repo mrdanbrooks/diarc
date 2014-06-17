@@ -1,6 +1,10 @@
 import xml.etree.ElementTree as ET
 import xml.dom.minidom
 from ros_topology import *
+# [db] dan@danbrooks.net
+#
+# Parses ros:v2 xml syntax and generates a RosSystemGraph object
+#
 # TODO:
 # - Sort Nodes intelligently
 #

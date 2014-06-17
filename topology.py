@@ -1,3 +1,16 @@
+# [db] dan@danbrooks.net
+#
+# Diarc topology objects
+# 
+# A Diarc topology consists of two types of objects - logical objects and graphical
+# objects which visually represent logical objects. 
+# 
+# Logical objects:                  Graphical Objects:
+#   Vertex                          Block
+#   Edge                            Band(s)
+#   Connection, Source, Sink        Snap(s)
+# 
+#
 from util import *
 import types
 
@@ -8,10 +21,12 @@ class Topology(object):
 
     @property
     def vertices(self):
+        """ returns an unordered list of vertex objects in the topology """
         return self._vertices
 
     @property 
     def edges(self):
+        """ returns an unordered list of edge objects in the topology """
         return self._edges
 
     @property
@@ -28,6 +43,9 @@ class Topology(object):
 
 class Vertex(object):
     """ A Vertex in a directional graph. 
+    A vertex can connect to multiple edges as either an input (source) or output
+    (sink) to the edge. It is graphically represented by a Block object.
+
     Sources - outgoing connections to Edges
     Sinks - incomming connections from Edges
     """
@@ -44,7 +62,10 @@ class Vertex(object):
         self.sinks = TypedList(Sink)
 
 class Edge(object):
-    """ A directional multiple-input multiple-output edge in the graph.
+    """ A directional multiple-input multiple-output edge in the graph. Inputs
+    (sources) and outputs (sinks) are linked to vertices. An edge is represented 
+    graphically by either 1 or 2 Band objects. 
+
     Sources - inputs from vertices
     Sinks - outputs to vertices
     """
@@ -78,7 +99,11 @@ class Edge(object):
     bands = property(__get_bands)
 
 class Connection(object):
-    """ Use Source or Sink """
+    """ A base class for connecting a vertex to an edge, but without specifing 
+    the nature of the connection (input or output). Rather then using this 
+    class directly, Source or Sink objects should be used.
+    
+    """
     def __init__(self,topology,vertex,edge):
         self._topology = typecheck(topology,Topology,"topology")
         self._vertex = typecheck(vertex,Vertex,"vertex")
@@ -104,7 +129,9 @@ class Connection(object):
         return self.vertex.block
 
 class Source(Connection):
-    """ Connection from Vertex to Edge """
+    """ A logical connection from a Vertex to an Edge. Graphically represented 
+    by a Snap object.
+    """
     def __init__(self,topology,vertex,edge):
         super(Source,self).__init__(topology,vertex,edge)
         # Check to make sure there is not already a source going from this vertex to this edge
@@ -116,7 +143,9 @@ class Source(Connection):
         edge.sources.append(self)
 
 class Sink(Connection):
-    """ Connection from Edge to Vertex """
+    """ A logical connection from an Edge to a Vertex. Graphically represented
+    by a Snap object. 
+    """
     def __init__(self,topology,vertex,edge):
         super(Sink,self).__init__(topology,vertex,edge)
         # Check to make sure there is not already a sink going from this edge to this vertex
