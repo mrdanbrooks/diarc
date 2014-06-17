@@ -7,6 +7,8 @@ from ros_topology import *
 #
 # TODO:
 # - Sort Nodes intelligently
+# - give warnings about topics which are not fully connected (are not connected
+#   on one side or another)
 #
 # BUGS:
 # - Topics with / vs without / show up differently
