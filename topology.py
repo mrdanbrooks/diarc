@@ -79,24 +79,24 @@ class Edge(object):
         self.sources = TypedList(Source)
         self.sinks = TypedList(Sink)
 
-    def __get_posBand(self):
+    @property
+    def posBand(self):
         # Initialize on first request
         if self._pBand is None:
             self._pBand = Band(self)
         return self._pBand
 
-    def __get_negBand(self):
+    @property
+    def negBand(self):
         # Initialize on first request
         if self._nBand is None:
             self._nBand = Band(self)
         return self._nBand
 
-    def __get_bands(self):
+    @property
+    def bands(self):
         return filter(lambda x: isinstance(x,Band), [self._pBand,self._nBand])
 
-    posBand = property(__get_posBand)
-    negBand = property(__get_negBand)
-    bands = property(__get_bands)
 
 class Connection(object):
     """ A base class for connecting a vertex to an edge, but without specifing 
@@ -274,10 +274,12 @@ class Snap(object):
         # use nBand instead of negBand to keep from instantiating the Band object
         return self._connection.edge._nBand
 
-    def __get_block(self):
+    @property
+    def block(self):
         return self._connection.vertex.block
 
-    def __get_bands(self):
+    @property
+    def bands(self):
         return filter(lambda x: isinstance(x,Band), [self.posBand,self.negBand])
 
     def __get_order(self):
@@ -302,8 +304,5 @@ class Snap(object):
         # Update value
         self._order = value
 
-
-    bands = property(__get_bands)
-    block = property(__get_block)
     order = property(__get_order,__set_order)
  
