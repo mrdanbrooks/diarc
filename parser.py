@@ -19,18 +19,14 @@ def parseTree(tree):
     print "Num Edges Detected:",len(edges)
 
     for edge in edges:
-        altitude = int(edge.attrib["altitude"].strip())
-        rank = int(edge.attrib["rank"].strip())
-        matches = filter(lambda x: x.rank==rank,t.bands.values())
-        if len(matches) <= 0:
-            e = Edge(t)
-#             print "creating new edge",e
-        else:
-#             print "found %d matches"%len(matches)
-            e = matches[0].edge
-        band = e.posBand if altitude > 0 else e.negBand
-        band.altitude = altitude
-        band.rank = rank
+        e = Edge(t)
+        for band in edge.findall("band"):
+            altitude = int(band.attrib["altitude"].strip())
+            rank = int(band.attrib["rank"].strip())
+            matches = filter(lambda x: x.rank==rank,t.bands.values())
+            b = e.posBand if altitude > 0 else e.negBand
+            b.altitude = altitude
+            b.rank = rank
 
    
     # Populate Vertices

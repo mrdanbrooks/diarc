@@ -162,6 +162,6 @@ def draw(topology):
  
     
 if __name__ == "__main__":
-    topology = parseFile("data/v4.xml")
+    topology = parseFile("data/v5.xml")
     print ""
     draw(topology)
