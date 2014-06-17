@@ -41,7 +41,7 @@ def parseTree(tree):
     for vertex in vertices:
         index = int(vertex.attrib['index'].strip())
         v = Vertex(t)
-        print "Creating Vertex with index=",index,v
+#         print "Creating Vertex with index=",index,v
         v.block.index = index
 
         # Make edge connections to this vertex
@@ -51,11 +51,11 @@ def parseTree(tree):
             e = edgeList[edgeid]
             if v in [s.vertex for s in e.sinks]:
                 pass
-                print "Existing Vertex found!"
+#                 print "Existing Vertex found!"
             else:
                 tmp = Sink(t,v,e)
                 tmp.snap.order = order
-                print "Creating sink with order=",order,"altitude=",altitude,tmp
+#                 print "Creating sink with order=",order,"altitude=",altitude,tmp
 
         for source in vertex.find("emitter").findall("source"):
             order = int(source.attrib["order"].strip())
@@ -63,11 +63,11 @@ def parseTree(tree):
             e = edgeList[edgeid]
             if v in [src.vertex for src in e.sources]:
                 pass
-                print "Existing Vertex found"
+#                 print "Existing Vertex found"
             else:
                 tmp = Source(t,v,e)
                 tmp.snap.order = order
-                print "Creating source with order=",order,"altitude=",altitude,tmp
+#                 print "Creating source with order=",order,"altitude=",altitude,tmp
     return t
 
 def serialize(topology):
