@@ -5,7 +5,12 @@ class RosSystemGraph(Topology):
         super(RosSystemGraph,self).__init__()
         # Renaming these things just for convenience
         self.nodes = self.vertices
-        self.topics = self.edges
+#         self.topics = self.edges
+
+    @property
+    def topics(self):
+        return dict(filter(lambda x: None not in x[0], [((topic.name,topic.msgType),topic) for topic in self.edges]))
+
 
     def nextFreeNodeIndex(self):
         """ returns the next available node index """
@@ -26,6 +31,9 @@ class Node(Vertex):
         # dumb placement - just get the next free index
         self.block.index = rsg.nextFreeNodeIndex()
 
+        self.name = None
+        self.location = None
+        self.pid = None
         self.publishers = self.sources
         self.subscribers = self.sinks
 
@@ -37,11 +45,13 @@ class Topic(Edge):
         # Dumb placement - just get the enxt free altitudes
         
         self.posBand.altitude,self.negBand.altitude = rsg.nextFreeAltitudes()
-
+        self.name = None
+        self.msgType = None
+        self.bandwidth = None
+        self.freq = None
 
         self.publishers = self.sources
         self.subscribers = self.sinks
-        self.msgType = None
 
 class Publisher(Source):
     def __init__(self,rsg,node,topic):
