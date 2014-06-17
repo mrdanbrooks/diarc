@@ -26,8 +26,10 @@ def topology_plot(args):
 
 if __name__=="__main__":
     available_tests = dict(inspect.getmembers(sys.modules[__name__],inspect.isfunction))
-    if sys.argv[1] not in available_tests:
-        print "Test available:",available_tests.keys()
+
+    if len(sys.argv) < 2 or sys.argv[1] not in available_tests:
+        print "Usage:\n ./test.py <test> [parameters]\n"
+        print "Tests available:",available_tests.keys()
         exit(0)
     elif len(sys.argv)>2:
         available_tests[sys.argv[1]](sys.argv[2:])
