@@ -8,11 +8,8 @@
 
 from CharGrid import *
 from topology import *
-from parser import *
 
 vertexSpacing = 5
-
-
 
 class Plot(object):
     def __init__(self,topology):
@@ -194,8 +191,3 @@ def draw(topology):
 
     print grid
  
-    
-if __name__ == "__main__":
-    topology = parseFile("data/v5.xml")
-    print ""
-    draw(topology)
