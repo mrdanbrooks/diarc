@@ -10,7 +10,14 @@ class RosSystemGraph(Topology):
     def nextFreeNodeIndex(self):
         """ returns the next available node index """
         return max(self.blocks.keys())+1 if len(self.blocks)>0 else 0
-        
+    
+    def nextFreeAltitudes(self):
+        """ returns a 2-tuple of (posAltitude,negAltitude) of the avaliable altitudes """
+        altitudes = [band.altitude for band in self.bands.values()] + [0]
+        return (max(altitudes)+1,min(altitudes)-1)
+
+
+
 class Node(Vertex):
     def __init__(self,rsg):
         typecheck(rsg,RosSystemGraph,"rsg")
@@ -26,6 +33,12 @@ class Topic(Edge):
     def __init__(self,rsg):
         typecheck(rsg,RosSystemGraph,"rsg")
         super(Topic,self).__init__(rsg)
+        
+        # Dumb placement - just get the enxt free altitudes
+        
+        self.posBand.altitude,self.negBand.altitude = rsg.nextFreeAltitudes()
+
+
         self.publishers = self.sources
         self.subscribers = self.sinks
         self.msgType = None
