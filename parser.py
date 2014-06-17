@@ -76,18 +76,26 @@ def serialize(topology):
     xmlVertices = ET.SubElement(xmlRoot,'vertices')
     xmlEdges = ET.SubElement(xmlRoot,'edges')
 
+    nextEdgeId = 0
+    revEdgeList = dict()
+
     # Serialize Edges
     for edge in topology.edges:
         xmlEdge = ET.SubElement(xmlEdges,'edge')
+        eid = nextEdgeId
+        nextEdgeId+=1
+        xmlEdge.attrib["id"] = eid
         for band in edge.bands:
             b = ET.SubElement(xmlEdge,'band')
             b.attrib["altitude"] = str(band.altitude)
             b.attrib["rank"] = str(band.rank)
+            revEdgeList[band.altitude] = eid
 
     # Serialize Vertices
     for vertex in topology.vertices:
         xmlVertex = ET.SubElement(xmlVertices,'vertex')
 #         for source in vertex.sources:
+# 
 # 
 # 
 #         for sink in vertex.sinks:
