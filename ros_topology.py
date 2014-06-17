@@ -44,11 +44,11 @@ class Topic(Edge):
         
         # Dumb placement - just get the enxt free altitudes
         self.posBand.altitude,self.negBand.altitude = rsg.nextFreeAltitudes()
+        self.posBand.rank = self.posBand.altitude
+        self.negBand.rank = self.posBand.altitude
 
         self.name = None
         self.msgType = None
-        self.bandwidth = None
-        self.freq = None
 
         self.publishers = self.sources
         self.subscribers = self.sinks
@@ -61,10 +61,13 @@ class Publisher(Source):
         super(Publisher,self).__init__(rsg,node,topic)
 
         # Dumb placement
-        self.snap.order = max([pub.snap.order for pub in node.publishers] + [0])
+        self.snap.order = max(filter(lambda x: isinstance(x,int), [pub.snap.order for pub in node.publishers] + [-1]))+1
 
         self.bandwidth = None
         self.msgType = None
+
+        self.topic = self.edge
+        self.node = self.vertex
 
 class Subscriber(Sink):
     def __init__(self,rsg,node,topic):
@@ -74,10 +77,13 @@ class Subscriber(Sink):
         super(Subscriber,self).__init__(rsg,node,topic)
 
         # Dumb placement
-        self.snap.order = max([sub.snap.order for sub in node.subscribers] + [0])
+        self.snap.order = max(filter(lambda x: isinstance(x,int), [sub.snap.order for sub in node.subscribers] + [-1]))+1
 
         self.bandwidth = None
         self.msgType = None
+
+        self.topic = self.edge
+        self.node = self.vertex
 
 
 if __name__ == "__main__":
