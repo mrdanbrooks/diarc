@@ -1,4 +1,4 @@
-<topology>
+<topology version="diarc:v5">
   <vertices>
     <vertex index='0'>
       <collector>
