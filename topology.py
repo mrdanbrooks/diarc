@@ -219,6 +219,9 @@ class Band(object):
     def __get_rank(self):
         return self._rank
     def __set_rank(self,val):
+        typecheck(val,int,"val")
+        if val < 0:
+            raise Exception("Rank must be >= 0, received %d"%val)
         self._rank = val
     
     def __get_altitude(self):
