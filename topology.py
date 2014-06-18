@@ -222,11 +222,13 @@ class Band(object):
         # Visual Connections 
 
     @property
-    def sources(self):
+    def emitters(self):
+        """ returns a list of snaps to sources """
         return [s.snap for s in self._edge.sources]
 
     @property
-    def sinks(self):
+    def collectors(self):
+        """ returns list of snaps to sinks """
         return [s.snap for s in self._edge.sinks]
 
     def __get_edge(self):
