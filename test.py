@@ -5,11 +5,11 @@
 import sys
 import inspect
 
-def ros_plot():
+def ros_plot(args):
     """ Test drawing a ROS xml specification """
     import ros_parser
     import asciiplot
-    ros = ros_parser.parseFile("data/dava.xml")
+    ros = ros_parser.parseFile(args[0])
     asciiplot.draw(ros)
 
 
