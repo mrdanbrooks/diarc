@@ -151,6 +151,7 @@ class Source(Connection):
             if vertex == source.vertex and edge == source.edge:
                 raise Exception("Duplicate Source!")
         self._topology._sources.append(self)
+        self.visual = None
 
 class Sink(Connection):
     """ A logical connection from an Edge to a Vertex. Graphically represented
@@ -219,8 +220,14 @@ class Band(object):
         self._altitude = None
         self._rank = None
         # Visual Connections 
-        self.sources = TypedList(Snap)
-        self.sinks = TypedList(Snap)
+
+    @property
+    def sources(self):
+        return [s.snap for s in self._edge.sources]
+
+    @property
+    def sinks(self):
+        return [s.snap for s in self._edge.sinks]
 
     def __get_edge(self):
         return self._edge
@@ -261,12 +268,6 @@ class Snap(object):
     """
     def __init__(self,connection):
         self._connection = typecheck(connection,Connection,"connection")
-        if isinstance(self._connection,Source):
-            for band in self._connection.edge.bands:
-                band.sources.append(self)
-        if isinstance(self._connection,Sink):
-            for band in self._connection.edge.bands:
-                band.sinks.append(self)
         self._order = None
 
     @property
