@@ -67,7 +67,7 @@ class Vertex(object):
         return filter(lambda x: x.vertex == self, self._topology._sinks)
 
 class Edge(object):
-    """ A directional multiple-input multiple-output edge in the graph. Inputs
+    """ A directional multiple-input multiGple-output edge in the graph. Inputs
     (sources) and outputs (sinks) are linked to vertices. An edge is represented 
     graphically by either 1 or 2 Band objects. 
 
@@ -176,6 +176,8 @@ class Block(object):
         self._topology = vertex._topology
         # Visual Properties
         self._index = None
+        # Visual object
+        self.visual = None
 
     @property
     def vertex(self):
@@ -220,6 +222,7 @@ class Band(object):
         self._altitude = None
         self._rank = None
         # Visual Connections 
+        self.visual = None
 
     @property
     def emitters(self):
@@ -271,6 +274,7 @@ class Snap(object):
     def __init__(self,connection):
         self._connection = typecheck(connection,Connection,"connection")
         self._order = None
+        self.visual = None
 
     @property
     def posBand(self):
@@ -295,6 +299,14 @@ class Snap(object):
     @property
     def bands(self):
         return filter(lambda x: isinstance(x,Band), [self.posBand,self.negBand])
+
+    @property
+    def isSource(self):
+        return isinstance(self._connection,Source)
+
+    @property
+    def isSink(self):
+        return isinstance(self._connection,Sink)
 
     def __get_order(self):
         return self._order
