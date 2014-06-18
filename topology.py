@@ -300,11 +300,9 @@ class Snap(object):
     def bands(self):
         return filter(lambda x: isinstance(x,Band), [self.posBand,self.negBand])
 
-    @property
     def isSource(self):
         return isinstance(self._connection,Source)
 
-    @property
     def isSink(self):
         return isinstance(self._connection,Sink)
 
