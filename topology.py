@@ -18,6 +18,8 @@ class Topology(object):
     def __init__(self):
         self._vertices = TypedList(Vertex)
         self._edges = TypedList(Edge)
+        self._sources = TypedList(Source)
+        self._sinks = TypedList(Sink)
 
     @property
     def vertices(self):
@@ -55,11 +57,14 @@ class Vertex(object):
         # Visual Component
         self.block = Block(self)
         # Connections
-        # TODO: Connections should be stored as a top level element of the topology
-        # and these values should be queried dynamically from that list?
-        # This would be good because the items are shared by both vertices and edges
-        self.sources = TypedList(Source)
-        self.sinks = TypedList(Sink)
+
+    @property
+    def sources(self):
+        return filter(lambda x: x.vertex == self, self._topology._sources)
+
+    @property
+    def sinks(self):
+        return filter(lambda x: x.vertex == self, self._topology._sinks)
 
 class Edge(object):
     """ A directional multiple-input multiple-output edge in the graph. Inputs
@@ -76,8 +81,15 @@ class Edge(object):
         self._pBand = None
         self._nBand = None
         # Connections
-        self.sources = TypedList(Source)
-        self.sinks = TypedList(Sink)
+
+    @property
+    def sources(self):
+        return filter(lambda x: x.edge == self, self._topology._sources)
+
+    @property
+    def sinks(self):
+        return filter(lambda x: x.edge == self, self._topology._sinks)
+
 
     @property
     def posBand(self):
@@ -108,7 +120,7 @@ class Connection(object):
         self._topology = typecheck(topology,Topology,"topology")
         self._vertex = typecheck(vertex,Vertex,"vertex")
         self._edge = typecheck(edge,Edge,"edge")
-        if not (isinstance(self,Source) or isinstance(self,Sink)):
+        if (not isinstance(self,Source)) and (not isinstance(self,Sink)):
             raise Exception("Do not create connections directly! Use Source or Sink")
         self._snap = Snap(self)
 
@@ -138,9 +150,7 @@ class Source(Connection):
         for source in vertex.sources + edge.sources:
             if vertex == source.vertex and edge == source.edge:
                 raise Exception("Duplicate Source!")
-        # Add to Vertex and Edge. 
-        vertex.sources.append(self)
-        edge.sources.append(self)
+        self._topology._sources.append(self)
 
 class Sink(Connection):
     """ A logical connection from an Edge to a Vertex. Graphically represented
@@ -152,9 +162,7 @@ class Sink(Connection):
         for sink in vertex.sinks + edge.sinks:
             if vertex == sink.vertex and edge == sink.edge:
                 raise Exception("Duplicate Sink!")
-
-        vertex.sinks.append(self)
-        edge.sinks.append(self)
+        self._topology._sinks.append(self)
 
 
 class Block(object):

@@ -16,8 +16,10 @@ class RosSystemGraph(Topology):
     def __init__(self):
         super(RosSystemGraph,self).__init__()
         # Renaming these things just for convenience
-        self.nodes = self.vertices
-#         self.topics = self.edges
+
+    @property
+    def nodes(self):
+        return self.vertices
 
     @property
     def topics(self):
@@ -46,8 +48,20 @@ class Node(Vertex):
         self.name = None
         self.location = None
         self.pid = None
-        self.publishers = self.sources
-        self.subscribers = self.sinks
+
+    @property
+    def publishers(self):
+        # NOTE: This must be a property function (instead of just saying 
+        # self.publishers = self.sources in the constructor) because self.sources
+        # just returns a static list once, and we need this to be dynamically
+        # queried every time we ask. This is because Vertex.sources and Edge.sources
+        # are just syntax sugar for functions that are being called.
+        return self.sources
+
+    @property
+    def subscribers(self):
+        return self.sinks
+
 
 class Topic(Edge):
     def __init__(self,rsg):
@@ -62,8 +76,16 @@ class Topic(Edge):
         self.name = None
         self.msgType = None
 
-        self.publishers = self.sources
-        self.subscribers = self.sinks
+    @property
+    def publishers(self):
+        # NOTE: See note on Node class about why this MUST be a property.
+        return self.sources
+
+    @property
+    def subscribers(self):
+        # NOTE: See note on Node class about why this MUST be a property.
+        return self.sinks
+
 
 class Publisher(Source):
     def __init__(self,rsg,node,topic):
@@ -71,15 +93,21 @@ class Publisher(Source):
         typecheck(node,Node,"node")
         typecheck(topic,Topic,"topic")
         super(Publisher,self).__init__(rsg,node,topic)
-
         # Dumb placement
         self.snap.order = max(filter(lambda x: isinstance(x,int), [pub.snap.order for pub in node.publishers] + [-1]))+1
 
         self.bandwidth = None
         self.msgType = None
 
-        self.topic = self.edge
-        self.node = self.vertex
+    @property
+    def topic(self):
+        # NOTE: See note on Node class about why this MUST be a property.
+        return self.edge
+
+    @property
+    def node(self):
+        # NOTE: See note on Node class about why this MUST be a property.
+        return self.vertex
 
 class Subscriber(Sink):
     def __init__(self,rsg,node,topic):
@@ -94,8 +122,16 @@ class Subscriber(Sink):
         self.bandwidth = None
         self.msgType = None
 
-        self.topic = self.edge
-        self.node = self.vertex
+    @property
+    def topic(self):
+        # NOTE: See note on Node class about why this MUST be a property.
+        return self.edge
+
+    @property
+    def node(self):
+        # NOTE: See note on Node class about why this MUST be a property.
+        return self.vertex
+
 
 
 if __name__ == "__main__":
