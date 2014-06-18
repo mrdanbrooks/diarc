@@ -17,6 +17,7 @@
             <publishes name="/tf" type="tf/tfMessage" bw="0" freq="0" />
             <publishes name="/odom" type="nav_msgs/Odometry" bw="0" freq="0"/>
             <subscribes name="/tf" type="tf/tfMessage" bw="0" freq="0" />
+            <subscribes name="/enc" type="std_msgs/Int16" bw="0" freq="0" />
         </topics>
     </node>
 
@@ -26,6 +27,7 @@
             <publishes name="/move_base/goal" type="move_base_msgs/MoveBaseGoal" bw="0" freq="0" />
             <subscribes name="/odom" type="nav_msgs/Odometry" bw="0" freq="0"/>
             <subscribes name="/tf" type="tf/tfMessage" bw="0" freq="0" />
+            <subscribes name="/move_base/goal" type="move_base_msgs/MoveBaseGoal" bw="0" freq="0" />
         </topics>
     </node>
 
