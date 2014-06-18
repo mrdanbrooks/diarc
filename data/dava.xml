@@ -1,10 +1,9 @@
 <ros version="ros:v2">
   <node name="Gscam" location="192.168.1.2" pid="123" >
     <topics>
-      <publishes name="/gscam/camera_info" type="sensor_msgs/CameraInfo" bw="0" freq="0"/>
-
-      <publishes name="/gscam/image_raw" type="sensor_msgs/Image" bw="0" freq="0"/>
       <publishes name="/rosout" type="rosgraph_msgs/Log" bw="0" freq="0" />
+      <publishes name="/gscam/camera_info" type="sensor_msgs/CameraInfo" bw="0" freq="0"/>
+      <publishes name="/gscam/image_raw" type="sensor_msgs/Image" bw="0" freq="0"/>
     </topics>
   </node>
 
