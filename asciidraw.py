@@ -16,6 +16,20 @@ class AsciiObject(object):
 
 
 
+class AsciiBand(AsciiObject):
+    def __init__(self,band):
+        self.band = typecheck(band,Band,"band")
+        self.band.visual = self
+        self.above = None
+        self.below = None
+
+    def layout(self):
+        pass
+
+    def draw(self,grid):
+        pass
+
+
 class AsciiBlock(AsciiObject):
     def __init__(self,block):
         self.block = typecheck(block,Block,"block")
@@ -103,6 +117,7 @@ class AsciiBlock(AsciiObject):
         grid[(self.botRow,self.rightCol)] = '+'
 
     
+
 class AsciiSnap(AsciiObject):
     def __init__(self,snap):
         self.snap = typecheck(snap,Snap,"snap")
@@ -113,6 +128,9 @@ class AsciiSnap(AsciiObject):
 
         # Layout properties
         self.col = None
+        self.centerRow = None
+        self.posBandRow = None
+        self.negBandRow = None
 
     def layout(self):
         # TODO: Make sure parent layout has values
@@ -132,41 +150,59 @@ class AsciiSnap(AsciiObject):
         # ordering of the order values and take into account missing values.
         self.col + 2 + 2*self.snap.order
 
-#     def draw(self,grid):
-#         # Draw a Sink Snap
-#         # ================
-#         if self.snap.isSink():
-#             if self.snap.posBand.edge.sinks
-# 
-# 
-#         # Draw a Source Snap
-#         # ==================
-#         elif self.snap.isSource():
-#             
-# 
-#         else:
-#             raise Exception("Snap is not source or sink")
+        # Get the center row
+        self.centerRow = self.snap.block.visual.centerRow
 
+        # Get the band rows (may require doing layout)
 
-
-class AsciiBand(AsciiObject):
-    def __init__(self,band):
-        self.band = typecheck(band,Band,"band")
-        self.band.visual = self
-        self.above = None
-        self.below = None
-
-    def layout(self):
-        pass
 
     def draw(self,grid):
-        pass
+        centerRow = self.centerRow
+        col = self.col
+        posBand = self.snap.posBand
+        negBand = self.snap.negBand
+        if self.snap.isSink():
+            if posBand:
+                row = self.
+                # Draw a Positive Sink Snap
+                grid[(centerRow-1,col)] = 'V-'
+                grid[(row,col-1)] = '.'
+                for i in range(centerRow-2-row):
+                    grid[(centerRow-2-i,col)] = '|'
+            if negBand:
+                # Draw a Negative Sink Snap
+                grid[(centerRow+1,col)] = 'A-'
+                grid[(row,col+1)] = "'"
+                for i in range(row-(centerRow+2)):
+                    grid[(centerRow+2+i,col)] = '|'
+        elif self.snap.isSource():
+            if posBand:
+                # Draw a Positive Source Snap
+                grid[(centerRow-1,col)] = 'A-'
+                grid[(row,col+1)] = '.'
+                for i in range(centerRow-2-row):
+                    grid[(centerRow-2-i,col)] = '|'
+            if negBand:
+                # Draw a Negative Source Snap
+                grid[(centerRow+1,col)] = 'V-'
+                grid[(row,col-1)] = "'"
+                for i in range(row-(centerRow+2)):
+                    grid[(centerRow+2+i,col)] = '|'
+        else:
+            raise Exception("Snap is not source or sink")
+
    
-class LeftIndexBlock(AsciiObject):
+
+
+class CornerStone(AsciiObject):
+    """ What everything tries to be relative to """
     def __init__(self,topology):
         self._topology = topology
         #Adjoining blocks
         self.rightBlock = None
+        # Adjoining bands
+        self.above = None
+        self.below = None
         # Positioning Parameters
         self.leftCol = None
         self.centerCol = None
@@ -195,13 +231,24 @@ class LeftIndexBlock(AsciiObject):
 def draw(topology):
     
     # Initialize Visual Elements
-    lastBlock = LeftIndexBlock(topology)
-    for k in topology.blocks:
-        vertexBlock = AsciiBlock(topology.blocks[k])
+    lastBlock = CornerStone(topology)
+    for index,block in topology.blocks.items():
+        vertexBlock = AsciiBlock(block])
         vertexBlock.leftBlock = lastBlock
         lastBlock.rightBlock = vertexBlock
         lastBlock = vertexBlock
-
+    
+    bands = topology.bands
+    altitudes = bands.keys()
+    posAlts = filter(lambda x: x>0,altitudes)
+    posAlts.sort(lambda x,y:x-y)# sort ascending
+    lastBand = None
+    for band in [bands[a] for a in posAlts]:
+        asciiBand = AsciiBand(band)
+        asciiBand.below = lastBand
+        lastBand.above = asciiBand
+        lastBand = asciiBand
+    
 
     # Perform Layouts
     blocks = topology.blocks
