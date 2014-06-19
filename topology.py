@@ -318,7 +318,6 @@ class Snap(object):
             return pBand
         else:
             return None
-#         return self._connection.edge._pBand
 
     @property
     def negBand(self):
@@ -336,7 +335,6 @@ class Snap(object):
             return nBand
         else:
             return None
-#         return self._connection.edge._nBand
 
     @property
     def block(self):
