@@ -23,20 +23,61 @@ class AsciiBand(AsciiObject):
         self.above = None
         self.below = None
 
+        # Visual parameters
         self._row = None
+        self._startCol = None
+        self._endCol = None
 
     @property
     def row(self):
         if self._row is None: self.layout()
         return self._row
 
+    @property
+    def startCol(self):
+        if self._startCol is None: self.layout()
+        return self._startCol
+
+    @property
+    def endCol(self):
+        if self._endCol is None: self.layout()
+        return self._endCol
+
+
     def layout(self):
         if self.above.row is None:
             self.above.layout()
         self._row = self.above.row + 1
+        print "laying out band",self.band.altitude
+
+        # Determine start and stop columns
+        srcSnaps = dict([(s.block.index,s) for s in self.band.emitters])
+        sinkSnaps = dict([(s.block.index,s) for s in self.band.collectors])
+
+        # Figure out the binding snaps
+        startSnap = None
+        endSnap = None
+        if self.band.altitude > 0:
+            startSnap = srcSnaps[min(srcSnaps.keys())]
+            endSnap = sinkSnaps[max(sinkSnaps.keys())]
+        else:
+            startSnap = sinkSnaps[min(sinkSnaps.keys())]
+            endSnap = srcSnaps[max(srcSnaps.keys())]
+
+
+        # Get the snap positions
+        if startSnap.visual.col is None:
+            startSnap.visual.layout()
+        if endSnap.visual.col is None:
+            endSnap.visual.layout()
+        self._startCol = startSnap.visual.col+2
+        self._endCol = endSnap.visual.col-2
+           
 
     def draw(self,grid):
         grid[(self.row,0)] = str(self.band.altitude)
+        grid[(self.row,self.startCol)] = '-'*((self.endCol-self.startCol)+1)
+
 
 
 class AsciiBlock(AsciiObject):
