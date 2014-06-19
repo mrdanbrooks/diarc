@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # Usage:
-# ./test.py topology_plot data/v5.xml
+# ./run.py topology_plot data/v5.xml
 
 import sys
 import inspect
@@ -20,7 +20,7 @@ def asciidraw(args):
     print ""
     asciidraw.draw(topology)
 
-def topology_plot(args):
+def asciiplot(args):
     """ draw an xml topology in ascii art """
     import parser
     import asciiplot
