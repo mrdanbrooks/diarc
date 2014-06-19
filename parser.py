@@ -17,7 +17,7 @@ def parseTree(tree):
     # Populate Edges
     edges = root.find("edges").findall("edge")
 
-    print "Num Edges Detected:",len(edges)
+#     print "Num Edges Detected:",len(edges)
 
     # Keep track of edges for reference later
     edgeList = dict()
@@ -37,7 +37,7 @@ def parseTree(tree):
    
     # Populate Vertices
     vertices = root.find("vertices").findall("vertex")
-    print "Num Vertices Detected: %d"%len(vertices)
+#     print "Num Vertices Detected: %d"%len(vertices)
     for vertex in vertices:
         index = int(vertex.attrib['index'].strip())
         v = Vertex(t)
