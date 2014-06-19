@@ -36,7 +36,6 @@
     </vertices>
     <edges>
         <edge id='0'>
-            <band altitude='1' rank='0' />
             <band altitude='-1' rank='0' />
         </edge>
     </edges>
