@@ -23,11 +23,20 @@ class AsciiBand(AsciiObject):
         self.above = None
         self.below = None
 
+        self._row = None
+
+    @property
+    def row(self):
+        if self._row is None: self.layout()
+        return self._row
+
     def layout(self):
-        pass
+        if self.above.row is None:
+            self.above.layout()
+        self._row = self.above.row + 1
 
     def draw(self,grid):
-        pass
+        grid[(self.row,0)] = str(self.band.altitude)
 
 
 class AsciiBlock(AsciiObject):
@@ -138,9 +147,9 @@ class AsciiSnap(AsciiObject):
         # Determine your col location
         # First, figure out what to offset against
         if self.snap.isSource():
-            self.col = self.snap.block.visual.leftCol 
-        elif self.snap.isSink():
             self.col = self.snap.block.visual.centerCol 
+        elif self.snap.isSink():
+            self.col = self.snap.block.visual.leftCol 
         else:
             raise Exception("Snap isnt Source or Sink")
 
@@ -148,7 +157,7 @@ class AsciiSnap(AsciiObject):
         # TODO: This assumes that there are no skipped order values, which 
         # would leave holes when drawing. The correct way would be to get relative 
         # ordering of the order values and take into account missing values.
-        self.col + 2 + 2*self.snap.order
+        self.col += 2 + 2*self.snap.order
 
         # Get the center row
         self.centerRow = self.snap.block.visual.centerRow
@@ -163,14 +172,15 @@ class AsciiSnap(AsciiObject):
         negBand = self.snap.negBand
         if self.snap.isSink():
             if posBand:
-                row = self.
                 # Draw a Positive Sink Snap
+                row = posBand.visual.row
                 grid[(centerRow-1,col)] = 'V-'
                 grid[(row,col-1)] = '.'
                 for i in range(centerRow-2-row):
                     grid[(centerRow-2-i,col)] = '|'
             if negBand:
                 # Draw a Negative Sink Snap
+                row = negBand.visual.row
                 grid[(centerRow+1,col)] = 'A-'
                 grid[(row,col+1)] = "'"
                 for i in range(row-(centerRow+2)):
@@ -178,12 +188,14 @@ class AsciiSnap(AsciiObject):
         elif self.snap.isSource():
             if posBand:
                 # Draw a Positive Source Snap
+                row = posBand.visual.row
                 grid[(centerRow-1,col)] = 'A-'
                 grid[(row,col+1)] = '.'
                 for i in range(centerRow-2-row):
                     grid[(centerRow-2-i,col)] = '|'
             if negBand:
                 # Draw a Negative Source Snap
+                row = negBand.visual.row
                 grid[(centerRow+1,col)] = 'V-'
                 grid[(row,col-1)] = "'"
                 for i in range(row-(centerRow+2)):
@@ -191,7 +203,19 @@ class AsciiSnap(AsciiObject):
         else:
             raise Exception("Snap is not source or sink")
 
-   
+class TopLine(AsciiObject):
+    def __init__(self,topology):
+        self._topology = topology
+        self.row = 0
+
+        #Adjoining bands
+        self.below = None
+
+    def layout(self):
+        self.row = 0
+
+    def draw(self):
+        pass
 
 
 class CornerStone(AsciiObject):
@@ -211,9 +235,21 @@ class CornerStone(AsciiObject):
         self.centerRow = None
         self.botRow = None
 
+    @property
+    def row(self):
+        """ return a calculated row since the spacing here is non-standard. Basically
+        we return the empty row below the band of Blocks. This is used for band layout """
+        if not self.botRow:
+            self.layout()
+        return self.botRow+1
+        
+
     def layout(self):
         # TODO: topRow should be replaced with finding height of adjacent bands bottom
-        self.topRow = len(filter(lambda x: x.altitude > 0, self._topology.bands.values())) + 1
+        if self.above.row is None:
+            self.above.layout()
+        self.topRow = self.above.row + 2
+#         self.topRow = len(filter(lambda x: x.altitude > 0, self._topology.bands.values())) + 1
         self.centerRow = self.topRow+1
         self.botRow = self.centerRow+1
         
@@ -231,35 +267,74 @@ class CornerStone(AsciiObject):
 def draw(topology):
     
     # Initialize Visual Elements
-    lastBlock = CornerStone(topology)
-    for index,block in topology.blocks.items():
-        vertexBlock = AsciiBlock(block])
-        vertexBlock.leftBlock = lastBlock
-        lastBlock.rightBlock = vertexBlock
-        lastBlock = vertexBlock
-    
+    cornerStone = CornerStone(topology)
+   
+    # Create posBands
     bands = topology.bands
     altitudes = bands.keys()
     posAlts = filter(lambda x: x>0,altitudes)
-    posAlts.sort(lambda x,y:x-y)# sort ascending
-    lastBand = None
+    posAlts.sort(lambda x,y:y-x)# sort ascending
+    lastBand = TopLine(topology)
     for band in [bands[a] for a in posAlts]:
         asciiBand = AsciiBand(band)
-        asciiBand.below = lastBand
-        lastBand.above = asciiBand
+        asciiBand.above = lastBand
+        lastBand.below = asciiBand
         lastBand = asciiBand
+
+    cornerStone.above = lastBand
+    lastBand.below = cornerStone
+
+    # Create negBands
+    negAlts = filter(lambda x: x<0,altitudes)
+    negAlts.sort(lambda x,y:y-x)# sort descending
+    lastBand = cornerStone
+    for band in [bands[a] for a in negAlts]:
+        asciiBand = AsciiBand(band)
+        asciiBand.above = lastBand
+        lastBand.below = asciiBand
+        lastBand = asciiBand
+
+    # Create Blocks and snaps
+    lastBlock = cornerStone
+    for index,block in topology.blocks.items():
+        vertexBlock = AsciiBlock(block)
+        vertexBlock.leftBlock = lastBlock
+        lastBlock.rightBlock = vertexBlock
+        lastBlock = vertexBlock
+
+        collector = block.collector
+        for snap in collector.values():
+            asciiSnap = AsciiSnap(snap)
+
+        emitter = block.emitter
+        for snap in emitter.values():
+            asciiSnap = AsciiSnap(snap)
     
 
     # Perform Layouts
     blocks = topology.blocks
     for k in blocks:
         blocks[k].visual.layout()
+    
+    for k in bands:
+        print "laying out ",bands[k].altitude
+        bands[k].visual.layout()
+
+    snaps = [c.snap for c in topology._sources+topology._sinks]
+    for snap in snaps:
+        snap.visual.layout()
 
     # Draw
     grid = CharGrid()
     blocks = topology.blocks
+    bands = topology.bands
     for k in blocks:
         blocks[k].visual.draw(grid)
+    for k in bands:
+        bands[k].visual.draw(grid)
+    for snap in snaps:
+        snap.visual.draw(grid)
+
         
     print grid
 
