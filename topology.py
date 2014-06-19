@@ -226,13 +226,37 @@ class Band(object):
 
     @property
     def emitters(self):
-        """ returns a list of snaps to sources """
-        return [s.snap for s in self._edge.sources]
+        """ returns a list of source snaps that reach this band """
+        # We compare the position of each source against the position of the furthest
+        # away sink (depending on pos/neg altitude).
+        sinkBlockIndices = [s.block.index for s in self.edge.sinks]
+        sinkBlockIndices = filter(lambda x: isinstance(x,int), sinkBlockIndices)
+        sources = list()
+        # Find Sources if this is a  Positive Bands
+        if self._altitude and self._altitude > 0:
+            maxSinkIndex = max(sinkBlockIndices)
+            sources = filter(lambda src: src.block.index < maxSinkIndex, self.edge.sources)
+        # Find Sources if this is a  Negative Bands
+        elif self._altitude and self._altitude < 0:
+            minSinkIndex = min(sinkBlockIndices)
+            sources = filter(lambda src: src.block.index >= minSinkIndex, self.edge.sources)
+        return [s.snap for s in sources]
 
     @property
     def collectors(self):
-        """ returns list of snaps to sinks """
-        return [s.snap for s in self._edge.sinks]
+        """ returns list of sink snaps that reach this band """
+        sourceBlockIndices = [s.block.index for s in self.edge.sources]
+        sourceBlockIndices = filter(lambda x: isinstance(x,int), sourceBlockIndices)
+        sinks = list()
+        # Find Sinks if this is a  Positive Bands
+        if self._altitude and self._altitude > 0:
+            minSourceIndex = min(sourceBlockIndices)
+            sinks = filter(lambda sink: sink.block.index > minSourceIndex, self.edge.sinks)
+        # Find Sinks if this is a  Negative Bands
+        elif self._altitude and self._altitude < 0:
+            maxSourceIndex = max(sourceBlockIndices)
+            sinks = filter(lambda sink: sink.block.index <= maxSourceIndex, self.edge.sinks)
+        return [s.snap for s in sinks]
 
     def __get_edge(self):
         return self._edge
