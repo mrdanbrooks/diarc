@@ -1,6 +1,12 @@
 import unittest
 
+
 class TestBandEmittersCollectors(unittest.TestCase):
+    """ A Band object's emitters and collectors should only consist of the 
+    subset of snaps which will actually be drawn touching the band. Some snaps
+    have links to a band they will not touch because the snap corresponds to a
+    connection with an edge the follows the alternative band. 
+    """
     def test_v5_a(self):
         import parser
         # TestFile v5_a.xml
