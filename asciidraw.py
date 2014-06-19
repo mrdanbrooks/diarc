@@ -183,8 +183,6 @@ class AsciiSnap(AsciiObject):
         self.negBandRow = None
 
     def layout(self):
-        # TODO: Make sure parent layout has values
-
         # Determine your col location
         # First, figure out what to offset against
         if self.snap.isSource():
@@ -204,6 +202,7 @@ class AsciiSnap(AsciiObject):
         self.centerRow = self.snap.block.visual.centerRow
 
         # Get the band rows (may require doing layout)
+        #TODO: row = posBand.visual.row etc should be calculated here instead of in draw
 
 
     def draw(self,grid):
@@ -371,6 +370,7 @@ def draw(topology):
     bands = topology.bands
     for k in blocks:
         blocks[k].visual.draw(grid)
+    #TODO: Bands and associated snaps should be drawn in rank order
     for k in bands:
         bands[k].visual.draw(grid)
     for snap in snaps:
