@@ -307,14 +307,36 @@ class Snap(object):
         be drawn. The check for if we should draw the connection happens at drawing
         time when we decide if we should be using positive or negative"""
         # use pBand instead of posBand to keep from instantiating the Band object
-        return self._connection.edge._pBand
+        pBand = self._connection.edge._pBand
+        if isinstance(pBand,types.NoneType): 
+            return None
+        # If you are a source snap and there is a sink snap to the right, you connect to this band
+        elif self.isSource() and max([sink.block.index for sink in pBand.collectors]) > self.block.index:
+            return pBand
+        # if you are a sink snap and there is a source snap to your left, connect to this band
+        elif self.isSink() and min([source.block.index for source in pBand.emitters]) < self.block.index:
+            return pBand
+        else:
+            return None
+#         return self._connection.edge._pBand
 
     @property
     def negBand(self):
         """ returns the negative band connection - if it exists. See posBand for
         more details."""
         # use nBand instead of negBand to keep from instantiating the Band object
-        return self._connection.edge._nBand
+        nBand = self._connection.edge._nBand
+        if isinstance(nBand,types.NoneType):
+            return None
+        # If you are a source snap and there is a sink snap to the left, connect to this band
+        elif self.isSource() and min([sink.block.index for sink in nBand.collectors]) <= self.block.index:
+            return nBand
+        # if you are a sink snap and there is a source snap to the right, connect to this band
+        elif self.isSink() and max([source.block.index for source in nBand.emitters]) >= self.block.index:
+            return nBand
+        else:
+            return None
+#         return self._connection.edge._nBand
 
     @property
     def block(self):
