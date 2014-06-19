@@ -12,6 +12,13 @@ def ros_plot(args):
     ros = ros_parser.parseFile(args[0])
     asciiplot.draw(ros)
 
+def asciidraw(args):
+    import parser
+    import asciidraw
+
+    topology = parser.parseFile(args[0])
+    print ""
+    asciidraw.draw(topology)
 
 def topology_plot(args):
     """ draw an xml topology in ascii art """
