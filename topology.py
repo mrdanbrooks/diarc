@@ -176,9 +176,9 @@ class Block(object):
         self._topology = vertex._topology
         # Visual Properties
         self._index = None
-        # Indexes of blocks to left and right
-        self._leftIndex = None
-        self._rightIndex = None
+        # blocks to left and right
+        self._leftBlock = None
+        self._rightBlock = None
         # Visual object
         self.visual = None
 
@@ -195,16 +195,14 @@ class Block(object):
         return dict(filter(lambda x: isinstance(x[0],int),[(s.snap.order,s.snap) for s in self._vertex.sinks]))
 
     @property
-    def leftIndex(self):
-        """ Returns the block index value of the block to the left, or None if 
-        no such block exists """
-        return self._leftIndex
+    def leftBlock(self):
+        """ Returns the block to the left """
+        return self._leftBlock
 
     @property
-    def rightIndex(self):
-        """ Returns the block index value of the block to the right, or None if 
-        no such block exists """
-        return self._rightIndex
+    def rightBlock(self):
+        """ returns the block to the right """
+        return self._rightBlock
 
 
     def _updateNeighbors(self):
@@ -214,39 +212,38 @@ class Block(object):
         # If there was an item to the left, it needs a new right hand value
         if len(blocks) > 0:
             # update old neighbors
-            if not isinstance(self._leftIndex,types.NoneType):
-                if self._leftIndex < max(blocks.keys()):
-                    blocks[self._leftIndex]._rightIndex = min([b for b in blocks.keys() if b > self._leftIndex])
+            if not isinstance(self._leftBlock,types.NoneType):
+                if self._leftBlock.index < max(blocks.keys()):
+                    self._leftBlock._rightBlock = blocks[min([b for b in blocks.keys() if b > self._leftBlock.index])]
                 else:
-                    blocks[self._leftIndex]._rightIndex = None
+                    self._leftBlock._rightBlock = None
 
-            if not isinstance(self._rightIndex,types.NoneType):
-                if self._rightIndex > min(blocks.keys()):
-                    blocks[self._rightIndex]._leftIndex = max([b for b in blocks.keys() if b < self._rightIndex])
+            if not isinstance(self._rightBlock,types.NoneType):
+                if self._rightBlock.index > min(blocks.keys()):
+                    self._rightBlock._leftBlock = blocks[max([b for b in blocks.keys() if b < self._rightBlock.index])]
+
                 else: 
-                    blocks[self._rightIndex]._leftIndex = None
+                    self._rightBlock._leftBlock = None
 
         # Set my current neighbors
         if isinstance(self._index,types.NoneType):
-            self._leftIndex = None
-            self._rightIndex = None
+            self._leftBlock = None
+            self._rightBlock = None
         else:
-            # Calculate new index values of left and right blocks
+            # Calculate new values of left and right blocks
             # update the right value of the left block and left value of the right block
             # If you are on an edge, leave the value at None
             if self._index > min(blocks.keys()):
-                self._leftIndex = max([b for b in blocks.keys() if b < self._index])
-                blocks[self._leftIndex]._rightIndex = self._index
+                self._leftBlock = blocks[max([b for b in blocks.keys() if b < self._index])]
+                self._leftBlock._rightBlock = self
             else:
-                # We got the our own value, set left to None
-                self._leftIndex = None
+                self._leftBlock = None
 
             if self._index < max(blocks.keys()):
-                self._rightIndex = min([b for b in blocks.keys() if b > self._index])
-                blocks[self._rightIndex]._leftIndex = self._index
+                self._rightBlock = blocks[min([b for b in blocks.keys() if b > self._index])]
+                self._rightBlock._leftBlock = self
             else:
-                self._rightIndex = None
-
+                self._rightBlock = None
 
 
     def __get_index(self):

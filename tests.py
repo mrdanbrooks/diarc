@@ -19,40 +19,40 @@ class Test_BlockNeighbors(unittest.TestCase):
         assert(v3.block.index is None)
 
         v1.block.index = 1
-        assert(v1.block.leftIndex is None)
-        assert(v1.block.rightIndex is None)
+        assert(v1.block.leftBlock is None)
+        assert(v1.block.rightBlock is None)
 
         v3.block.index = 3
-        assert(v1.block.leftIndex is None)
-        assert(v1.block.rightIndex == 3)
-        assert(v3.block.leftIndex == 1)
-        assert(v3.block.rightIndex is None)
+        assert(v1.block.leftBlock is None)
+        assert(v1.block.rightBlock == v3.block)
+        assert(v3.block.leftBlock == v1.block)
+        assert(v3.block.rightBlock is None)
 
         v2.block.index = 0
-        assert(v1.block.leftIndex == 0)
-        assert(v1.block.rightIndex == 3)
-        assert(v2.block.leftIndex is None)
-        assert(v2.block.rightIndex == 1)
-        assert(v3.block.leftIndex == 1)
-        assert(v3.block.rightIndex is None)
+        assert(v1.block.leftBlock == v2.block)
+        assert(v1.block.rightBlock == v3.block)
+        assert(v2.block.leftBlock is None)
+        assert(v2.block.rightBlock == v1.block)
+        assert(v3.block.leftBlock == v1.block)
+        assert(v3.block.rightBlock is None)
 
         v2.block.index = 2
-        assert(v1.block.leftIndex is None)
-        assert(v1.block.rightIndex == 2)
-        assert(v2.block.leftIndex == 1)
-        assert(v2.block.rightIndex == 3)
-        assert(v3.block.leftIndex == 2)
-        assert(v3.block.rightIndex is None)
+        assert(v1.block.leftBlock is None)
+        assert(v1.block.rightBlock == v2.block)
+        assert(v2.block.leftBlock == v1.block)
+        assert(v2.block.rightBlock == v3.block)
+        assert(v3.block.leftBlock == v2.block)
+        assert(v3.block.rightBlock is None)
 
         v0.block.index = 0
-        assert(v0.block.leftIndex is None)
-        assert(v0.block.rightIndex == 1)
-        assert(v1.block.leftIndex == 0)
-        assert(v1.block.rightIndex == 2)
-        assert(v2.block.leftIndex == 1)
-        assert(v2.block.rightIndex == 3)
-        assert(v3.block.leftIndex == 2)
-        assert(v3.block.rightIndex is None)
+        assert(v0.block.leftBlock is None)
+        assert(v0.block.rightBlock == v1.block)
+        assert(v1.block.leftBlock == v0.block)
+        assert(v1.block.rightBlock == v2.block)
+        assert(v2.block.leftBlock == v1.block)
+        assert(v2.block.rightBlock == v3.block)
+        assert(v3.block.leftBlock == v2.block)
+        assert(v3.block.rightBlock is None)
 
 
 
