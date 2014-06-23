@@ -196,15 +196,19 @@ class Block(object):
 
     @property
     def leftIndex(self):
+        """ Returns the block index value of the block to the left, or None if 
+        no such block exists """
         return self._leftIndex
 
     @property
     def rightIndex(self):
+        """ Returns the block index value of the block to the right, or None if 
+        no such block exists """
         return self._rightIndex
 
 
     def _updateNeighbors(self):
-        """ Update neighbors with new left and right values """
+        """ Update leftIndex and rightIndex, as well as previous neighbors """
         blocks = self._topology.blocks
         # First update your former neighbor's left and right values
         # If there was an item to the left, it needs a new right hand value
