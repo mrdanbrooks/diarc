@@ -176,6 +176,9 @@ class Block(object):
         self._topology = vertex._topology
         # Visual Properties
         self._index = None
+        # Indexes of blocks to left and right
+        self._leftIndex = None
+        self._rightIndex = None
         # Visual object
         self.visual = None
 
@@ -191,20 +194,73 @@ class Block(object):
     def collector(self):
         return dict(filter(lambda x: isinstance(x[0],int),[(s.snap.order,s.snap) for s in self._vertex.sinks]))
 
+    @property
+    def leftIndex(self):
+        return self._leftIndex
+
+    @property
+    def rightIndex(self):
+        return self._rightIndex
+
+
+    def _updateNeighbors(self):
+        """ Update neighbors with new left and right values """
+        blocks = self._topology.blocks
+        # First update your former neighbor's left and right values
+        # If there was an item to the left, it needs a new right hand value
+        if len(blocks) > 0:
+            # update old neighbors
+            if not isinstance(self._leftIndex,types.NoneType):
+                if self._leftIndex < max(blocks.keys()):
+                    blocks[self._leftIndex]._rightIndex = min([b for b in blocks.keys() if b > self._leftIndex])
+                else:
+                    blocks[self._leftIndex]._rightIndex = None
+
+            if not isinstance(self._rightIndex,types.NoneType):
+                if self._rightIndex > min(blocks.keys()):
+                    blocks[self._rightIndex]._leftIndex = max([b for b in blocks.keys() if b < self._rightIndex])
+                else: 
+                    blocks[self._rightIndex]._leftIndex = None
+
+        # Set my current neighbors
+        if isinstance(self._index,types.NoneType):
+            self._leftIndex = None
+            self._rightIndex = None
+        else:
+            # Calculate new index values of left and right blocks
+            # update the right value of the left block and left value of the right block
+            # If you are on an edge, leave the value at None
+            if self._index > min(blocks.keys()):
+                self._leftIndex = max([b for b in blocks.keys() if b < self._index])
+                blocks[self._leftIndex]._rightIndex = self._index
+            else:
+                # We got the our own value, set left to None
+                self._leftIndex = None
+
+            if self._index < max(blocks.keys()):
+                self._rightIndex = min([b for b in blocks.keys() if b > self._index])
+                blocks[self._rightIndex]._leftIndex = self._index
+            else:
+                self._rightIndex = None
+
+
+
     def __get_index(self):
         return self._index
     def __set_index(self,value):
         """ Check to see if a block with the same index already exists """
         if self._index == value:
             return
-        if value is None:
+        if isinstance(value,types.NoneType):
             self._index = value
+            self._updateNeighbors()
             return
         allVertices = self._topology._vertices
         allBlocks = [v.block for v in allVertices]
         if value in [b.index for b in allBlocks]:
             raise Exception("Block with index %r already exists!"%value)
         self._index = value
+        self._updateNeighbors()
 
     index = property(__get_index,__set_index)
 

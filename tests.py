@@ -3,6 +3,61 @@ import types
 
 
 
+
+class Test_BlockNeighbors(unittest.TestCase):
+    def test(self):
+        import topology
+        t = topology.Topology()
+        v0 = topology.Vertex(t)
+        v1 = topology.Vertex(t)
+        v2 = topology.Vertex(t)
+        v3 = topology.Vertex(t)
+
+        assert(v0.block.index is None)
+        assert(v1.block.index is None)
+        assert(v2.block.index is None)
+        assert(v3.block.index is None)
+
+        v1.block.index = 1
+        assert(v1.block.leftIndex is None)
+        assert(v1.block.rightIndex is None)
+
+        v3.block.index = 3
+        assert(v1.block.leftIndex is None)
+        assert(v1.block.rightIndex == 3)
+        assert(v3.block.leftIndex == 1)
+        assert(v3.block.rightIndex is None)
+
+        v2.block.index = 0
+        assert(v1.block.leftIndex == 0)
+        assert(v1.block.rightIndex == 3)
+        assert(v2.block.leftIndex is None)
+        assert(v2.block.rightIndex == 1)
+        assert(v3.block.leftIndex == 1)
+        assert(v3.block.rightIndex is None)
+
+        v2.block.index = 2
+        assert(v1.block.leftIndex is None)
+        assert(v1.block.rightIndex == 2)
+        assert(v2.block.leftIndex == 1)
+        assert(v2.block.rightIndex == 3)
+        assert(v3.block.leftIndex == 2)
+        assert(v3.block.rightIndex is None)
+
+        v0.block.index = 0
+        assert(v0.block.leftIndex is None)
+        assert(v0.block.rightIndex == 1)
+        assert(v1.block.leftIndex == 0)
+        assert(v1.block.rightIndex == 2)
+        assert(v2.block.leftIndex == 1)
+        assert(v2.block.rightIndex == 3)
+        assert(v3.block.leftIndex == 2)
+        assert(v3.block.rightIndex is None)
+
+
+
+
+
 class Test_v5_a(unittest.TestCase):
     def setUp(self):
         import parser
