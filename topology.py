@@ -407,6 +407,25 @@ class Snap(object):
     def isSink(self):
         return isinstance(self._connection,Sink)
 
+
+    @property
+    def leftSnap(self):
+        """ Returns the snap directly to the left of this snap within either an emitter or collector. Returns None if this is leftmost snap. """
+        snaps = self.block.emitter if self.isSource() else self.block.collector
+        if isinstance(self._order,int) and self._order > min(snaps.keys()):
+            return snaps[max([s for s in snaps.keys() if s < self._order])]
+        else:
+            return None
+
+    @property
+    def rightSnap(self):
+        """ Returns the snap directly to the right of this snap within either an emitter or collector. Returns None if this is rightmost snap. """
+        snaps = self.block.emitter if self.isSource() else self.block.collector
+        if isinstance(self._order,int) and self._order < max(snaps.keys()):
+            return snaps[min([s for s in snaps.keys() if s > self._order])]
+        else:
+            return None
+
     def __get_order(self):
         return self._order
     def __set_order(self,value):
