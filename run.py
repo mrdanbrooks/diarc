@@ -30,6 +30,18 @@ def asciiplot(args):
     print ""
     asciiplot.draw(topology)
 
+def qtplot(args):
+    import PyQt4.QtGui
+    import parser
+    import qtview
+    topology = parser.parseFile(args[0])
+    app = PyQt4.QtGui.QApplication(sys.argv)
+    graphView = qtview.GraphView()
+    graphView.autoLayout(topology)
+    graphView.activateWindow()
+    graphView.raise_()
+    sys.exit(app.exec_())
+
 
 if __name__=="__main__":
     available_tests = dict(inspect.getmembers(sys.modules[__name__],inspect.isfunction))
