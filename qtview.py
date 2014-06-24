@@ -17,7 +17,9 @@ class MyBlock(QGraphicsWidget):
         self.rightSpacer = MyBlockSpacer(self)
 
         l = self.parent.layout()
-        # Set up top and bottom margin
+
+        # We want to have a little space above and below the Emitter/Collector,
+        # Set up top and bottom margin to give that space. 
         self._topMargin = MyBlockHorizontalSpacer(self)
         self._botMargin = MyBlockHorizontalSpacer(self)
         l.addAnchor(self,Qt.AnchorTop, self._topMargin, Qt.AnchorTop)
@@ -27,8 +29,10 @@ class MyBlock(QGraphicsWidget):
         l.addAnchor(self,Qt.AnchorLeft, self._botMargin, Qt.AnchorLeft)
         l.addAnchor(self,Qt.AnchorRight, self._botMargin, Qt.AnchorRight)
 
+        # TODO: Set up left and right margins as well
 
-        # Set up Emitter and Collector Containers
+        # Set up Emitter and Collector Containers. They will sit inside the 
+        # block margins
         self.myEmitter = MyEmitter(self)
         self.myCollector = MyCollector(self)
         l.addAnchor(self._topMargin, Qt.AnchorBottom, self.myEmitter, Qt.AnchorTop)
@@ -117,7 +121,6 @@ class MyCollector(MyContainer):
 class MySnap(QGraphicsWidget):
     def __init__(self,parent,snap):
         super(MySnap,self).__init__(parent=parent)
-        print type(parent)
         self.parent = parent
         # The parent here should be a MyContainer
         self.setSizePolicy(QSizePolicy(QSizePolicy.Preferred,QSizePolicy.Preferred))
@@ -130,56 +133,34 @@ class MySnap(QGraphicsWidget):
         self.rightSpacer = MySnap.Spacer(self)
 
     def link(self):
+        """ Link this snap with objects surrounding it. """
         l = self.parent.layout()
 
         # Link with your own right spacer
         l.addAnchor(self, Qt.AnchorRight, self.rightSpacer, Qt.AnchorLeft)
         l.addAnchor(self, Qt.AnchorVerticalCenter, self.rightSpacer, Qt.AnchorVerticalCenter)
 
-        # Link with snap to right (when available)
-        if self.snap.rightSnap and self.snap.rightSnap.visual:
-            print "Connecting snap",self.snap.order,
-            print "to right snap ",self.snap.rightSnap.order,
-            print "in block",self.snap.block.index,
-            print "emitter" if self.snap.isSource() else "collector"
+        # Determine what container (emitter or collector) you are in, so that 
+        # you can link to its edges if necessary
+        container = self.snap.block.visual.myEmitter if self.snap.isSource() else self.snap.block.visual.myCollector
 
+        # Link with snap to right (if it exists) or to the left side of container
+        #TODO: replace AnchorVerticalCenter with AnchorTop and again with AnchorBottom
+        if self.snap.rightSnap and self.snap.rightSnap.visual:
             l.addAnchor(self.rightSpacer, Qt.AnchorRight, self.snap.rightSnap.visual, Qt.AnchorLeft)
             l.addAnchor(self.rightSpacer, Qt.AnchorVerticalCenter, self.snap.rightSnap.visual, Qt.AnchorVerticalCenter)
-            # This will bind to top and bottom
-#             l.addAnchor(self.rightSpacer, Qt.AnchorTop, self.snap.rightSnap.visual, Qt.AnchorTop)
-#             l.addAnchor(self.rightSpacer, Qt.AnchorBottom, self.snap.rightSnap.visual, Qt.AnchorBottom)
-
-        # If you are the rightmost snap, link with parent container
         else:
-            print "Adding rightmost snap order",self.snap.order,"to block",self.snap.block.index,"emitter" if self.snap.isSource() else "collector"
-            container = self.snap.block.visual.myEmitter if self.snap.isSource() else self.snap.block.visual.myCollector
-#             l.addAnchor(self.rightSpacer, Qt.AnchorTop, container, Qt.AnchorTop)
-            l.addAnchor(self.rightSpacer, Qt.AnchorVerticalCenter, container, Qt.AnchorVerticalCenter)
-#             l.addAnchor(self.rightSpacer, Qt.AnchorBottom, container, Qt.AnchorBottom)
             l.addAnchor(self.rightSpacer, Qt.AnchorRight, container, Qt.AnchorRight)
+            l.addAnchor(self.rightSpacer, Qt.AnchorVerticalCenter, container, Qt.AnchorVerticalCenter)
 
-        # Link with spacer of Snap to left (when available)
+        # Link with spacer of Snap to left (if it exists), or to the right side
+        # of your container
         if self.snap.leftSnap and self.snap.leftSnap.visual:
-            print "Connecting snap",self.snap.order,
-            print "to left snap",self.snap.leftSnap.order,
-            print "in block",self.snap.block.index,
-            print "emitter" if self.snap.isSource() else "collector"
             l.addAnchor(self, Qt.AnchorLeft, self.snap.leftSnap.visual.rightSpacer, Qt.AnchorRight)
             l.addAnchor(self, Qt.AnchorVerticalCenter, self.snap.leftSnap.visual.rightSpacer, Qt.AnchorVerticalCenter)
-            # This will bind to top and bottom
-#             l.addAnchor(self, Qt.AnchorTop, self.snap.leftSnap.visual.rightSpacer, Qt.AnchorTop)
-#             l.addAnchor(self, Qt.AnchorBottom, self.snap.leftSnap.visual.rightSpacer, Qt.AnchorBottom)
-
-        # If you are the leftmost snap, link with parent container
         else:
-            print "Adding leftmost snap order",self.snap.order,"to block",self.snap.block.index,"emitter" if self.snap.isSource() else "collector"
-            container = self.snap.block.visual.myEmitter if self.snap.isSource() else self.snap.block.visual.myCollector
-#             l.addAnchor(self, Qt.AnchorTop, container, Qt.AnchorTop)
-#             l.addAnchor(self, Qt.AnchorBottom, container, Qt.AnchorBottom)
             l.addAnchor(self, Qt.AnchorLeft, container, Qt.AnchorLeft)
             l.addAnchor(self, Qt.AnchorVerticalCenter, container, Qt.AnchorVerticalCenter)
-
-
 
     def paint(self,painter,option,widget):
         painter.setPen(Qt.red)
