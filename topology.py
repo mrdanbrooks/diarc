@@ -196,12 +196,12 @@ class Block(object):
 
     @property
     def leftBlock(self):
-        """ Returns the block to the left """
+        """ Returns the block to the left. This value is cached when the index is set.  """
         return self._leftBlock
 
     @property
     def rightBlock(self):
-        """ returns the block to the right """
+        """ returns the block to the right. This  value is cached when the index is set. """
         return self._rightBlock
 
 
