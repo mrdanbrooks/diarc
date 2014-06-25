@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # Usage:
 # ./run.py topology_plot data/v5.xml
 
