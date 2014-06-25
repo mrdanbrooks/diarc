@@ -13,7 +13,6 @@ class MyBlock(QGraphicsWidget):
         # Make Dragable
 #         self.setFlag(QGraphicsItem.ItemIsMovable, True)
 #         self.setCursor(Qt.SizeAllCursor)
-        self.setDragEnabled(True)
 
         self.parent = parent
         self.block = block
@@ -71,7 +70,20 @@ class MyBlock(QGraphicsWidget):
     def mousePressEvent(self,event):
         pos = event.pos()
         print "Block:",self.block.index
-        super(MyBlock,self).mousePressEvent(event)
+        self.setCursor(Qt.ClosedHandCursor)
+#         super(MyBlock,self).mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        drag = QDrag(event.widget())
+        mimeData = QMimeData()
+        mimeData.setText(str(self.block.index))
+        drag.setMimeData(mimeData)
+        drag.start()
+
+    def mouseReleaseEvent(self,event):
+        print "hi",
+        self.setCursor(Qt.ArrowCursor)
+#         super(MyBlock,self).mouseReleaseEvent(event)
 
 
     def paint(self,painter,option,widget):
@@ -96,11 +108,23 @@ class MyBlockSpacer(QGraphicsWidget):
         self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.Preferred))
         self.setPreferredWidth(15)
         self.setMinimumWidth(15)
+        self.dragOver = False
         self.setAcceptDrops(True)
-        self.setDropIndicatorShown(True)
 
-    def dropEvent(self, event):
-        print "Dropped!"
+    def dragEnterEvent(self,event):
+        if event.mimeData().hasText():
+            event.setAccepted(True)
+            self.dragOver = True
+        else:
+            event.setAccepted(False)
+
+    def dragLeaveEvent(self,event):
+        self.dragOver = False
+
+    def dropEvent(self,event):
+        self.dragOver = False
+        print "dropped!"
+        print "Move index",event.mimeData().text()
 
     def paint(self,painter,option,widget):
         painter.setPen(Qt.NoPen)
@@ -124,6 +148,12 @@ class MyContainer(QGraphicsWidget):
         pos = event.pos()
         print "Emitter" if isinstance(self,MyEmitter) else "Collector" if isinstance(self,MyCollector) else "Container"
         super(MyContainer,self).mousePressEvent(event)
+
+    def mouseReleaseEvent(self,event):
+        print "hi"
+        self.setCursor(Qt.ArrowCursor)
+        super(MyContainer,self).mouseReleaseEvent(event)
+
 
 
 
@@ -189,6 +219,12 @@ class MySnap(QGraphicsWidget):
         pos = event.pos()
         print "Snap:",self.snap.order
         super(MySnap,self).mousePressEvent(event)
+
+    def mouseReleaseEvent(self,event):
+        print "hi"
+        self.setCursor(Qt.ArrowCursor)
+        super(MySnap,self).mouseReleaseEvent(event)
+
 
 
     def paint(self,painter,option,widget):
@@ -290,5 +326,11 @@ class GraphView(QGraphicsView):
         pos = event.pos()
         print pos.x(),pos.y()
         super(GraphView,self).mousePressEvent(event)
+
+    def mouseReleaseEvent(self,event):
+        pos = event.pos()
+        print pos.x(),pos.y()
+        super(GraphView,self).mouseReleaseEvent(event)
+
 
 
