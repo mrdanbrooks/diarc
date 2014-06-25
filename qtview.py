@@ -10,15 +10,11 @@ class MyBlock(QGraphicsWidget):
     """ Visual Block, with right hand spacer """
     def __init__(self,parent,block):
         super(MyBlock,self).__init__(parent=parent)
-        # Make Dragable
-#         self.setFlag(QGraphicsItem.ItemIsMovable, True)
-#         self.setCursor(Qt.SizeAllCursor)
-
         self.parent = parent
         self.block = block
         self.block.visual = self
         self.setContentsMargins(5,5,5,5)
-        self.rightSpacer = MyBlockSpacer(self)
+        self.rightSpacer = MyBlock.Spacer(self)
 
         l = self.parent.layout()
 
@@ -66,12 +62,10 @@ class MyBlock(QGraphicsWidget):
             l.addAnchor(self,Qt.AnchorLeft,self.block.leftBlock.visual.rightSpacer,Qt.AnchorRight)
             l.addAnchor(self,Qt.AnchorVerticalCenter,self.block.leftBlock.visual.rightSpacer,Qt.AnchorVerticalCenter)
 
-
     def mousePressEvent(self,event):
         pos = event.pos()
         print "Block:",self.block.index
         self.setCursor(Qt.ClosedHandCursor)
-#         super(MyBlock,self).mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
         drag = QDrag(event.widget())
@@ -83,12 +77,46 @@ class MyBlock(QGraphicsWidget):
     def mouseReleaseEvent(self,event):
         print "hi",
         self.setCursor(Qt.ArrowCursor)
-#         super(MyBlock,self).mouseReleaseEvent(event)
-
 
     def paint(self,painter,option,widget):
         painter.setPen(Qt.red)
         painter.drawRect(self.rect())
+
+    class Spacer(QGraphicsWidget):
+        """ Spacer between blocks, associated with the block to its left """
+        def __init__(self,parent):
+            super(MyBlock.Spacer,self).__init__(parent=parent)
+            self.parent = parent
+            self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.Preferred))
+            self.setPreferredWidth(15)
+            self.setMinimumWidth(15)
+            self.dragOver = False
+            self.setAcceptDrops(True)
+
+        def dragEnterEvent(self,event):
+            if event.mimeData().hasText():
+                event.setAccepted(True)
+                self.dragOver = True
+            else:
+                event.setAccepted(False)
+
+        def dragLeaveEvent(self,event):
+            self.dragOver = False
+
+        def dropEvent(self,event):
+            self.dragOver = False
+            print "dropped!"
+            print "Move index",event.mimeData().text(),
+            print "between",self.parent.block.index,"and",self.parent.block.rightBlock.index
+
+        def paint(self,painter,option,widget):
+            painter.setPen(Qt.NoPen)
+            painter.drawRect(self.rect())
+
+
+
+
+
 
 class MyBlockHorizontalSpacer(QGraphicsWidget):
     def __init__(self,parent):
@@ -100,36 +128,6 @@ class MyBlockHorizontalSpacer(QGraphicsWidget):
 #     def paint(self,painter,option,widget):
 #         painter.setPen(Qt.blue)
 #         painter.drawRect(self.rect())
-
-class MyBlockSpacer(QGraphicsWidget):
-    """ Spacer between blocks, associated with the block to its left """
-    def __init__(self,parent):
-        super(MyBlockSpacer,self).__init__(parent=parent)
-        self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.Preferred))
-        self.setPreferredWidth(15)
-        self.setMinimumWidth(15)
-        self.dragOver = False
-        self.setAcceptDrops(True)
-
-    def dragEnterEvent(self,event):
-        if event.mimeData().hasText():
-            event.setAccepted(True)
-            self.dragOver = True
-        else:
-            event.setAccepted(False)
-
-    def dragLeaveEvent(self,event):
-        self.dragOver = False
-
-    def dropEvent(self,event):
-        self.dragOver = False
-        print "dropped!"
-        print "Move index",event.mimeData().text()
-
-    def paint(self,painter,option,widget):
-        painter.setPen(Qt.NoPen)
-        painter.drawRect(self.rect())
-
 
 class MyContainer(QGraphicsWidget):
     """ Emitter or Collector """
