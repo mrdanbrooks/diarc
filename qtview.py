@@ -10,8 +10,11 @@ class MyBlock(QGraphicsWidget):
     """ Visual Block, with right hand spacer """
     def __init__(self,parent,block):
         super(MyBlock,self).__init__(parent=parent)
+        # Make Dragable
 #         self.setFlag(QGraphicsItem.ItemIsMovable, True)
 #         self.setCursor(Qt.SizeAllCursor)
+        self.setDragEnabled(True)
+
         self.parent = parent
         self.block = block
         self.block.visual = self
@@ -93,6 +96,11 @@ class MyBlockSpacer(QGraphicsWidget):
         self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.Preferred))
         self.setPreferredWidth(15)
         self.setMinimumWidth(15)
+        self.setAcceptDrops(True)
+        self.setDropIndicatorShown(True)
+
+    def dropEvent(self, event):
+        print "Dropped!"
 
     def paint(self,painter,option,widget):
         painter.setPen(Qt.NoPen)
