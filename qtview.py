@@ -10,6 +10,8 @@ class MyBlock(QGraphicsWidget):
     """ Visual Block, with right hand spacer """
     def __init__(self,parent,block):
         super(MyBlock,self).__init__(parent=parent)
+#         self.setFlag(QGraphicsItem.ItemIsMovable, True)
+#         self.setCursor(Qt.SizeAllCursor)
         self.parent = parent
         self.block = block
         self.block.visual = self
@@ -63,6 +65,12 @@ class MyBlock(QGraphicsWidget):
             l.addAnchor(self,Qt.AnchorVerticalCenter,self.block.leftBlock.visual.rightSpacer,Qt.AnchorVerticalCenter)
 
 
+    def mousePressEvent(self,event):
+        pos = event.pos()
+        print "Block:",self.block.index
+        super(MyBlock,self).mousePressEvent(event)
+
+
     def paint(self,painter,option,widget):
         painter.setPen(Qt.red)
         painter.drawRect(self.rect())
@@ -103,6 +111,13 @@ class MyContainer(QGraphicsWidget):
     def paint(self,painter,option,widget):
         painter.setPen(Qt.green)
         painter.drawRect(self.rect())
+
+    def mousePressEvent(self,event):
+        pos = event.pos()
+        print "Emitter" if isinstance(self,MyEmitter) else "Collector" if isinstance(self,MyCollector) else "Container"
+        super(MyContainer,self).mousePressEvent(event)
+
+
 
 class MyEmitter(MyContainer):
      def paint(self,painter,option,widget):
@@ -161,6 +176,12 @@ class MySnap(QGraphicsWidget):
         else:
             l.addAnchor(self, Qt.AnchorLeft, container, Qt.AnchorLeft)
             l.addAnchor(self, Qt.AnchorVerticalCenter, container, Qt.AnchorVerticalCenter)
+
+    def mousePressEvent(self,event):
+        pos = event.pos()
+        print "Snap:",self.snap.order
+        super(MySnap,self).mousePressEvent(event)
+
 
     def paint(self,painter,option,widget):
         painter.setPen(Qt.red)
