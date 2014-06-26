@@ -113,6 +113,8 @@ class MyBlock(QGraphicsWidget):
             upperIdx = self.parent.block.rightBlock.index if self.parent.block.rightBlock else None
             blocks = self.parent.block._topology.blocks     # generated dictionary - note keys don't change
 
+            # This is just printing debug info. 
+            # TODO: Remove when no longer needed
             print "Move index",str(srcIdx),"between",str(lowerIdx),"and",str(upperIdx)
             b = self.parent.block._topology.blocks[0]
             while True:
@@ -134,9 +136,6 @@ class MyBlock(QGraphicsWidget):
             # indices left.
             elif lowerIdx > srcIdx:
                 print "Case 2"
-                srcBlock = blocks[srcIdx]
-                lastBlock = srcBlock
-                currBlock = lastBlock.rightBlock
 
                 # TODO: This algorithm is messy and hard to understand what is going on.
                 # This seems to mainly be due to the fact that I am trying to shift the
@@ -148,19 +147,33 @@ class MyBlock(QGraphicsWidget):
                 currIdx = srcIdx
                 while isinstance(currIdx,int) and currIdx < (upperIdx or lowerIdx+1): # In case upperIdx is None, use lower+1
                     # Get the next blocks index, or upperIdx if you are at right most block
+                    # This must be done before you change its index, because changing
+                    # the index also changes the neighbors
                     nextIdx = blocks[currIdx].rightBlock.index if blocks[currIdx].rightBlock else None
                     blocks[currIdx].index = lastIdx
                     print "%s -> %s"%(str(currIdx),str(lastIdx))
                     lastIdx = currIdx
                     currIdx = nextIdx
+                # Assertion check. TODO: Remove this after verifing this is true
                 if not lastIdx == lowerIdx:
                     print "last=%r lower=%r"%(lastIdx,lowerIdx)
                     exit(0)
                 blocks[srcIdx].index = lastIdx
                 self.parent.parent.link()    
 
-
-                
+            # If we are moving to the left, upperIdx is the target index.
+            # Clear the dragged blocks
+            elif upperIdx < srcIdx:
+                print "Case 3"
+                currIdx = srcIdx
+                while isinstance(currIdx,int) and currIdx > lowerIdx:
+                    nextIdx = blocks[currIdx].leftBlock.index if blocks[currIdx].leftBlock else None
+                    blocks[currIdx].index = lastIdx
+                    print "%s -> %s"%(str(currIdx),str(lastIdx))
+                    lastIdx = currIdx
+                    currIdx = nextIdx
+                blocks[srcIdx].index = lastIdx
+                self.parent.parent.link()
 
 
 
