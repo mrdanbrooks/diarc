@@ -16,12 +16,19 @@ class MyBlock(QGraphicsWidget):
         self.setContentsMargins(5,5,5,5)
         self.rightSpacer = MyBlock.Spacer(self)
 
-        l = self.parent.layout()
-
         # We want to have a little space above and below the Emitter/Collector,
         # Set up top and bottom margin to give that space. 
         self._topMargin = MyBlockHorizontalSpacer(self)
         self._botMargin = MyBlockHorizontalSpacer(self)
+        # TODO: Set up left and right margins as well
+
+        # Set up Emitter and Collector Containers. They will sit inside the 
+        # block margins
+        self.myEmitter = MyEmitter(self)
+        self.myCollector = MyCollector(self)
+
+    def link(self):
+        l = self.parent.layout()
         l.addAnchor(self,Qt.AnchorTop, self._topMargin, Qt.AnchorTop)
         l.addAnchor(self,Qt.AnchorLeft, self._topMargin, Qt.AnchorLeft)
         l.addAnchor(self,Qt.AnchorRight, self._topMargin, Qt.AnchorRight)
@@ -29,12 +36,6 @@ class MyBlock(QGraphicsWidget):
         l.addAnchor(self,Qt.AnchorLeft, self._botMargin, Qt.AnchorLeft)
         l.addAnchor(self,Qt.AnchorRight, self._botMargin, Qt.AnchorRight)
 
-        # TODO: Set up left and right margins as well
-
-        # Set up Emitter and Collector Containers. They will sit inside the 
-        # block margins
-        self.myEmitter = MyEmitter(self)
-        self.myCollector = MyCollector(self)
         l.addAnchor(self._topMargin, Qt.AnchorBottom, self.myEmitter, Qt.AnchorTop)
         l.addAnchor(self._botMargin, Qt.AnchorTop, self.myEmitter, Qt.AnchorBottom)
         l.addAnchor(self._topMargin, Qt.AnchorBottom, self.myCollector, Qt.AnchorTop)
@@ -42,9 +43,6 @@ class MyBlock(QGraphicsWidget):
         l.addAnchor(self, Qt.AnchorLeft, self.myCollector, Qt.AnchorLeft)
         l.addAnchor(self, Qt.AnchorRight, self.myEmitter, Qt.AnchorRight)
         l.addAnchor(self.myCollector, Qt.AnchorRight, self.myEmitter, Qt.AnchorLeft)
-
-    def link(self):
-        l = self.parent.layout()
 
         # Link with your own right spacer
         l.addAnchor(self,Qt.AnchorRight,self.rightSpacer,Qt.AnchorLeft)
@@ -108,12 +106,18 @@ class MyBlock(QGraphicsWidget):
             print "dropped!"
             print "Move index",event.mimeData().text(),
             print "between",self.parent.block.index,"and",self.parent.block.rightBlock.index
+            #TODO: alternatively, we could test to see if the index+1 was in topology.blocks.keys()?
+            print type(event.source())
+            if self.parent.block.index+1 < self.parent.block.rightBlock.index:
+                self.parent.block._topology.blocks[int(event.mimeData().text())].index = self.parent.block.index+1
+                print "allowed!"
+                self.parent.parent.link()    
+
+
 
         def paint(self,painter,option,widget):
             painter.setPen(Qt.NoPen)
             painter.drawRect(self.rect())
-
-
 
 
 
@@ -263,33 +267,34 @@ class DrawingBoard(QGraphicsWidget):
         super(DrawingBoard,self).__init__(parent=None)
         self.setAcceptedMouseButtons(Qt.LeftButton)
         self.resize(0,0)
+    def autoLayout(self,topology):
+
+        lastBlock = None
+        self.visualBlocks = list()
+        self.visualSnaps = list()
+        for index,block in topology.blocks.items():
+            print "adding block",index
+            vertexBlock = MyBlock(self,block)
+            self.visualBlocks.append(vertexBlock)
+            for snap in block.emitter.values()+block.collector.values():
+                mySnap = MySnap(self,snap)
+                self.visualSnaps.append(mySnap)
+        self.link()
+        
+    def link(self):
         l = QGraphicsAnchorLayout()
         l.setSpacing(0)
         self.setLayout(l)
 
-    def autoLayout(self,topology):
-
-        lastBlock = None
-        visualBlocks = list()
-        visualSnaps = list()
-        for index,block in topology.blocks.items():
-            print "adding block",index
-            vertexBlock = MyBlock(self,block)
-            visualBlocks.append(vertexBlock)
-            for snap in block.emitter.values()+block.collector.values():
-                mySnap = MySnap(self,snap)
-                visualSnaps.append(mySnap)
 
         # Anchor the first block against the layout
-        self.layout().addAnchor(visualBlocks[0],Qt.AnchorTop,self.layout(),Qt.AnchorTop)
-        self.layout().addAnchor(visualBlocks[0],Qt.AnchorLeft,self.layout(),Qt.AnchorLeft)
-
-        
+        self.layout().addAnchor(self.visualBlocks[0],Qt.AnchorTop,self.layout(),Qt.AnchorTop)
+        self.layout().addAnchor(self.visualBlocks[0],Qt.AnchorLeft,self.layout(),Qt.AnchorLeft)
 
         # Start anchoring the other blocks
-        for b in visualBlocks:
+        for b in self.visualBlocks:
             b.link()
-        for s in visualSnaps:
+        for s in self.visualSnaps:
             s.link()
         self.layout().invalidate()
         
