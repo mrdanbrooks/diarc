@@ -81,7 +81,9 @@ class MyBlock(QGraphicsWidget):
         painter.drawRect(self.rect())
 
     class Spacer(QGraphicsWidget):
-        """ Spacer between blocks, associated with the block to its left """
+        """ Spacer between blocks, associated with the block to its left.
+        Spacers are targets for dragging blocks to new positions.
+        """
         def __init__(self,parent):
             super(MyBlock.Spacer,self).__init__(parent=parent)
             self.parent = parent
@@ -103,45 +105,58 @@ class MyBlock(QGraphicsWidget):
 
         def dropEvent(self,event):
             self.dragOver = False
-            print "dropped!"
-            print "Move index",event.mimeData().text(),
-            print "between",self.parent.block.index,"and",self.parent.block.rightBlock.index
-            print type(event.source())
-
-            srcIdx = int(event.mimeData().text())           # Dragged Index
-            lowerIdx = self.parent.block.index              # Left Index
-            upperIdx = self.parent.block.rightBlock.index   # Right Index 
-            print "src=",srcIdx,"lower=",lowerIdx,"upper=",upperIdx
+            # Dragged Index
+            srcIdx = int(event.mimeData().text()) 
+            # Left Index
+            lowerIdx = self.parent.block.index 
+            # Right Index - or your index + 1 if you are the right most block already
+            upperIdx = self.parent.block.rightBlock.index if self.parent.block.rightBlock else None
             blocks = self.parent.block._topology.blocks     # generated dictionary - note keys don't change
+
+            print "Move index",str(srcIdx),"between",str(lowerIdx),"and",str(upperIdx)
+            b = self.parent.block._topology.blocks[0]
+            while True:
+                print b.index,
+                b = b.rightBlock
+                if b is None:
+                    break
+            print ""
+
             # IF there is an empty space, take it!
             #TODO: alternatively, test if index+1 in blocks.keys()?
             if lowerIdx+1 < upperIdx:
                 blocks[srcIdx].index = lowerIdx+1
-                print "allowed - case1!"
+                print "Case 1"
                 self.parent.parent.link()    
 
             # If we are moving to the right, lowerIdx is the target index.
             # Clear the dragged block's index, then shift all effected block
-            # indices down 
+            # indices left.
             elif lowerIdx > srcIdx:
-                block = self.parent.block._topology.blocks[0]
-                while True:
-                    print block.index,
-                    block = block.rightBlock
-                    if block is None:
-                        break
-                print ""
+                print "Case 2"
+                srcBlock = blocks[srcIdx]
+                lastBlock = srcBlock
+                currBlock = lastBlock.rightBlock
+
+                # TODO: This algorithm is messy and hard to understand what is going on.
+                # This seems to mainly be due to the fact that I am trying to shift the
+                # actual values, whatever they happen to be (not necessarily consecutive).
+                # Consecutive numbers would probably be a lot cleaner, but the topology 
+                # supports skipping values (for flexibility).
+                # Is there a better way?
                 lastIdx = None
                 currIdx = srcIdx
-                while currIdx < upperIdx:
-                    nextIdx = blocks[currIdx].rightBlock.index
+                while isinstance(currIdx,int) and currIdx < (upperIdx or lowerIdx+1): # In case upperIdx is None, use lower+1
+                    # Get the next blocks index, or upperIdx if you are at right most block
+                    nextIdx = blocks[currIdx].rightBlock.index if blocks[currIdx].rightBlock else None
                     blocks[currIdx].index = lastIdx
                     print "%s -> %s"%(str(currIdx),str(lastIdx))
                     lastIdx = currIdx
                     currIdx = nextIdx
-                assert(lastIdx == lowerIdx)
+                if not lastIdx == lowerIdx:
+                    print "last=%r lower=%r"%(lastIdx,lowerIdx)
+                    exit(0)
                 blocks[srcIdx].index = lastIdx
-                print "allowed - case2!"
                 self.parent.parent.link()    
 
 
@@ -301,8 +316,9 @@ class DrawingBoard(QGraphicsWidget):
         super(DrawingBoard,self).__init__(parent=None)
         self.setAcceptedMouseButtons(Qt.LeftButton)
         self.resize(0,0)
+        self.topology = None
     def autoLayout(self,topology):
-
+        self.topology = topology
         lastBlock = None
         self.visualBlocks = list()
         self.visualSnaps = list()
@@ -322,8 +338,12 @@ class DrawingBoard(QGraphicsWidget):
 
 
         # Anchor the first block against the layout
-        self.layout().addAnchor(self.visualBlocks[0],Qt.AnchorTop,self.layout(),Qt.AnchorTop)
-        self.layout().addAnchor(self.visualBlocks[0],Qt.AnchorLeft,self.layout(),Qt.AnchorLeft)
+        blocks = self.topology.blocks
+        first = min(blocks.keys())
+        self.layout().addAnchor(blocks[first].visual, Qt.AnchorTop, self.layout(), Qt.AnchorTop)
+        self.layout().addAnchor(blocks[first].visual, Qt.AnchorLeft, self.layout(), Qt.AnchorLeft)
+#         self.layout().addAnchor(self.visualBlocks[0],Qt.AnchorTop,self.layout(),Qt.AnchorTop)
+#         self.layout().addAnchor(self.visualBlocks[0],Qt.AnchorLeft,self.layout(),Qt.AnchorLeft)
 
         # Start anchoring the other blocks
         for b in self.visualBlocks:
