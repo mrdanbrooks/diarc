@@ -55,16 +55,29 @@ class Vertex(object):
         self._topology = typecheck(topology,Topology,"topology")
         self._topology._vertices.append(self)
         # Visual Component
-        self.block = Block(self)
+        self._block = Block(self)
         # Connections
 
     @property
     def sources(self):
+        """ Returns an unordered list of outgoing connections (Source objects)
+        from this vertex.
+        """
         return filter(lambda x: x.vertex == self, self._topology._sources)
 
     @property
     def sinks(self):
+        """ Returns an unordered list of outgoing connections (Sink objects)
+        from this vertex.
+        """
         return filter(lambda x: x.vertex == self, self._topology._sinks)
+
+    @property
+    def block(self):
+        """ Returns the relative graphical object (Block) for this Vertex. 
+        The block cannot be changed 
+        """
+        return self._block
 
 class Edge(object):
     """ A directional multiple-input multiGple-output edge in the graph. Inputs
