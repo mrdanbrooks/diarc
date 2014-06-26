@@ -106,12 +106,46 @@ class MyBlock(QGraphicsWidget):
             print "dropped!"
             print "Move index",event.mimeData().text(),
             print "between",self.parent.block.index,"and",self.parent.block.rightBlock.index
-            #TODO: alternatively, we could test to see if the index+1 was in topology.blocks.keys()?
             print type(event.source())
-            if self.parent.block.index+1 < self.parent.block.rightBlock.index:
-                self.parent.block._topology.blocks[int(event.mimeData().text())].index = self.parent.block.index+1
-                print "allowed!"
+
+            srcIdx = int(event.mimeData().text())           # Dragged Index
+            lowerIdx = self.parent.block.index              # Left Index
+            upperIdx = self.parent.block.rightBlock.index   # Right Index 
+            print "src=",srcIdx,"lower=",lowerIdx,"upper=",upperIdx
+            blocks = self.parent.block._topology.blocks     # generated dictionary - note keys don't change
+            # IF there is an empty space, take it!
+            #TODO: alternatively, test if index+1 in blocks.keys()?
+            if lowerIdx+1 < upperIdx:
+                blocks[srcIdx].index = lowerIdx+1
+                print "allowed - case1!"
                 self.parent.parent.link()    
+
+            # If we are moving to the right, lowerIdx is the target index.
+            # Clear the dragged block's index, then shift all effected block
+            # indices down 
+            elif lowerIdx > srcIdx:
+                block = self.parent.block._topology.blocks[0]
+                while True:
+                    print block.index,
+                    block = block.rightBlock
+                    if block is None:
+                        break
+                print ""
+                lastIdx = None
+                currIdx = srcIdx
+                while currIdx < upperIdx:
+                    nextIdx = blocks[currIdx].rightBlock.index
+                    blocks[currIdx].index = lastIdx
+                    print "%s -> %s"%(str(currIdx),str(lastIdx))
+                    lastIdx = currIdx
+                    currIdx = nextIdx
+                assert(lastIdx == lowerIdx)
+                blocks[srcIdx].index = lastIdx
+                print "allowed - case2!"
+                self.parent.parent.link()    
+
+
+                
 
 
 
