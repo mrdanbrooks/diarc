@@ -169,7 +169,9 @@ class Sink(Connection):
 class Block(object):
     """ Visual Representation of a Vertex 
     Visual Parameters
-    Index - 0-indexed order in which draw blocks
+    Index - Unique int value to determine order in which to draw blocks. 
+            Lower values to the left, higher to the right. Indices do not 
+            necessarily need to be consecutive.
     """
     def __init__(self,vertex):
         self._vertex = typecheck(vertex,Vertex,"vertex")
@@ -184,24 +186,39 @@ class Block(object):
 
     @property
     def vertex(self):
+        """ Returns the logical component (Vertex) for this relative object.
+        The vertex is bound to this block, and cannot be changed.
+        """
         return self._vertex
 
     @property
     def emitter(self):
+        """ Dictionary of Snaps that represent source connections for this block.
+        Only snaps which have been assigned an order value are represented, since
+        the order is used as the dictionary key.
+        """
         return dict(filter(lambda x: isinstance(x[0],int),[(s.snap.order,s.snap) for s in self._vertex.sources]))
 
     @property
     def collector(self):
+        """ Dictionary of Snaps that represent sink connections for this block.
+        Only snaps which have been assigned an order value are represented, since
+        the order is used as the dictionary key.
+        """
         return dict(filter(lambda x: isinstance(x[0],int),[(s.snap.order,s.snap) for s in self._vertex.sinks]))
 
     @property
     def leftBlock(self):
-        """ Returns the block to the left. This value is cached when the index is set.  """
+        """ Returns the block to the left, determined by block wich has the next
+        lowest index value. This value is cached when the index is set.  
+        """
         return self._leftBlock
 
     @property
     def rightBlock(self):
-        """ returns the block to the right. This  value is cached when the index is set. """
+        """ returns the block to the right, determined by block which has the next
+        highest index value. This  value is cached when the index is set. 
+        """
         return self._rightBlock
 
 
