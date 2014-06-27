@@ -223,28 +223,29 @@ class MyContainer(QGraphicsWidget):
         """ prints the container type as a string """
         return "emitter" if isinstance(self,MyEmitter) else "collector" if isinstance(self,MyCollector) else "unknown"
 
+
     def getLeftSpacer(self,snap):
-        # Look for an appropriate spacer
+        #TODO: This seems to work correctly, but the code is a mess :(
+
+        # Find all spacers that have this snap to the right
         ret = filter(lambda x: x.rightSnap == snap, self._spacers)
+
+        # Delete outdated spacers
         for spacer in ret:
-            if spacer.leftSnap == snap.leftSnap:
-                continue
-            else: 
+            if not spacer.leftSnap == snap.leftSnap:
                 # Delete this object, it doesn't match any more
                 print "Removing old spacer",spacer.leftSnap.order if spacer.leftSnap else None,spacer.rightSnap.order if spacer.rightSnap else None
                 self._spacers.remove(spacer)
-        ret = filter(lambda x: x.rightSnap == snap, self._spacers)
-        if len(ret) == 1:
-            if ret[0].leftSnap == snap.leftSnap:
-                print "#spacers=",len(self._spacers)
-                return ret[0]
-        elif len(ret) > 1:
-            for r in ret:
-                print r.leftSnap.order if r.leftSnap else None,
-            print ""
-            raise Exception("What? %d"%len(ret))
 
-        # Create a new spacer
+        ret = filter(lambda x: x.rightSnap == snap, self._spacers)
+        # Return existing spacer if only one exists. There should not be extras
+        if len(ret) == 1 and ret[0].leftSnap == snap.leftSnap:
+            print "#spacers=",len(self._spacers)
+            return ret[0]
+        elif len(ret) >= 1:
+            raise Exception("To many spacers found! %d"%len(ret))
+
+        # No existing spacers fit. Create a new spacer
         print "making new left spacer",snap.leftSnap.order if isinstance(snap.leftSnap,Snap) else None, snap.order if isinstance(snap,Snap) else None
         spacer = MyContainer.Spacer(self)
         spacer.rightSnap = snap
@@ -254,29 +255,27 @@ class MyContainer(QGraphicsWidget):
         return spacer
 
     def getRightSpacer(self,snap):
-        # Look for an appropriate spacer
+        #TODO: This seems to work correctly, but the code is a mess :(
+        
+        # Find all spacers that have this snap to the left
         ret = filter(lambda x: x.leftSnap == snap,self._spacers)
+
+        # Delete outdated spacers
         for spacer in ret:
-            if spacer.rightSnap == snap.rightSnap:
-                continue
-            else:
-                # Delete this object, it doesn't match any more
-                print "Removing old spacer",spacer.leftSnap.order if isinstance(spacer.leftSnap,Snap) else None,spacer.rightSnap.order if isinstance(spacer.rightSnap,Snap) else None
+            # Delete this object, it doesn't match any more
+            if not spacer.rightSnap == snap.rightSnap:
+                print "Removing old spacer",spacer.leftSnap.order if spacer.leftSnap else None,spacer.rightSnap.order if spacer.rightSnap else None
                 self._spacers.remove(spacer)
 
         ret = filter(lambda x: x.leftSnap == snap,self._spacers)
-        if len(ret) == 1:
-            if ret[0].rightSnap == snap.rightSnap:
-                # Return existing spacer
-                print "#spacers=",len(self._spacers)
-                return ret[0]
-        elif len(ret) > 1:
-            for r in ret:
-                print r.rightSnap.order if r.rightSnap else None,
-            print ""
-            raise Exception("what?%d"%len(ret))
+        # Return existing spacer if only one exists. There should not be extras
+        if len(ret) == 1 and ret[0].rightSnap == snap.rightSnap:
+            print "#spacers=",len(self._spacers)
+            return ret[0]
+        elif len(ret) >= 1:
+            raise Exception("To many spacers found! %d"%len(ret))
 
-        # Create a new spacer
+        # No existing spacers fit. Create a new spacer
         print "making new right spacer",snap.order if isinstance(snap,Snap) else None,snap.rightSnap.order if isinstance(snap.rightSnap,Snap) else None
         spacer = MyContainer.Spacer(self)
         spacer.leftSnap = snap
