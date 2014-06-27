@@ -2,6 +2,8 @@
 # from PySide.QtGui import *
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
+from util import *
+import types
 import sys
 
 
@@ -28,6 +30,7 @@ class MyBlock(QGraphicsWidget):
         self.myCollector = MyCollector(self)
 
     def link(self):
+        print "linking block",self.block.index
         l = self.parent.layout()
         l.addAnchor(self,Qt.AnchorTop, self._topMargin, Qt.AnchorTop)
         l.addAnchor(self,Qt.AnchorLeft, self._topMargin, Qt.AnchorLeft)
@@ -165,6 +168,7 @@ class MyBlock(QGraphicsWidget):
             # Clear the dragged blocks
             elif upperIdx < srcIdx:
                 print "Case 3"
+                lastIdx = None
                 currIdx = srcIdx
                 while isinstance(currIdx,int) and currIdx > lowerIdx:
                     nextIdx = blocks[currIdx].leftBlock.index if blocks[currIdx].leftBlock else None
@@ -191,18 +195,50 @@ class MyBlockHorizontalSpacer(QGraphicsWidget):
         self.setPreferredHeight(15)
         self.setMinimumHeight(15)
 
-#     def paint(self,painter,option,widget):
-#         painter.setPen(Qt.blue)
-#         painter.drawRect(self.rect())
 
 class MyContainer(QGraphicsWidget):
     """ Emitter or Collector """
     def __init__(self,parent):
         super(MyContainer,self).__init__(parent=parent)
-        self.parent = parent
+        self.parent = typecheck(parent,MyBlock,"parent")
         self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.Preferred))
 #         self.setPreferredWidth(15)
         self.setMinimumWidth(15)
+        #TODO: Somehow this list needs cleared and repopulated
+        self._spacers = list() 
+
+    def getLeftSpacer(self,snap):
+        # Look for an appropriate spacer
+        ret = filter(lambda x: x.rightSnap == snap, self._spacers)
+        if len(ret) == 1:
+            # Return existing spacer
+            return ret[0]
+        elif len(ret) < 1:
+            # Create a new spacer
+            spacer = MyContainer.Spacer(self)
+            spacer.rightSnap = snap
+            spacer.leftSnap = snap.leftSnap 
+            self._spacers.append(spacer)
+            return spacer
+        print ret
+        raise Exception("Found too many spacers!")
+
+    def getRightSpacer(self,snap):
+        # Look for an appropriate spacer
+        ret = filter(lambda x: x.leftSnap == snap,self._spacers)
+        if len(ret) == 1:
+            # Return existing spacer
+            return ret[0]
+        elif len(ret) < 1:
+            # Create a new spacer
+            spacer = MyContainer.Spacer(self)
+            spacer.leftSnap = snap
+            spacer.rightSnap = snap.rightSnap
+            self._spacers.append(spacer)
+            return spacer
+        print ret
+        raise Exception("Found too many spacers!")
+
 
     def paint(self,painter,option,widget):
         painter.setPen(Qt.green)
@@ -219,6 +255,52 @@ class MyContainer(QGraphicsWidget):
         super(MyContainer,self).mouseReleaseEvent(event)
 
 
+    class Spacer(QGraphicsWidget):
+        """ Snap Spacer """
+        def __init__(self,parent):
+            self.parent = typecheck(parent,MyContainer,"parent")
+            super(MyContainer.Spacer,self).__init__(parent=parent)
+            self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.Preferred))
+            self.setPreferredWidth(15)
+            self.setMinimumWidth(15)
+            self.leftSnap = None
+            self.rightSnap = None
+
+        def link(self):
+            l = self.parent.parent.parent.layout()
+
+            # If you have a snap to your left, connect
+            target = None
+            if self.leftSnap and self.leftSnap.visual:
+                l.addAnchor(self, Qt.AnchorLeft, self.leftSnap.visual, Qt.AnchorRight)
+                l.addAnchor(self, Qt.AnchorVerticalCenter, self.leftSnap.visual, Qt.AnchorVerticalCenter)
+#                 l.addAnchor(self, Qt.AnchorTop, self.leftSnap.visual, Qt.AnchorTop)
+#                 l.addAnchor(self, Qt.AnchorBottom, self.leftSnap.visual, Qt.AnchorBottom)
+
+            # Otherwise connect to left container edge
+            else:
+                l.addAnchor(self, Qt.AnchorLeft, self.parent, Qt.AnchorLeft)
+                l.addAnchor(self, Qt.AnchorVerticalCenter, self.parent, Qt.AnchorVerticalCenter)
+#                 l.addAnchor(self, Qt.AnchorTop, self.parent, Qt.AnchorTop)
+#                 l.addAnchor(self, Qt.AnchorBottom, self.parent, Qt.AnchorBottom)
+
+            # if you have a snap to your right, connect
+            if self.rightSnap and self.rightSnap.visual:
+                l.addAnchor(self, Qt.AnchorRight, self.rightSnap.visual, Qt.AnchorLeft)
+                l.addAnchor(self, Qt.AnchorVerticalCenter, self.rightSnap.visual, Qt.AnchorVerticalCenter)
+#                 l.addAnchor(self, Qt.AnchorTop, self.rightSnap.visual, Qt.AnchorTop)
+#                 l.addAnchor(self, Qt.AnchorBottom, self.rightSnap.visual, Qt.AnchorBottom)
+
+            # Otherwise connect to the right container edge
+            else:
+                l.addAnchor(self, Qt.AnchorRight, self.parent, Qt.AnchorRight)
+                l.addAnchor(self, Qt.AnchorVerticalCenter, self.parent, Qt.AnchorVerticalCenter)
+#                 l.addAnchor(self, Qt.AnchorTop, self.parent, Qt.AnchorTop)
+#                 l.addAnchor(self, Qt.AnchorBottom, self.parent, Qt.AnchorBottom)
+
+        def paint(self,painter,option,widget):
+            painter.setPen(Qt.NoPen)
+            painter.drawRect(self.rect())
 
 
 class MyEmitter(MyContainer):
@@ -247,38 +329,23 @@ class MySnap(QGraphicsWidget):
         self.snap = snap
         self.snap.visual = self
 
-        self.rightSpacer = MySnap.Spacer(self)
-
     def link(self):
         """ Link this snap with objects surrounding it. """
         l = self.parent.layout()
-
-        # Link with your own right spacer
-        l.addAnchor(self, Qt.AnchorRight, self.rightSpacer, Qt.AnchorLeft)
-        l.addAnchor(self, Qt.AnchorVerticalCenter, self.rightSpacer, Qt.AnchorVerticalCenter)
+        print "Linking Snap",self.snap.order
 
         # Determine what container (emitter or collector) you are in, so that 
         # you can link to its edges if necessary
         container = self.snap.block.visual.myEmitter if self.snap.isSource() else self.snap.block.visual.myCollector
+        leftSpacer = container.getLeftSpacer(self.snap)
+        rightSpacer = container.getRightSpacer(self.snap)
 
-        # Link with snap to right (if it exists) or to the left side of container
-        #TODO: replace AnchorVerticalCenter with AnchorTop and again with AnchorBottom
-        if self.snap.rightSnap and self.snap.rightSnap.visual:
-            l.addAnchor(self.rightSpacer, Qt.AnchorRight, self.snap.rightSnap.visual, Qt.AnchorLeft)
-            l.addAnchor(self.rightSpacer, Qt.AnchorVerticalCenter, self.snap.rightSnap.visual, Qt.AnchorVerticalCenter)
-        else:
-            l.addAnchor(self.rightSpacer, Qt.AnchorRight, container, Qt.AnchorRight)
-            l.addAnchor(self.rightSpacer, Qt.AnchorVerticalCenter, container, Qt.AnchorVerticalCenter)
 
-        # Link with spacer of Snap to left (if it exists), or to the right side
-        # of your container
-        if self.snap.leftSnap and self.snap.leftSnap.visual:
-            l.addAnchor(self, Qt.AnchorLeft, self.snap.leftSnap.visual.rightSpacer, Qt.AnchorRight)
-            l.addAnchor(self, Qt.AnchorVerticalCenter, self.snap.leftSnap.visual.rightSpacer, Qt.AnchorVerticalCenter)
-        else:
-            l.addAnchor(self, Qt.AnchorLeft, container, Qt.AnchorLeft)
-            l.addAnchor(self, Qt.AnchorVerticalCenter, container, Qt.AnchorVerticalCenter)
-
+        # Have left spacer link
+        leftSpacer.link()
+        # Have right spacer link
+        rightSpacer.link()
+ 
     def mousePressEvent(self,event):
         pos = event.pos()
         print "Snap:",self.snap.order
@@ -289,24 +356,9 @@ class MySnap(QGraphicsWidget):
         self.setCursor(Qt.ArrowCursor)
         super(MySnap,self).mouseReleaseEvent(event)
 
-
-
     def paint(self,painter,option,widget):
         painter.setPen(Qt.red)
         painter.drawRect(self.rect())
-
-
-    class Spacer(QGraphicsWidget):
-        """ Snap Spacer """
-        def __init__(self,parent):
-            super(MySnap.Spacer,self).__init__(parent=parent)
-            self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.Preferred))
-            self.setPreferredWidth(15)
-            self.setMinimumWidth(15)
-
-        def paint(self,painter,option,widget):
-            painter.setPen(Qt.NoPen)
-            painter.drawRect(self.rect())
 
 
 
@@ -330,21 +382,25 @@ class DrawingBoard(QGraphicsWidget):
         self.setAcceptedMouseButtons(Qt.LeftButton)
         self.resize(0,0)
         self.topology = None
-    def autoLayout(self,topology):
-        self.topology = topology
-        lastBlock = None
         self.visualBlocks = list()
         self.visualSnaps = list()
+
+    def autoLayout(self,topology):
+        """ Populates the visualBlocks and visualSnaps lists """
+        self.topology = topology
+        lastBlock = None
         for index,block in topology.blocks.items():
             print "adding block",index
             vertexBlock = MyBlock(self,block)
             self.visualBlocks.append(vertexBlock)
             for snap in block.emitter.values()+block.collector.values():
+                print "adding snap",snap.order
                 mySnap = MySnap(self,snap)
                 self.visualSnaps.append(mySnap)
         self.link()
         
     def link(self):
+        """ Links up the anchored layouts """
         l = QGraphicsAnchorLayout()
         l.setSpacing(0)
         self.setLayout(l)
@@ -359,10 +415,13 @@ class DrawingBoard(QGraphicsWidget):
 #         self.layout().addAnchor(self.visualBlocks[0],Qt.AnchorLeft,self.layout(),Qt.AnchorLeft)
 
         # Start anchoring the other blocks
+        print "Linking blocks"
         for b in self.visualBlocks:
             b.link()
+        print "Linking snaps"
         for s in self.visualSnaps:
             s.link()
+
         self.layout().invalidate()
         
         
