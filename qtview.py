@@ -360,12 +360,20 @@ class MySnap(QGraphicsWidget):
     def mousePressEvent(self,event):
         pos = event.pos()
         print "Snap:",self.snap.order
-        super(MySnap,self).mousePressEvent(event)
+#         super(MySnap,self).mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        drag = QDrag(event.widget())
+        mimeData = QMimeData()
+        mimeData.setText(str(self.snap.order))
+        drag.setMimeData(mimeData)
+        drag.start()
+
 
     def mouseReleaseEvent(self,event):
         print "hi"
         self.setCursor(Qt.ArrowCursor)
-        super(MySnap,self).mouseReleaseEvent(event)
+#         super(MySnap,self).mouseReleaseEvent(event)
 
     def paint(self,painter,option,widget):
         painter.setPen(Qt.red)
