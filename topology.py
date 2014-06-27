@@ -428,6 +428,10 @@ class Snap(object):
         return self._connection.vertex.block
 
     @property
+    def connection(self):
+        return self._connection
+
+    @property
     def bands(self):
         return filter(lambda x: isinstance(x,Band), [self.posBand,self.negBand])
 
