@@ -204,40 +204,51 @@ class MyContainer(QGraphicsWidget):
         self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.Preferred))
 #         self.setPreferredWidth(15)
         self.setMinimumWidth(15)
-        #TODO: Somehow this list needs cleared and repopulated
+
+        # This is a list of spacers in this container
         self._spacers = list() 
 
     def getLeftSpacer(self,snap):
         # Look for an appropriate spacer
         ret = filter(lambda x: x.rightSnap == snap, self._spacers)
         if len(ret) == 1:
-            # Return existing spacer
-            return ret[0]
-        elif len(ret) < 1:
-            # Create a new spacer
-            spacer = MyContainer.Spacer(self)
-            spacer.rightSnap = snap
-            spacer.leftSnap = snap.leftSnap 
-            self._spacers.append(spacer)
-            return spacer
-        print ret
-        raise Exception("Found too many spacers!")
+            if ret[0].leftSnap == snap.leftSnap:
+                # Return existing spacer
+                return ret[0]
+            else: 
+                # Delete this object, it doesn't match any more
+                self._spacers.remove(ret[0])
+        elif len(ret) > 1:
+            raise Exception("What? %d"%len(ret))
+
+        # Create a new spacer
+        print "making new left spacer"
+        spacer = MyContainer.Spacer(self)
+        spacer.rightSnap = snap
+        spacer.leftSnap = snap.leftSnap 
+        self._spacers.append(spacer)
+        return spacer
 
     def getRightSpacer(self,snap):
         # Look for an appropriate spacer
         ret = filter(lambda x: x.leftSnap == snap,self._spacers)
         if len(ret) == 1:
-            # Return existing spacer
-            return ret[0]
-        elif len(ret) < 1:
-            # Create a new spacer
-            spacer = MyContainer.Spacer(self)
-            spacer.leftSnap = snap
-            spacer.rightSnap = snap.rightSnap
-            self._spacers.append(spacer)
-            return spacer
-        print ret
-        raise Exception("Found too many spacers!")
+            if ret[0].rightSnap == snap.rightSnap:
+                # Return existing spacer
+                return ret[0]
+            else:
+                # Delete this object, it doesn't match any more
+                self._spacers.remove(ret[0])
+        elif len(ret) > 1:
+            raise Exception("what?%d"%len(ret))
+
+        # Create a new spacer
+        print "making new right spacer"
+        spacer = MyContainer.Spacer(self)
+        spacer.leftSnap = snap
+        spacer.rightSnap = snap.rightSnap
+        self._spacers.append(spacer)
+        return spacer
 
 
     def paint(self,painter,option,widget):
