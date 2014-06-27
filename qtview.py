@@ -4,6 +4,7 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from util import *
 import types
+import json
 import sys
 
 
@@ -71,7 +72,7 @@ class MyBlock(QGraphicsWidget):
     def mouseMoveEvent(self, event):
         drag = QDrag(event.widget())
         mimeData = QMimeData()
-        mimeData.setText(str(self.block.index))
+        mimeData.setText(json.dumps({'block':self.block.index}))
         drag.setMimeData(mimeData)
         drag.start()
 
@@ -97,7 +98,13 @@ class MyBlock(QGraphicsWidget):
             self.setAcceptDrops(True)
 
         def dragEnterEvent(self,event):
-            if event.mimeData().hasText():
+            if not event.mimeData().hasText():
+                event.setAccepted(False)
+                return
+            
+            data = json.loads(str(event.mimeData().text()))
+            print data
+            if 'block' in data:
                 event.setAccepted(True)
                 self.dragOver = True
             else:
@@ -109,7 +116,10 @@ class MyBlock(QGraphicsWidget):
         def dropEvent(self,event):
             self.dragOver = False
             # Dragged Index
-            srcIdx = int(event.mimeData().text()) 
+            data = json.loads(str(event.mimeData().text()))
+            if not 'block' in data:
+                raise Exception("Wrong drag data type!")
+            srcIdx = data['block']
             # Left Index
             lowerIdx = self.parent.block.index 
             # Right Index - or your index + 1 if you are the right most block already
@@ -365,7 +375,7 @@ class MySnap(QGraphicsWidget):
     def mouseMoveEvent(self, event):
         drag = QDrag(event.widget())
         mimeData = QMimeData()
-        mimeData.setText(str(self.snap.order))
+        mimeData.setText(json.dumps({'block': self.snap.block.index,'container': "emitter" if self.snap.isSource() else "collector",'snap':self.snap.order}))
         drag.setMimeData(mimeData)
         drag.start()
 
