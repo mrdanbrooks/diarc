@@ -3,6 +3,7 @@
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from util import *
+from topology import *
 import types
 import json
 import sys
@@ -218,46 +219,70 @@ class MyContainer(QGraphicsWidget):
         # This is a list of spacers in this container
         self._spacers = list() 
 
+    def strType(self):
+        """ prints the container type as a string """
+        return "emitter" if isinstance(self,MyEmitter) else "collector" if isinstance(self,MyCollector) else "unknown"
+
     def getLeftSpacer(self,snap):
         # Look for an appropriate spacer
         ret = filter(lambda x: x.rightSnap == snap, self._spacers)
-        if len(ret) == 1:
-            if ret[0].leftSnap == snap.leftSnap:
-                # Return existing spacer
-                return ret[0]
+        for spacer in ret:
+            if spacer.leftSnap == snap.leftSnap:
+                continue
             else: 
                 # Delete this object, it doesn't match any more
-                self._spacers.remove(ret[0])
+                print "Removing old spacer",spacer.leftSnap.order if spacer.leftSnap else None,spacer.rightSnap.order if spacer.rightSnap else None
+                self._spacers.remove(spacer)
+        ret = filter(lambda x: x.rightSnap == snap, self._spacers)
+        if len(ret) == 1:
+            if ret[0].leftSnap == snap.leftSnap:
+                print "#spacers=",len(self._spacers)
+                return ret[0]
         elif len(ret) > 1:
+            for r in ret:
+                print r.leftSnap.order if r.leftSnap else None,
+            print ""
             raise Exception("What? %d"%len(ret))
 
         # Create a new spacer
-        print "making new left spacer"
+        print "making new left spacer",snap.leftSnap.order if isinstance(snap.leftSnap,Snap) else None, snap.order if isinstance(snap,Snap) else None
         spacer = MyContainer.Spacer(self)
         spacer.rightSnap = snap
         spacer.leftSnap = snap.leftSnap 
         self._spacers.append(spacer)
+        print "#spacers=",len(self._spacers)
         return spacer
 
     def getRightSpacer(self,snap):
         # Look for an appropriate spacer
         ret = filter(lambda x: x.leftSnap == snap,self._spacers)
+        for spacer in ret:
+            if spacer.rightSnap == snap.rightSnap:
+                continue
+            else:
+                # Delete this object, it doesn't match any more
+                print "Removing old spacer",spacer.leftSnap.order if isinstance(spacer.leftSnap,Snap) else None,spacer.rightSnap.order if isinstance(spacer.rightSnap,Snap) else None
+                self._spacers.remove(spacer)
+
+        ret = filter(lambda x: x.leftSnap == snap,self._spacers)
         if len(ret) == 1:
             if ret[0].rightSnap == snap.rightSnap:
                 # Return existing spacer
+                print "#spacers=",len(self._spacers)
                 return ret[0]
-            else:
-                # Delete this object, it doesn't match any more
-                self._spacers.remove(ret[0])
         elif len(ret) > 1:
+            for r in ret:
+                print r.rightSnap.order if r.rightSnap else None,
+            print ""
             raise Exception("what?%d"%len(ret))
 
         # Create a new spacer
-        print "making new right spacer"
+        print "making new right spacer",snap.order if isinstance(snap,Snap) else None,snap.rightSnap.order if isinstance(snap.rightSnap,Snap) else None
         spacer = MyContainer.Spacer(self)
         spacer.leftSnap = snap
         spacer.rightSnap = snap.rightSnap
         self._spacers.append(spacer)
+        print "#spacers=",len(self._spacers)
         return spacer
 
 
@@ -284,8 +309,10 @@ class MyContainer(QGraphicsWidget):
             self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.Preferred))
             self.setPreferredWidth(15)
             self.setMinimumWidth(15)
+            self.setAcceptDrops(True)
             self.leftSnap = None
             self.rightSnap = None
+
 
         def link(self):
             l = self.parent.parent.parent.layout()
@@ -319,18 +346,75 @@ class MyContainer(QGraphicsWidget):
 #                 l.addAnchor(self, Qt.AnchorTop, self.parent, Qt.AnchorTop)
 #                 l.addAnchor(self, Qt.AnchorBottom, self.parent, Qt.AnchorBottom)
 
+
+        def dragEnterEvent(self,event):
+            """ Decides whether or not the information being dragged can be placed here"""
+            if not event.mimeData().hasText():
+                event.setAccepted(False)
+                return
+
+            data = json.loads(str(event.mimeData().text()))
+            if not set(['block','container','snap']).issubset(set(data.keys())):
+                event.setAccepted(False)
+                return
+
+            if not data['block'] == self.parent.parent.block.index:
+                event.setAccepted(False)
+                return
+
+            if not self.parent.strType() == data['container']:
+                event.setAccepted(False)
+                return
+
+            event.setAccepted(True)
+
+        def dropEvent(self,event):
+            """ Relocates a MySnap to this position """
+            data = json.loads(str(event.mimeData().text()))
+            assert(data['block'] == self.parent.parent.block.index)
+            assert(data['container'] == self.parent.strType())
+
+            srcIdx = data['snap']
+            lowerIdx = self.leftSnap.order if self.leftSnap else None
+            upperIdx = self.rightSnap.order if self.rightSnap else None
+            snaps = self.parent.parent.block.emitter if isinstance(self.parent,MyEmitter) else self.parent.parent.block.collector
+            print snaps.keys()
+            print "move snap",srcIdx,"between",lowerIdx,"and",upperIdx
+
+            # If we are moving to the right, lowerIdx is the target index.
+            # Clear the dragged snaps's index, then shift all effected snap
+            # indices left.
+            if lowerIdx > srcIdx:
+                lastIdx = None
+                currIdx = srcIdx
+                while isinstance(currIdx,int) and currIdx < (upperIdx or lowerIdx+1):
+                    nextIdx = snaps[currIdx].rightSnap.order if snaps[currIdx].rightSnap else None
+                    snaps[currIdx].order = lastIdx
+                    print "%s -> %s"%(str(currIdx),str(lastIdx))
+                    lastIdx = currIdx
+                    currIdx = nextIdx
+                # Assertion check. TODO: Remove
+                if not lastIdx == lowerIdx:
+                    print "last=%r lower=%r"%(lastIdx,lowerIdx)
+                    exit(0)
+                snaps[srcIdx].order = lastIdx
+                self.parent.parent.parent.link()    
+
+
+
+
         def paint(self,painter,option,widget):
             painter.setPen(Qt.NoPen)
             painter.drawRect(self.rect())
 
 
 class MyEmitter(MyContainer):
-     def paint(self,painter,option,widget):
+    def paint(self,painter,option,widget):
         painter.setPen(Qt.blue)
         painter.drawRect(self.rect())
    
 class MyCollector(MyContainer):
-     def paint(self,painter,option,widget):
+    def paint(self,painter,option,widget):
         painter.setPen(Qt.green)
         painter.drawRect(self.rect())
    
@@ -353,7 +437,7 @@ class MySnap(QGraphicsWidget):
     def link(self):
         """ Link this snap with objects surrounding it. """
         l = self.parent.layout()
-        print "Linking Snap",self.snap.order
+        print "\nLinking Snap",self.snap.order,"in block",self.snap.block.index,"emitter" if self.snap.isSource() else "collector"
 
         # Determine what container (emitter or collector) you are in, so that 
         # you can link to its edges if necessary
