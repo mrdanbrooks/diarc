@@ -151,12 +151,7 @@ class MyBlock(QGraphicsWidget):
             elif lowerIdx > srcIdx:
                 print "Case 2"
 
-                # TODO: This algorithm is messy and hard to understand what is going on.
-                # This seems to mainly be due to the fact that I am trying to shift the
-                # actual values, whatever they happen to be (not necessarily consecutive).
-                # Consecutive numbers would probably be a lot cleaner, but the topology 
-                # supports skipping values (for flexibility).
-                # Is there a better way?
+                # TODO: This algorithm is messy and hard to understand what is going on. See #12
                 lastIdx = None
                 currIdx = srcIdx
                 while isinstance(currIdx,int) and currIdx < (upperIdx or lowerIdx+1): # In case upperIdx is None, use lower+1
@@ -380,12 +375,13 @@ class MyContainer(QGraphicsWidget):
             print snaps.keys()
             print "move snap",srcIdx,"between",lowerIdx,"and",upperIdx
 
+            lastIdx = None
+            currIdx = srcIdx
             # If we are moving to the right, lowerIdx is the target index.
             # Clear the dragged snaps's index, then shift all effected snap
             # indices left.
+            # NOTE: see #12
             if lowerIdx > srcIdx:
-                lastIdx = None
-                currIdx = srcIdx
                 while isinstance(currIdx,int) and currIdx < (upperIdx or lowerIdx+1):
                     nextIdx = snaps[currIdx].rightSnap.order if snaps[currIdx].rightSnap else None
                     snaps[currIdx].order = lastIdx
@@ -393,11 +389,28 @@ class MyContainer(QGraphicsWidget):
                     lastIdx = currIdx
                     currIdx = nextIdx
                 # Assertion check. TODO: Remove
-                if not lastIdx == lowerIdx:
-                    print "last=%r lower=%r"%(lastIdx,lowerIdx)
-                    exit(0)
-                snaps[srcIdx].order = lastIdx
-                self.parent.parent.parent.link()    
+                assert lastIdx == lowerIdx, "%r %r"%(lastIdx,lowerIdx)
+
+            # If we are moving to the left, upperIdx is the target index.
+            # Clear the dragged blocks
+            elif upperIdx < srcIdx:
+                while isinstance(currIdx,int) and currIdx > lowerIdx:
+                    nextIdx = snaps[currIdx].leftSnap.order if snaps[currIdx].leftSnap else None
+                    snaps[currIdx].order = lastIdx
+                    print "%s -> %s"%(str(currIdx),str(lastIdx))
+                    lastIdx = currIdx
+                    currIdx = nextIdx
+                # Assertion check. TODO remove
+                assert lastIdx == upperIdx, "%r %r"%(lastIdx,upperIdx)
+
+            # Otherwise we are just dragging to the side a bit and nothing is
+            # really moving anywhere.
+            else:
+                print "No op!"
+
+            snaps[srcIdx].order = lastIdx
+            self.parent.parent.parent.link()
+
 
 
 
