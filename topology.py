@@ -398,13 +398,16 @@ class Snap(object):
         if isinstance(pBand,types.NoneType): 
             return None
         # If you are a source snap and there is a sink snap to the right, you connect to this band
-        elif self.isSource() and max([sink.block.index for sink in pBand.collectors]) > self.block.index:
-            return pBand
+        elif self.isSource(): 
+            indices =  [sink.block.index for sink in pBand.collectors]
+            if len(indices) > 0 and max(indices) > self.block.index:
+                return pBand
         # if you are a sink snap and there is a source snap to your left, connect to this band
-        elif self.isSink() and min([source.block.index for source in pBand.emitters]) < self.block.index:
-            return pBand
-        else:
-            return None
+        elif self.isSink():
+            indices =[source.block.index for source in pBand.emitters]
+            if len(indices) > 0 and min(indices) < self.block.index:
+                return pBand
+        return None
 
     @property
     def negBand(self):
@@ -415,13 +418,16 @@ class Snap(object):
         if isinstance(nBand,types.NoneType):
             return None
         # If you are a source snap and there is a sink snap to the left, connect to this band
-        elif self.isSource() and min([sink.block.index for sink in nBand.collectors]) <= self.block.index:
-            return nBand
+        elif self.isSource():
+            indices = [sink.block.index for sink in nBand.collectors]
+            if len(indices) > 0 and min(indices) <= self.block.index:
+                return nBand
         # if you are a sink snap and there is a source snap to the right, connect to this band
-        elif self.isSink() and max([source.block.index for source in nBand.emitters]) >= self.block.index:
-            return nBand
-        else:
-            return None
+        elif self.isSink(): 
+            indices = [source.block.index for source in nBand.emitters]
+            if len(indices) > 0 and max(indices) >= self.block.index:
+                return nBand
+        return None
 
     @property
     def block(self):
