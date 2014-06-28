@@ -402,9 +402,11 @@ class MyContainer(QGraphicsWidget):
                 assert lastIdx == upperIdx, "%r %r"%(lastIdx,upperIdx)
 
             # Otherwise we are just dragging to the side a bit and nothing is
-            # really moving anywhere.
+            # really moving anywhere. Return immediately to avoid trying to
+            # give the snap a new order and unnecessary extra linking actions.
             else:
                 print "No op!"
+                return
 
             # Finally give the moved object its desired destination. Then
             # make the DrawingBoard relink all the objects again.
