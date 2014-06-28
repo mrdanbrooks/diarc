@@ -346,21 +346,18 @@ class MyContainer(QGraphicsWidget):
             if not event.mimeData().hasText():
                 event.setAccepted(False)
                 return
-
             data = json.loads(str(event.mimeData().text()))
             if not set(['block','container','snap']).issubset(set(data.keys())):
                 event.setAccepted(False)
                 return
-
             if not data['block'] == self.parent.parent.block.index:
                 event.setAccepted(False)
                 return
-
             if not self.parent.strType() == data['container']:
                 event.setAccepted(False)
                 return
-
             event.setAccepted(True)
+
 
         def dropEvent(self,event):
             """ Relocates a MySnap to this position """
@@ -378,7 +375,7 @@ class MyContainer(QGraphicsWidget):
             lastIdx = None
             currIdx = srcIdx
             # If we are moving to the right, lowerIdx is the target index.
-            # Clear the dragged snaps's index, then shift all effected snap
+            # Clear the dragged snaps's order, then shift all effected snap
             # indices left.
             # NOTE: see #12
             if lowerIdx > srcIdx:
@@ -392,7 +389,8 @@ class MyContainer(QGraphicsWidget):
                 assert lastIdx == lowerIdx, "%r %r"%(lastIdx,lowerIdx)
 
             # If we are moving to the left, upperIdx is the target index.
-            # Clear the dragged blocks
+            # Clear the dragged snaps order, then shift all effected snaps
+            # indices right
             elif upperIdx < srcIdx:
                 while isinstance(currIdx,int) and currIdx > lowerIdx:
                     nextIdx = snaps[currIdx].leftSnap.order if snaps[currIdx].leftSnap else None
@@ -408,11 +406,10 @@ class MyContainer(QGraphicsWidget):
             else:
                 print "No op!"
 
+            # Finally give the moved object its desired destination. Then
+            # make the DrawingBoard relink all the objects again.
             snaps[srcIdx].order = lastIdx
             self.parent.parent.parent.link()
-
-
-
 
 
         def paint(self,painter,option,widget):
@@ -456,11 +453,8 @@ class MySnap(QGraphicsWidget):
         container = self.snap.block.visual.myEmitter if self.snap.isSource() else self.snap.block.visual.myCollector
         leftSpacer = container.getLeftSpacer(self.snap)
         rightSpacer = container.getRightSpacer(self.snap)
-
-
-        # Have left spacer link
+        # Once you have both spacers, make them link to their surrounding snaps
         leftSpacer.link()
-        # Have right spacer link
         rightSpacer.link()
  
     def mousePressEvent(self,event):
