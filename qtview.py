@@ -153,7 +153,6 @@ class BlockRibbon(QGraphicsWidget):
                     print "%s -> %s"%(str(currIdx),str(lastIdx))
                     lastIdx = currIdx
                     currIdx = nextIdx
-                # Assertion check. TODO: Remove this after verifing this is true
                 assert lastIdx == lowerIdx, "%r %r"%(lastIdx,upperIdx)
 
             # If we are moving to the left, upperIdx is the target index.
@@ -193,7 +192,6 @@ class MyBlock(QGraphicsWidget):
         self.block = block
         self.block.visual = self
         self.setContentsMargins(5,5,5,5)
-#         self.rightSpacer = MyBlock.Spacer(self)
 
         # We want to have a little space above and below the Emitter/Collector,
         # Set up top and bottom margin to give that space. 
@@ -252,6 +250,7 @@ class MyBlock(QGraphicsWidget):
     def paint(self,painter,option,widget):
         painter.setPen(Qt.red)
         painter.drawRect(self.rect())
+
 
 
 class MyBlockHorizontalSpacer(QGraphicsWidget):
