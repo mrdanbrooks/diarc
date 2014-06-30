@@ -38,9 +38,11 @@ class Topology(object):
 
     @property
     def bands(self):
-        """ Returns dictionary of all bands who have a proper altitude assigned """
-        return dict([(band.altitude,band) for edge in self._edges for band in edge.bands])
-
+        """ Returns dictionary of all bands, by altitude. """
+        allBands = [band for edge in self._edges for band in [edge.posBand,edge.negBand]]
+        if None is [band.altitude for band in allBands]:
+            print "WARNING: There are bands lacking altitude information! Not all bands are represented"
+        return dict([(band.altitude,band) for band in filter(lambda x: isinstance(x.altitude,int),allBands)])
 
 
 class Vertex(object):
@@ -56,7 +58,6 @@ class Vertex(object):
         self._topology._vertices.append(self)
         # Visual Component
         self._block = Block(self)
-        # Connections
 
     @property
     def sources(self):
@@ -91,9 +92,8 @@ class Edge(object):
         self._topology = typecheck(topology,Topology,"topology")
         self._topology._edges.append(self)
         # Visual Component
-        self._pBand = None
-        self._nBand = None
-        # Connections
+        self._pBand = Band(self)
+        self._nBand = Band(self)
 
     @property
     def sources(self):
@@ -106,22 +106,11 @@ class Edge(object):
 
     @property
     def posBand(self):
-        # Initialize on first request
-        if self._pBand is None:
-            self._pBand = Band(self)
         return self._pBand
 
     @property
     def negBand(self):
-        # Initialize on first request
-        if self._nBand is None:
-            self._nBand = Band(self)
         return self._nBand
-
-    @property
-    def bands(self):
-        return filter(lambda x: isinstance(x,Band), [self._pBand,self._nBand])
-
 
 class Connection(object):
     """ A base class for connecting a vertex to an edge, but without specifing 
@@ -345,6 +334,15 @@ class Band(object):
             sinks = filter(lambda sink: sink.block.index <= maxSourceIndex, self.edge.sinks)
         return [s.snap for s in sinks]
 
+    def isUsed(self):
+        """ returns true if this band is needed to represent connections on
+        its edge, else false. This is determined by checking if any sources
+        reach this band.
+        """
+        # This should be equivalent to checking if any sinks reach this band,
+        # but this has not been tested or proven. 
+        return True if len(self.emitters) > 0 else False
+
     def __get_edge(self):
         return self._edge
     def __get_rank(self):
@@ -366,7 +364,7 @@ class Band(object):
             return
         # Make sure the altitude is unique among all bands 
         allEdges = self._topology._edges
-        allBands = filter(lambda x: isinstance(x,Band),[band for edge in allEdges for band in edge.bands])
+        allBands = filter(lambda x: isinstance(x,Band),[band for edge in allEdges for band in [edge.posBand,edge.negBand]])
         if value in [b.altitude for b in allBands]:
             raise Exception("Band with altitude %d already exists!"%value)
         self._altitude = value
@@ -393,12 +391,9 @@ class Snap(object):
         Just because a positive band link exists does not mean that it should
         be drawn. The check for if we should draw the connection happens at drawing
         time when we decide if we should be using positive or negative"""
-        # use pBand instead of posBand to keep from instantiating the Band object
         pBand = self._connection.edge._pBand
-        if isinstance(pBand,types.NoneType): 
-            return None
         # If you are a source snap and there is a sink snap to the right, you connect to this band
-        elif self.isSource(): 
+        if self.isSource(): 
             indices =  [sink.block.index for sink in pBand.collectors]
             if len(indices) > 0 and max(indices) > self.block.index:
                 return pBand
@@ -413,12 +408,9 @@ class Snap(object):
     def negBand(self):
         """ returns the negative band connection - if it exists. See posBand for
         more details."""
-        # use nBand instead of negBand to keep from instantiating the Band object
         nBand = self._connection.edge._nBand
-        if isinstance(nBand,types.NoneType):
-            return None
         # If you are a source snap and there is a sink snap to the left, connect to this band
-        elif self.isSource():
+        if self.isSource():
             indices = [sink.block.index for sink in nBand.collectors]
             if len(indices) > 0 and min(indices) <= self.block.index:
                 return nBand

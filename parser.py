@@ -85,7 +85,7 @@ def serialize(topology):
         eid = nextEdgeId
         nextEdgeId+=1
         xmlEdge.attrib["id"] = eid
-        for band in edge.bands:
+        for band in [edge.posBand,edge.negBand]:
             b = ET.SubElement(xmlEdge,'band')
             b.attrib["altitude"] = str(band.altitude)
             b.attrib["rank"] = str(band.rank)

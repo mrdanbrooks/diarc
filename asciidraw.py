@@ -27,6 +27,7 @@ class AsciiBand(AsciiObject):
         self._row = None
         self._startCol = None
         self._endCol = None
+        self._isUsed = False
 
     @property
     def row(self):
@@ -47,6 +48,13 @@ class AsciiBand(AsciiObject):
     def layout(self):
         if self.above.row is None:
             self.above.layout()
+
+        self._isUsed = self.band.isUsed()
+        if not self._isUsed:
+            # Just give the above values
+            self._row = self.above.row
+            return
+
         self._row = self.above.row + 1
         print "laying out band",self.band.altitude
 
@@ -75,8 +83,9 @@ class AsciiBand(AsciiObject):
            
 
     def draw(self,grid):
-        grid[(self.row,0)] = str(self.band.altitude)
-        grid[(self.row,self.startCol)] = '-'*((self.endCol-self.startCol)+1)
+        if self._isUsed:
+            grid[(self.row,0)] = str(self.band.altitude)
+            grid[(self.row,self.startCol)] = '-'*((self.endCol-self.startCol)+1)
 
 
 
