@@ -217,8 +217,8 @@ class AsciiSnap(AsciiObject):
     def draw(self,grid):
         centerRow = self.centerRow
         col = self.col
-        posBand = self.snap.posBand
-        negBand = self.snap.negBand
+        posBand = self.snap.posBandLink
+        negBand = self.snap.negBandLink
         if self.snap.isSink():
             if posBand:
                 # Draw a Positive Sink Snap

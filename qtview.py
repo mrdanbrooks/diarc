@@ -481,10 +481,10 @@ class MySnap(QGraphicsWidget):
         painter.setPen(Qt.red)
         painter.drawRect(self.rect())
         rect = self.geometry()
-        if self.snap.posBand:
-            painter.drawText(6,12,str(self.snap.posBand.altitude))
-        if self.snap.negBand:
-            painter.drawText(3,rect.height()-3,str(self.snap.negBand.altitude))
+        if self.snap.posBandLink:
+            painter.drawText(6,12,str(self.snap.posBandLink.altitude))
+        if self.snap.negBandLink:
+            painter.drawText(3,rect.height()-3,str(self.snap.negBandLink.altitude))
 
 
 
