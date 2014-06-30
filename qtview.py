@@ -10,6 +10,36 @@ import sys
 
 
 
+
+class BlockRibbon(QGraphicsWidget):
+    """ A band like object for holding Blocks """
+    def __init__(self,parent):
+        super(BlockRibbon,self).__init__(parent=parent)
+        self.parent = typecheck(parent,DrawingBoard,"parent")
+        self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.Preferred))
+        self.setMinimumWidth(15)
+        # This is a list of spacers in this container
+        self._spacers = list() 
+
+    def getLeftSpacer(self,block):
+        pass
+
+    def getRightSpacer(self,block):
+        pass
+
+    def paint(self,painter,option,widget):
+        painter.setPen(Qt.blue)
+        painter.drawRect(self.rect())
+
+    class Spacer(QGraphicsWidget):
+        """ Block Spacer """
+        def __init__(self,parent):
+            self.parent = typecheck(parent,BlockRibbon,"parent")
+            super(BlockRibbon.Spacer,self).__init__(parent=parent)
+
+
+
+
 class MyBlock(QGraphicsWidget):
     """ Visual Block, with right hand spacer """
     def __init__(self,parent,block):
