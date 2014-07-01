@@ -92,8 +92,8 @@ class Edge(object):
         self._topology = typecheck(topology,Topology,"topology")
         self._topology._edges.append(self)
         # Visual Component
-        self._pBand = Band(self)
-        self._nBand = Band(self)
+        self._pBand = Band(self,True)
+        self._nBand = Band(self,False)
 
     @property
     def sources(self):
@@ -291,10 +291,11 @@ class Band(object):
     Rank - the Z drawing order (higher values closer to user)
     Altitude - the distance above or below the Block ribbon
     """
-    def __init__(self,edge):
+    def __init__(self,edge,isPositive):
         self._edge = typecheck(edge,Edge,"edge")
         self._topology = edge._topology
         # Visual Properties
+        self._isPositive = isPositive
         self._altitude = None
         self._rank = None
         # Visual Connections 
@@ -343,6 +344,29 @@ class Band(object):
         # but this has not been tested or proven. 
         return True if len(self.emitters) > 0 else False
 
+
+    @property
+    def topBand(self):
+        if not isinstance(self._altitude,int):
+            return None
+        bands = self._topology.bands
+        posMax = max(bands.keys())
+        negMax = max([altitude for altitude in bands.keys() if altitude < 0])
+        if (self._isPositive and self._altitude < posMax) or ((not self._isPositive) and self._altitude < negMax) :
+            return bands[min([a for a in bands.keys() if a > self._altitude])]
+        return None
+
+    @property
+    def bottomBand(self):
+        if not isinstance(self._altitude,int):
+            return None
+        bands = self._topology.bands
+        posMin = min([altitude for altitude in bands.keys() if altitude > 0])
+        negMin = min(bands.keys())
+        if (self._isPositive and self._altitude > posMin) or ((not self._isPositive) and self._altitude > negMin):
+            return bands[max([a for a in bands.keys() if a < self._altitude])]
+        return None
+
     def __get_edge(self):
         return self._edge
     def __get_rank(self):
@@ -358,6 +382,10 @@ class Band(object):
     def __set_altitude(self,value):
         if self._altitude == value:
             return
+        if self._isPositive and value < 0:
+            raise Exception("Altitude must be positive")
+        if (not self._isPositive) and value > 0:
+            raise Exception("Altitude must be negative")
         # Always allow "unsetting" value
         if value is None:
             self._altitude = value
