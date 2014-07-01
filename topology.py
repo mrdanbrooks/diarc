@@ -465,7 +465,7 @@ class Snap(object):
 
     @property
     def bandLinks(self):
-        return filter(lambda x: isinstance(x,Band), [self.posBand,self.negBand])
+        return filter(lambda x: isinstance(x,Band), [self.posBandLink,self.negBandLink])
 
     def isSource(self):
         return isinstance(self._connection,Source)
