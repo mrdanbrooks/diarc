@@ -357,7 +357,8 @@ class Band(object):
             return None
         bands = self._topology.bands
         posMax = max(bands.keys())
-        negMax = max([altitude for altitude in bands.keys() if altitude < 0])
+        negVals = [altitude for altitude in bands.keys() if altitude < 0]
+        negMax = max(negVals) if len(negVals) > 0 else 0
         if (self._isPositive and self._altitude < posMax) or ((not self._isPositive) and self._altitude < negMax) :
             return bands[min([a for a in bands.keys() if a > self._altitude])]
         return None
@@ -370,7 +371,8 @@ class Band(object):
         if not isinstance(self._altitude,int):
             return None
         bands = self._topology.bands
-        posMin = min([altitude for altitude in bands.keys() if altitude > 0])
+        posVals = [altitude for altitude in bands.keys() if altitude > 0]
+        posMin = min(posVals) if len(posVals) > 0 else 0
         negMin = min(bands.keys())
         if (self._isPositive and self._altitude > posMin) or ((not self._isPositive) and self._altitude > negMin):
             return bands[max([a for a in bands.keys() if a < self._altitude])]
