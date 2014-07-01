@@ -10,6 +10,176 @@ import sys
 
 
 
+class BandStack(QGraphicsWidget):
+    def __init__(self,parent):
+        super(BandStack,self).__init__(parent=parent)
+        self.parent = typecheck(parent,DrawingBoard,"parent")
+        self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.Preferred))
+        self.setMinimumWidth(15)
+        # This is a list of spacers in this container
+        self._spacers = list() 
+
+    def getTopSpacer(self,band):
+        """ Return the spacer above this band. """
+        ret = filter(lambda x: x.bottomBand == band, self._spacers)
+        # Delete old unused spacers
+        for spacer in ret:
+            if not spacer.topBand == band.topBand:
+                print "Removing old spacer",spacer.topband.altitude if spacer.topBand else None,spacer.bottomBand.altitude if spacer.bottomBand else None
+                self._spacers.remove(spacer)
+        ret = filter(lambda x: x.bottomBand == band, self._spacers)
+        # Return existing spacer if only one exists. There should not be extras
+        if len(ret) == 1 and ret[0].topBand == band.topBand:
+            return ret[0]
+        elif len(ret) >= 1:
+            raise Exception("To many spacers found %d"%len(ret))
+        # No existing spacers fit - create a new spacer
+        spacer = BandStack.Spacer(self)
+        spacer.bottomBand = band
+        spacer.topBand = band.topBand
+        self._spacers.append(spacer)
+        return spacer
+
+
+    def getBottomSpacer(self,band):
+        """ Return the spacer below this band """
+        ret = filter(lambda x: x.topBand == band, self._spacers)
+        # Delete old unused spacers
+        for spacer in ret:
+            if not spacer.bottomBand == band.bottomBand:
+                print "Removing old spacer",spacer.topband.altitude if spacer.topBand else None,spacer.bottomBand.altitude if spacer.bottomBand else None
+                self._spacers.remove(spacer)
+        ret = filter(lambda x: x.topBand == band, self._spacers)
+        # Return existing spacer if only one exists. There should not be extras
+        if len(ret) == 1 and ret[0].bottomBand == band.bottomBand:
+            return ret[0]
+        elif len(ret) >= 1:
+            raise Exception("To many spacers found %d"%len(ret))
+        # No existing spacers fit - create a new spacer
+        spacer = BandStack.Spacer(self)
+        spacer.topBand = band
+        spacer.bottomBand = band.bottomBand
+        self._spacers.append(spacer)
+        return spacer
+
+    def mousePressEvent(self,event):
+        pos = event.pos()
+        super(BandStack,self).mousePressEvent(event)
+
+    def mouseReleaseEvent(self,event):
+        self.setCursor(Qt.ArrowCursor)
+        super(BandStack,self).mouseReleaseEvent(event)
+
+    def paint(self,painter,option,widget):
+        painter.setPen(Qt.NoPen)
+        painter.drawRect(self.rect())
+
+    class Spacer(QGraphicsWidget):
+        """ Band Spacer """
+        def __init__(self,parent):
+            self.parent = typecheck(parent,BandStack,"parent")
+            super(BandStack.Spacer,self).__init__(parent=parent)
+            self.setSizePolicy(QSizePolicy(QSizePolicy.Preferred,QSizePolicy.MinimumExpanding))
+            self.setPreferredHeight(15)
+            self.setMinimumHeight(15)
+            self.setAcceptDrops(True)
+            self.topBand = None
+            self.bottomBand = None
+
+
+        def link(self):
+            l = self.parent.parent.layout()
+            print "Adding Spacer between bands",self.topBand.altitude if self.topBand else None, "and",self.bottomBand.altitude if self.bottomBand else None
+
+            # Link To your Top! If you have a band above, connect
+            if self.topBand and self.topBand.visual:
+                print "Linking to bottom of ",self.topBand.altitude
+                l.addAnchor(self, Qt.AnchorTop, self.topBand.visual, Qt.AnchorBottom)
+            # Otherwise, if it is a positive band, connect to the top of the BandStack
+            elif self.bottomBand.isPositive:
+                print "linking band",self.bottomBand.altitude,"to top of band stack"
+                l.addAnchor(self, Qt.AnchorTop, self.parent, Qt.AnchorTop)
+            # Otherwise, if it is a negative band, connect to Block Ribbon
+            elif not self.bottomBand.isPositive: 
+                print "linking band",self.bottomBand.altitude,"to bottom of ribbon"
+                l.addAnchor(self, Qt.AnchorTop, self.parent.parent.blockRibbon, Qt.AnchorBottom)
+
+            # Link to your bottom! If you have a band below, connect
+            if self.bottomBand and self.bottomBand.visual:
+                print "Linking to top of ",self.bottomBand.altitude
+                l.addAnchor(self, Qt.AnchorBottom, self.bottomBand.visual, Qt.AnchorTop)
+            # Otherwise, if it is a positive band, connect to the block ribbon
+            elif self.topBand.isPositive:
+                print "linking band",self.topBand.altitude,"to top of ribbon"
+                l.addAnchor(self, Qt.AnchorBottom, self.parent.parent.blockRibbon, Qt.AnchorTop)
+            elif not self.topBand.isPositive:
+                print "linking band",self.topBand.altitude,"to bottom of band stack"
+                l.addAnchor(self, Qt.AnchorBottom, self.parent, Qt.AnchorBottom)
+            
+            # Connect sides
+            l.addAnchor(self, Qt.AnchorLeft, self.parent, Qt.AnchorLeft)
+            l.addAnchor(self, Qt.AnchorRight, self.parent, Qt.AnchorRight)
+
+
+        def paint(self,painter,option,widget):
+            painter.setPen(Qt.NoPen)
+            painter.drawRect(self.rect())
+
+
+
+
+class MyBand(QGraphicsWidget):
+    def __init__(self,parent,band):
+        super(MyBand,self).__init__(parent=parent)
+        self.parent = typecheck(parent,DrawingBoard,"parent")
+        self.band = band
+        self.band.visual = self
+        self.setContentsMargins(5,5,5,5)
+        self.setSizePolicy(QSizePolicy(QSizePolicy.Preferred,QSizePolicy.MinimumExpanding))
+        self.setPreferredHeight(15)
+        self.setMinimumHeight(15)
+
+
+    def link(self):
+        print "linking band",self.band.altitude
+        l = self.parent.layout()
+        topSpacer = self.parent.bandStack.getTopSpacer(self.band)
+        bottomSpacer = self.parent.bandStack.getBottomSpacer(self.band)
+        # Link the spacers once you have both of them
+        topSpacer.link()
+        bottomSpacer.link()
+        # TODO: Create Horizontal anchors to snaps
+        l.addAnchor(self, Qt.AnchorHorizontalCenter, self.parent.blockRibbon, Qt.AnchorHorizontalCenter)
+#         l.addAnchor(self, Qt.AnchorLeft, self.parent.blockRibbon, Qt.AnchorLeft)
+#         l.addAnchor(self, Qt.AnchorRight, self.parent.blockRibbon, Qt.AnchorRight)
+
+    def mousePressEvent(self,event):
+        pos = event.pos()
+        print "Band:",self.band.altitude
+        self.setCursor(Qt.ClosedHandCursor)
+
+    def mouseMoveEvent(self, event):
+#         drag = QDrag(event.widget())
+#         mimeData = QMimeData()
+#         mimeData.setText(json.dumps({'block':self.block.index}))
+#         drag.setMimeData(mimeData)
+#         drag.start()
+        pass
+
+    def mouseReleaseEvent(self,event):
+        print "hi",
+        self.setCursor(Qt.ArrowCursor)
+
+    def paint(self,painter,option,widget):
+        painter.setPen(Qt.red)
+        painter.drawRect(self.rect())
+        rect = self.geometry()
+        painter.drawText(0,rect.height(),str(self.band.altitude))
+
+
+
+    
+
 
 class BlockRibbon(QGraphicsWidget):
     """ A band like object for holding Blocks """
@@ -566,14 +736,21 @@ class DrawingBoard(QGraphicsWidget):
         self.setAcceptedMouseButtons(Qt.LeftButton)
         self.resize(0,0)
         self.topology = None
+        self.visualBands = list()
         self.visualBlocks = list()
         self.visualSnaps = list()
+
+        self.bandStack = BandStack(self)
         self.blockRibbon = BlockRibbon(self)
 
     def autoLayout(self,topology):
         """ Populates the visualBlocks and visualSnaps lists """
         self.topology = topology
-        lastBlock = None
+        for altitude,band in topology.bands.items():
+            print "adding band",altitude
+            visualBand = MyBand(self,band)
+            self.visualBands.append(visualBand)
+
         for index,block in topology.blocks.items():
             print "adding block",index
             vertexBlock = MyBlock(self,block)
@@ -594,10 +771,18 @@ class DrawingBoard(QGraphicsWidget):
         # Anchor the first block against the layout
         blocks = self.topology.blocks
         first = min(blocks.keys())
+
+        # Anchor BandStack to Layout
+        # Anchor BlockRibbon to BandStack
         self.layout().addAnchor(self.blockRibbon, Qt.AnchorTop, self.layout(), Qt.AnchorTop)
         self.layout().addAnchor(self.blockRibbon, Qt.AnchorLeft, self.layout(), Qt.AnchorLeft)
+        self.layout().addAnchor(self.bandStack, Qt.AnchorLeft, self.blockRibbon, Qt.AnchorLeft)
+        self.layout().addAnchor(self.bandStack, Qt.AnchorRight, self.blockRibbon, Qt.AnchorRight)
 
         # Start anchoring the other blocks
+        print "linking bands"
+        for b in self.visualBands:
+            b.link()
         print "Linking blocks"
         for b in self.visualBlocks:
             b.link()
