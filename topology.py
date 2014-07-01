@@ -38,7 +38,10 @@ class Topology(object):
 
     @property
     def bands(self):
-        """ Returns dictionary of all bands, by altitude. """
+        """ Returns dictionary of all bands, by altitude. Bands which have not
+        been assigned altitudes are not reported. However, bands that are not 
+        being used (indicated by isUsed()) are shown. 
+        """
         allBands = [band for edge in self._edges for band in [edge.posBand,edge.negBand]]
         if None is [band.altitude for band in allBands]:
             print "WARNING: There are bands lacking altitude information! Not all bands are represented"
@@ -342,7 +345,15 @@ class Band(object):
         """
         # This should be equivalent to checking if any sinks reach this band,
         # but this has not been tested or proven. 
-        return True if len(self.emitters) > 0 else False
+        sinkBlockIndices = [s.block.index for s in self.edge.sinks if isinstance(s.block.index,int)]
+        sourceBlockIndices = [s.block.index for s in self.edge.sources if isinstance(s.block.index,int)]
+        # If positive and there is a sink to the left of any source
+        if self._isPositive and max(sinkBlockIndices) >= min(sourceBlockIndices):
+            return True
+        elif (not self._isPositive) and min(sinkBlockIndices) < max(sourceBlockIndices):
+            return True
+        else:
+            return False
 
     @property
     def isPositive(self):
@@ -351,12 +362,12 @@ class Band(object):
     @property
     def topBand(self):
         """ Returns the band with the next highest altitude, or None if either
-        there is no band above this one or the block ribbon is above it
+        there is no band above this one or the block ribbon is above it.
         """
         if not isinstance(self._altitude,int):
             return None
         bands = self._topology.bands
-        posMax = max(bands.keys())
+        posMax = max([band.altitude for band in bands.values() if band.isUsed()])
         negVals = [altitude for altitude in bands.keys() if altitude < 0]
         negMax = max(negVals) if len(negVals) > 0 else 0
         if (self._isPositive and self._altitude < posMax) or ((not self._isPositive) and self._altitude < negMax) :
