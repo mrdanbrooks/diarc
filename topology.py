@@ -347,6 +347,9 @@ class Band(object):
 
     @property
     def topBand(self):
+        """ Returns the band with the next highest altitude, or None if either
+        there is no band above this one or the block ribbon is above it
+        """
         if not isinstance(self._altitude,int):
             return None
         bands = self._topology.bands
@@ -358,6 +361,9 @@ class Band(object):
 
     @property
     def bottomBand(self):
+        """ Returns the band with the next lowest altitude, or None if either
+        there is no band below this one or the block ribbon is below it.
+        """
         if not isinstance(self._altitude,int):
             return None
         bands = self._topology.bands
