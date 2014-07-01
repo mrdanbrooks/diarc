@@ -344,6 +344,9 @@ class Band(object):
         # but this has not been tested or proven. 
         return True if len(self.emitters) > 0 else False
 
+    @property
+    def isPositive(self):
+        return self._isPositive
 
     @property
     def topBand(self):
