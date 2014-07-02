@@ -22,19 +22,22 @@ class BandStack(QGraphicsWidget):
     def getTopSpacer(self,band):
         """ Return the spacer above this band. """
         ret = filter(lambda x: x.bottomBand == band, self._spacers)
+        isUsed = band.isUsed()
         # Delete old unused spacers
         for spacer in ret:
-            if not spacer.topBand == band.topBand:
+            print spacer.topBand,"==",band.topBand,"?"
+            if (not spacer.topBand == band.topBand) or (not isUsed):
                 print "Removing old spacer",spacer.topBand.altitude if spacer.topBand else None,spacer.bottomBand.altitude if spacer.bottomBand else None
+                spacer.setParent(None)
                 self._spacers.remove(spacer)
         ret = filter(lambda x: x.bottomBand == band, self._spacers)
         # Once we have deleteded old spacers, make sure the band is being used
-        if not band.isUsed():
-            print "#hspacers",len(self._spacers)
+        if not isUsed:
+            print "#hspacers",len(self._spacers),"not used"
             return None
         # Return existing spacer if only one exists. There should not be extras
         if len(ret) == 1 and ret[0].topBand == band.topBand:
-            print "#hspacers",len(self._spacers)
+            print "#hspacers",len(self._spacers), "already exists"
             return ret[0]
         elif len(ret) >= 1:
             raise Exception("To many spacers found %d"%len(ret))
@@ -43,26 +46,28 @@ class BandStack(QGraphicsWidget):
         spacer.bottomBand = band
         spacer.topBand = band.topBand
         self._spacers.append(spacer)
-        print "#hspacers",len(self._spacers)
+        print "#hspacers",len(self._spacers), "added one"
         return spacer
 
 
     def getBottomSpacer(self,band):
         """ Return the spacer below this band """
         ret = filter(lambda x: x.topBand == band, self._spacers)
+        isUsed = band.isUsed()
         # Delete old unused spacers
         for spacer in ret:
-            if not spacer.bottomBand == band.bottomBand:
+            if (not spacer.bottomBand == band.bottomBand) or (not isUsed):
                 print "Removing old spacer",spacer.topBand.altitude if spacer.topBand else None,spacer.bottomBand.altitude if spacer.bottomBand else None
+                spacer.setParent(None)
                 self._spacers.remove(spacer)
         ret = filter(lambda x: x.topBand == band, self._spacers)
         # Once we have deleteded old spacers, make sure the band is being used
-        if not band.isUsed():
-            print "#hspacers",len(self._spacers)
+        if not isUsed:
+            print "#hspacers",len(self._spacers), "not used"
             return None
         # Return existing spacer if only one exists. There should not be extras
         if len(ret) == 1 and ret[0].bottomBand == band.bottomBand:
-            print "#hspacers",len(self._spacers)
+            print "#hspacers",len(self._spacers), "already exists"
             return ret[0]
         elif len(ret) >= 1:
             raise Exception("To many spacers found %d"%len(ret))
@@ -71,7 +76,7 @@ class BandStack(QGraphicsWidget):
         spacer.topBand = band
         spacer.bottomBand = band.bottomBand
         self._spacers.append(spacer)
-        print "#hspacers",len(self._spacers)
+        print "#hspacers",len(self._spacers), "added one"
         return spacer
 
     def mousePressEvent(self,event):
@@ -132,9 +137,14 @@ class BandStack(QGraphicsWidget):
             l.addAnchor(self, Qt.AnchorLeft, self.parent, Qt.AnchorLeft)
             l.addAnchor(self, Qt.AnchorRight, self.parent, Qt.AnchorRight)
 
+        def mousePressEvent(self,event):
+            print "Band Spacer: Above=",self.topBand.altitude if self.topBand else None,
+            print "Below=",self.bottomBand.altitude if self.bottomBand else None 
+
 
         def paint(self,painter,option,widget):
-            painter.setPen(Qt.NoPen)
+#             painter.setPen(Qt.NoPen)
+            painter.setPen(Qt.lightGray)
             painter.drawRect(self.rect())
 
 
@@ -155,12 +165,15 @@ class MyBand(QGraphicsWidget):
     def link(self):
         print "*** linking band",self.band.altitude,"***"
         l = self.parent.layout()
+
         topSpacer = self.parent.bandStack.getTopSpacer(self.band)
         bottomSpacer = self.parent.bandStack.getBottomSpacer(self.band)
         if isinstance(topSpacer,types.NoneType) or isinstance(bottomSpacer,types.NoneType):
             print "Not linking band",self.band.altitude,topSpacer,bottomSpacer
+            self.setVisible(False)
             return
         # Link the spacers once you have both of them
+        self.setVisible(True)
         topSpacer.link()
         bottomSpacer.link()
         # TODO: Create Horizontal anchors to snaps
@@ -188,9 +201,11 @@ class MyBand(QGraphicsWidget):
     def paint(self,painter,option,widget):
         if self.band.isUsed():
             painter.setPen(Qt.red)
-            painter.drawRect(self.rect())
-            rect = self.geometry()
-            painter.drawText(0,rect.height(),str(self.band.altitude))
+        else:
+            painter.setPen(Qt.blue)
+        painter.drawRect(self.rect())
+        rect = self.geometry()
+        painter.drawText(0,rect.height(),str(self.band.altitude))
 
 
 
