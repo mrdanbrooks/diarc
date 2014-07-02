@@ -4,9 +4,120 @@ from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 from util import *
 from topology import *
+from SpacerContainer import *
 import types
 import json
 import sys
+
+
+class BandStack2(SpacerContainer):
+    def __init__(self,parent):
+        super(BandStack2,self).__init__(parent)
+        self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.Preferred))
+        self.setMinimumWidth(15)
+        self.spacerType = BandSpacer
+
+class BandSpacer(SpacerContainer.Spacer):
+    def __init__(self,parent):
+        super(BandSpacer,self).__init__(parent)
+        self.setSizePolicy(QSizePolicy(QSizePolicy.Preferred,QSizePolicy.MinimumExpanding))
+        self.setPreferredHeight(15)
+        self.setMinimumHeight(15)
+        self.setAcceptDrops(True)
+
+    @property
+    def topBand(self):
+        return self.itemA
+
+    @property
+    def bottomBand(self):
+        return self.itemB
+
+    def link(self):
+        l = self.layout()
+        # Link To your Top! If you have a band above, connect
+        if self.topBand:
+            print "Linking to bottom of ",self.topBand.band.altitude
+            l.addAnchor(self, Qt.AnchorTop, self.topBand, Qt.AnchorBottom)
+        # Otherwise, if it is a positive band, connect to the top of the BandStack
+        elif self.bottomBand.band.isPositive:
+            print "linking band",self.bottomBand.band.altitude,"to top of band stack"
+            l.addAnchor(self, Qt.AnchorTop, self.parent, Qt.AnchorTop)
+        # Otherwise, if it is a negative band, connect to Block Ribbon
+        elif not self.bottomBand.band.isPositive: 
+            print "linking band",self.bottomBand.band.altitude,"to bottom of ribbon"
+            l.addAnchor(self, Qt.AnchorTop, self.parent.parent.blockRibbon, Qt.AnchorBottom)
+
+        # Link to your bottom! If you have a band below, connect
+        if self.bottomBand:
+            print "Linking to top of ",self.bottomBand.band.altitude
+            l.addAnchor(self, Qt.AnchorBottom, self.bottomBand, Qt.AnchorTop)
+        # Otherwise, if it is a positive band, connect to the block ribbon
+        elif self.topBand.band.isPositive:
+            print "linking band",self.topBand.band.altitude,"to top of ribbon"
+            l.addAnchor(self, Qt.AnchorBottom, self.parent.parent.blockRibbon, Qt.AnchorTop)
+        elif not self.topBand.band.isPositive:
+            print "linking band",self.topBand.band.altitude,"to bottom of band stack"
+            l.addAnchor(self, Qt.AnchorBottom, self.parent, Qt.AnchorBottom)
+        
+        # Connect sides
+        l.addAnchor(self, Qt.AnchorLeft, self.parent, Qt.AnchorLeft)
+        l.addAnchor(self, Qt.AnchorRight, self.parent, Qt.AnchorRight)
+
+    def mousePressEvent(self,event):
+        print "Band Spacer: Above=",self.topBand.band.altitude if self.topBand else None,
+        print "Below=",self.bottomBand.band.altitude if self.bottomBand else None 
+
+    def paint(self,painter,option,widget):
+#             painter.setPen(Qt.NoPen)
+        painter.setPen(Qt.lightGray)
+        painter.drawRect(self.rect())
+
+
+
+
+
+class BandItem(SpacerContainer.Item):
+    def __init__(self,parent,band):
+        typecheck(parent,DrawingBoard,"parent")
+        super(BandItem,self).__init__(parent,parent.bandStack)
+        self.band = band
+        self.band.visual = self
+        self.setContentsMargins(5,5,5,5)
+        self.setSizePolicy(QSizePolicy(QSizePolicy.Preferred,QSizePolicy.MinimumExpanding))
+        self.setPreferredHeight(15)
+        self.setMinimumHeight(15)
+
+    def itemA(self):
+        """ Set itemA to be the topBand """
+        return self.band.topBand.visual if self.band.topBand else None
+
+    def itemB(self):
+        """ Set itemB to be the bottomBand """
+        return self.band.bottomBand.visual if self.band.bottomBand else None
+
+    def isUsed(self):
+        return self.band.isUsed()
+
+    def link(self):
+        super(BandItem,self).link()
+
+        l = self.parent.layout()
+        l.addAnchor(self, Qt.AnchorHorizontalCenter, self.parent.blockRibbon, Qt.AnchorHorizontalCenter)
+
+    def mousePressEvent(self,event):
+        pos = event.pos()
+        print "Band:",self.band.altitude
+        self.setCursor(Qt.ClosedHandCursor)
+
+    def paint(self,painter,option,widget):
+        if self.band.isUsed():
+            painter.setPen(Qt.red)
+        else:
+            painter.setPen(Qt.blue)
+        painter.drawRect(self.rect())
+        rect = self.geometry()
+        painter.drawText(0,rect.height(),str(self.band.altitude))
 
 
 
@@ -770,7 +881,8 @@ class DrawingBoard(QGraphicsWidget):
         self.visualBlocks = list()
         self.visualSnaps = list()
 
-        self.bandStack = BandStack(self)
+#         self.bandStack = BandStack(self)
+        self.bandStack = BandStack2(self)
         self.blockRibbon = BlockRibbon(self)
 
     def autoLayout(self,topology):
@@ -778,7 +890,8 @@ class DrawingBoard(QGraphicsWidget):
         self.topology = topology
         for altitude,band in topology.bands.items():
             print "adding band",altitude
-            visualBand = MyBand(self,band)
+#             visualBand = MyBand(self,band)
+            visualBand = BandItem(self,band)
             self.visualBands.append(visualBand)
 
         for index,block in topology.blocks.items():
