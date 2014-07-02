@@ -367,12 +367,20 @@ class Band(object):
         if not isinstance(self._altitude,int):
             return None
         bands = self._topology.bands
-        posMax = max([band.altitude for band in bands.values() if band.isUsed()])
-        negVals = [altitude for altitude in bands.keys() if altitude < 0]
-        negMax = max(negVals) if len(negVals) > 0 else 0
-        if (self._isPositive and self._altitude < posMax) or ((not self._isPositive) and self._altitude < negMax) :
-            return bands[min([a for a in bands.keys() if a > self._altitude])]
-        return None
+        available = [altitude for altitude in bands.keys() if altitude > self._altitude]
+        if self._isPositive:
+            # TODO: we probably dont need band._isPositive if altitude > self._altitude
+            available = [altitude for altitude in available if bands[altitude]._isPositive and bands[altitude].isUsed()]
+        else: 
+            available = [altitude for altitude in available if (not bands[altitude]._isPositive) and bands[altitude].isUsed()]
+        return bands[min(available)] if len(available) > 0 else None
+
+#         posMax = max([band.altitude for band in bands.values() if band.isUsed()])
+#         negVals = [altitude for altitude in bands.keys() if altitude < 0]
+#         negMax = max(negVals) if len(negVals) > 0 else 0
+#         if (self._isPositive and self._altitude < posMax) or ((not self._isPositive) and self._altitude < negMax) :
+#             return bands[min([a for a in bands.keys() if a > self._altitude])]
+#         return None
 
     @property
     def bottomBand(self):
@@ -382,12 +390,19 @@ class Band(object):
         if not isinstance(self._altitude,int):
             return None
         bands = self._topology.bands
-        posVals = [altitude for altitude in bands.keys() if altitude > 0]
-        posMin = min(posVals) if len(posVals) > 0 else 0
-        negMin = min(bands.keys())
-        if (self._isPositive and self._altitude > posMin) or ((not self._isPositive) and self._altitude > negMin):
-            return bands[max([a for a in bands.keys() if a < self._altitude])]
-        return None
+        available = [altitude for altitude in bands.keys() if altitude < self._altitude]
+        if self._isPositive:
+            available = [altitude for altitude in available if bands[altitude]._isPositive and bands[altitude].isUsed()]
+        else:
+            available = [altitude for altitude in available if (not bands[altitude]._isPositive) and bands[altitude].isUsed()]
+        return bands[max(available)] if len(available) > 0 else None
+
+#         posVals = [altitude for altitude in bands.keys() if altitude > 0]
+#         posMin = min(posVals) if len(posVals) > 0 else 0
+#         negMin = min(bands.keys())
+#         if (self._isPositive and self._altitude > posMin) or ((not self._isPositive) and self._altitude > negMin):
+#             return bands[max([a for a in bands.keys() if a < self._altitude])]
+#         return None
 
     def __get_edge(self):
         return self._edge

@@ -25,11 +25,16 @@ class BandStack(QGraphicsWidget):
         # Delete old unused spacers
         for spacer in ret:
             if not spacer.topBand == band.topBand:
-                print "Removing old spacer",spacer.topband.altitude if spacer.topBand else None,spacer.bottomBand.altitude if spacer.bottomBand else None
+                print "Removing old spacer",spacer.topBand.altitude if spacer.topBand else None,spacer.bottomBand.altitude if spacer.bottomBand else None
                 self._spacers.remove(spacer)
         ret = filter(lambda x: x.bottomBand == band, self._spacers)
+        # Once we have deleteded old spacers, make sure the band is being used
+        if not band.isUsed():
+            print "#hspacers",len(self._spacers)
+            return None
         # Return existing spacer if only one exists. There should not be extras
         if len(ret) == 1 and ret[0].topBand == band.topBand:
+            print "#hspacers",len(self._spacers)
             return ret[0]
         elif len(ret) >= 1:
             raise Exception("To many spacers found %d"%len(ret))
@@ -38,6 +43,7 @@ class BandStack(QGraphicsWidget):
         spacer.bottomBand = band
         spacer.topBand = band.topBand
         self._spacers.append(spacer)
+        print "#hspacers",len(self._spacers)
         return spacer
 
 
@@ -47,11 +53,16 @@ class BandStack(QGraphicsWidget):
         # Delete old unused spacers
         for spacer in ret:
             if not spacer.bottomBand == band.bottomBand:
-                print "Removing old spacer",spacer.topband.altitude if spacer.topBand else None,spacer.bottomBand.altitude if spacer.bottomBand else None
+                print "Removing old spacer",spacer.topBand.altitude if spacer.topBand else None,spacer.bottomBand.altitude if spacer.bottomBand else None
                 self._spacers.remove(spacer)
         ret = filter(lambda x: x.topBand == band, self._spacers)
+        # Once we have deleteded old spacers, make sure the band is being used
+        if not band.isUsed():
+            print "#hspacers",len(self._spacers)
+            return None
         # Return existing spacer if only one exists. There should not be extras
         if len(ret) == 1 and ret[0].bottomBand == band.bottomBand:
+            print "#hspacers",len(self._spacers)
             return ret[0]
         elif len(ret) >= 1:
             raise Exception("To many spacers found %d"%len(ret))
@@ -60,6 +71,7 @@ class BandStack(QGraphicsWidget):
         spacer.topBand = band
         spacer.bottomBand = band.bottomBand
         self._spacers.append(spacer)
+        print "#hspacers",len(self._spacers)
         return spacer
 
     def mousePressEvent(self,event):
@@ -141,10 +153,13 @@ class MyBand(QGraphicsWidget):
 
 
     def link(self):
-        print "linking band",self.band.altitude
+        print "*** linking band",self.band.altitude,"***"
         l = self.parent.layout()
         topSpacer = self.parent.bandStack.getTopSpacer(self.band)
         bottomSpacer = self.parent.bandStack.getBottomSpacer(self.band)
+        if isinstance(topSpacer,types.NoneType) or isinstance(bottomSpacer,types.NoneType):
+            print "Not linking band",self.band.altitude,topSpacer,bottomSpacer
+            return
         # Link the spacers once you have both of them
         topSpacer.link()
         bottomSpacer.link()
@@ -171,10 +186,11 @@ class MyBand(QGraphicsWidget):
         self.setCursor(Qt.ArrowCursor)
 
     def paint(self,painter,option,widget):
-        painter.setPen(Qt.red)
-        painter.drawRect(self.rect())
-        rect = self.geometry()
-        painter.drawText(0,rect.height(),str(self.band.altitude))
+        if self.band.isUsed():
+            painter.setPen(Qt.red)
+            painter.drawRect(self.rect())
+            rect = self.geometry()
+            painter.drawText(0,rect.height(),str(self.band.altitude))
 
 
 
@@ -458,24 +474,24 @@ class MyContainer(QGraphicsWidget):
         for spacer in ret:
             if not spacer.leftSnap == snap.leftSnap:
                 # Delete this object, it doesn't match any more
-                print "Removing old spacer",spacer.leftSnap.order if spacer.leftSnap else None,spacer.rightSnap.order if spacer.rightSnap else None
+#                 print "Removing old spacer",spacer.leftSnap.order if spacer.leftSnap else None,spacer.rightSnap.order if spacer.rightSnap else None
                 self._spacers.remove(spacer)
 
         ret = filter(lambda x: x.rightSnap == snap, self._spacers)
         # Return existing spacer if only one exists. There should not be extras
         if len(ret) == 1 and ret[0].leftSnap == snap.leftSnap:
-            print "#spacers=",len(self._spacers)
+#             print "#spacers=",len(self._spacers)
             return ret[0]
         elif len(ret) >= 1:
             raise Exception("To many spacers found! %d"%len(ret))
 
         # No existing spacers fit. Create a new spacer
-        print "making new left spacer",snap.leftSnap.order if isinstance(snap.leftSnap,Snap) else None, snap.order if isinstance(snap,Snap) else None
+#         print "making new left spacer",snap.leftSnap.order if isinstance(snap.leftSnap,Snap) else None, snap.order if isinstance(snap,Snap) else None
         spacer = MyContainer.Spacer(self)
         spacer.rightSnap = snap
         spacer.leftSnap = snap.leftSnap 
         self._spacers.append(spacer)
-        print "#spacers=",len(self._spacers)
+#         print "#spacers=",len(self._spacers)
         return spacer
 
     def getRightSpacer(self,snap):
@@ -488,24 +504,24 @@ class MyContainer(QGraphicsWidget):
         for spacer in ret:
             # Delete this object, it doesn't match any more
             if not spacer.rightSnap == snap.rightSnap:
-                print "Removing old spacer",spacer.leftSnap.order if spacer.leftSnap else None,spacer.rightSnap.order if spacer.rightSnap else None
+#                 print "Removing old spacer",spacer.leftSnap.order if spacer.leftSnap else None,spacer.rightSnap.order if spacer.rightSnap else None
                 self._spacers.remove(spacer)
 
         ret = filter(lambda x: x.leftSnap == snap,self._spacers)
         # Return existing spacer if only one exists. There should not be extras
         if len(ret) == 1 and ret[0].rightSnap == snap.rightSnap:
-            print "#spacers=",len(self._spacers)
+#             print "#spacers=",len(self._spacers)
             return ret[0]
         elif len(ret) >= 1:
             raise Exception("To many spacers found! %d"%len(ret))
 
         # No existing spacers fit. Create a new spacer
-        print "making new right spacer",snap.order if isinstance(snap,Snap) else None,snap.rightSnap.order if isinstance(snap.rightSnap,Snap) else None
+#         print "making new right spacer",snap.order if isinstance(snap,Snap) else None,snap.rightSnap.order if isinstance(snap.rightSnap,Snap) else None
         spacer = MyContainer.Spacer(self)
         spacer.leftSnap = snap
         spacer.rightSnap = snap.rightSnap
         self._spacers.append(spacer)
-        print "#spacers=",len(self._spacers)
+#         print "#spacers=",len(self._spacers)
         return spacer
 
 
@@ -538,7 +554,6 @@ class MyContainer(QGraphicsWidget):
 
 
         def link(self):
-            print type(self.parent.parent)
             l = self.parent.parent.parent.layout()
 
             # If you have a snap to your left, connect
@@ -678,7 +693,7 @@ class MySnap(QGraphicsWidget):
     def link(self):
         """ Link this snap with objects surrounding it. """
         l = self.parent.layout()
-        print "\nLinking Snap",self.snap.order,"in block",self.snap.block.index,"emitter" if self.snap.isSource() else "collector"
+#         print "\nLinking Snap",self.snap.order,"in block",self.snap.block.index,"emitter" if self.snap.isSource() else "collector"
 
         # Determine what container (emitter or collector) you are in, so that 
         # you can link to its edges if necessary
