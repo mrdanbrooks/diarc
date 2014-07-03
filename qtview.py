@@ -131,9 +131,9 @@ class BandItem(SpacerContainer.Item):
 
 
 
-class BlockRibbon2(SpacerContainer):
+class BlockRibbon(SpacerContainer):
     def __init__(self,parent):
-        super(BlockRibbon2,self).__init__(parent)
+        super(BlockRibbon,self).__init__(parent)
         self.spacerType = BlockSpacer
         self.parent = typecheck(parent,DrawingBoard,"parent")
         self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.Preferred))
@@ -650,7 +650,7 @@ class DrawingBoard(QGraphicsWidget):
         self.visualSnaps = list()
 
         self.bandStack = BandStack(self)
-        self.blockRibbon = BlockRibbon2(self)
+        self.blockRibbon = BlockRibbon(self)
  
     def mousePressEvent(self,event):
         print "Spacers:",len(self.bandStack._spacers)+len(self.blockRibbon._spacers)
