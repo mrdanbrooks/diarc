@@ -19,7 +19,7 @@ class SpacerContainer(QGraphicsWidget):
 #         self.parent = typecheck(parent,DrawingBoard,"parent")
         self.parent = parent
         self._spacers = list()
-        self._spacerType = SpacerContainer.Spacer
+        self._spacerType = None #SpacerContainer.Spacer
 
     def getSpacerA(self,item):
 #         print "A=",item
@@ -110,6 +110,8 @@ class SpacerContainer(QGraphicsWidget):
         return spacer
 
     def _get_spacerType(self):
+        if isinstance(self._spacerType,types.NoneType):
+            raise Exception("you must set the spacerType for the SpacerContainer %r"%type(self)) 
         return self._spacerType
     def _set_spacerType(self,spacerType):
 #         self._spacerType = typecheck(spacerType,SpacerContainer.Spacer,"spacerType")
