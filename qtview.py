@@ -128,188 +128,134 @@ class BandItem(SpacerContainer.Item):
 
 
 
-class BlockRibbon(QGraphicsWidget):
-    """ A band like object for holding Blocks """
+class BlockRibbon2(SpacerContainer):
     def __init__(self,parent):
-        super(BlockRibbon,self).__init__(parent=parent)
+        super(BlockRibbon2,self).__init__(parent)
+        self.spacerType = BlockSpacer
         self.parent = typecheck(parent,DrawingBoard,"parent")
         self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.Preferred))
         self.setMinimumWidth(15)
-        # This is a list of spacers in this container
-        self._spacers = list() 
-
-    def getLeftSpacer(self,block):
-        ret = filter(lambda x: x.rightBlock == block, self._spacers)
-        # Delete outdated spacers
-        for spacer in ret:
-            if not spacer.leftBlock == block.leftBlock:
-                # Delete this object, it doesnt match anymore
-                self._spacers.remove(spacer)
-
-        ret = filter(lambda x: x.rightBlock == block, self._spacers)
-        # return existing space if only one exists. There should not be extras
-        if len(ret) == 1 and ret[0].leftBlock == block.leftBlock:
-            return ret[0]
-        elif len(ret) >= 1:
-            raise Exception("To many spacers found $d"%len(ret))
-        # No existing spacers fit - create a new spacer
-        spacer = BlockRibbon.Spacer(self)
-        spacer.rightBlock = block
-        spacer.leftBlock = block.leftBlock
-        self._spacers.append(spacer)
-        return spacer
-
-    def getRightSpacer(self,block):
-        ret = filter(lambda x: x.leftBlock == block, self._spacers)
-        # Remove outdated spacers
-        for spacer in ret:
-            if not spacer.rightBlock == block.rightBlock:
-                # Remove this spacer, it does not match anymore
-                self._spacers.remove(spacer)
-
-        ret = filter(lambda x: x.leftBlock == block, self._spacers)
-        # return existing spacer if only one exists. there should not be extras
-        if len(ret) == 1 and ret[0].rightBlock == block.rightBlock:
-            return ret[0]
-        elif len(ret) >= 1:
-            raise Exception("To many spacers found! %d"%len(ret))
-
-        # No existing spacers fit - create a new one
-        spacer = BlockRibbon.Spacer(self)
-        spacer.leftBlock = block
-        spacer.rightBlock = block.rightBlock
-        self._spacers.append(spacer)
-        return spacer
-
-    def mousePressEvent(self,event):
-        pos = event.pos()
-        super(MyContainer,self).mousePressEvent(event)
-
-    def mouseReleaseEvent(self,event):
-        self.setCursor(Qt.ArrowCursor)
-        super(MyContainer,self).mouseReleaseEvent(event)
-
 
     def paint(self,painter,option,widget):
         painter.setPen(Qt.green)
         painter.drawRect(self.rect())
 
-    class Spacer(QGraphicsWidget):
-        """ Block Spacer """
-        def __init__(self,parent):
-            self.parent = typecheck(parent,BlockRibbon,"parent")
-            super(BlockRibbon.Spacer,self).__init__(parent=parent)
-            self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.Preferred))
-            self.setPreferredWidth(15)
-            self.setMinimumWidth(15)
-            self.setAcceptDrops(True)
-            self.leftBlock = None
-            self.rightBlock = None
+class BlockSpacer(SpacerContainer.Spacer):
+    def __init__(self,parent):
+        super(BlockSpacer,self).__init__(parent)
+        self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.Preferred))
+        self.setPreferredWidth(15)
+        self.setMinimumWidth(15)
+        self.setAcceptDrops(True)
 
-        def link(self):
-            l = self.parent.parent.layout()
-            # If you have a block to your left, connect
-            if self.leftBlock and self.leftBlock.visual:
-                l.addAnchor(self, Qt.AnchorLeft, self.leftBlock.visual, Qt.AnchorRight)
-                l.addAnchor(self, Qt.AnchorTop, self.leftBlock.visual, Qt.AnchorTop)
-                l.addAnchor(self, Qt.AnchorBottom, self.leftBlock.visual, Qt.AnchorBottom)
-            # Otherwise connect to left container edge
-            else:
-                l.addAnchor(self, Qt.AnchorLeft, self.parent, Qt.AnchorLeft)
-                l.addAnchor(self, Qt.AnchorTop, self.parent, Qt.AnchorTop)
-                l.addAnchor(self, Qt.AnchorBottom, self.parent, Qt.AnchorBottom)
+    @property
+    def leftBlock(self):
+        return self.itemA
 
-            # If you have a block to your right, connect
-            if self.rightBlock and self.rightBlock.visual:
-                l.addAnchor(self, Qt.AnchorRight, self.rightBlock.visual, Qt.AnchorLeft)
-                l.addAnchor(self, Qt.AnchorTop, self.rightBlock.visual, Qt.AnchorTop)
-                l.addAnchor(self, Qt.AnchorBottom, self.rightBlock.visual, Qt.AnchorBottom)
-            # Otherwise connect to the right container edge
-            else:
-                l.addAnchor(self, Qt.AnchorRight, self.parent, Qt.AnchorRight)
-                l.addAnchor(self, Qt.AnchorTop, self.parent, Qt.AnchorTop)
-                l.addAnchor(self, Qt.AnchorBottom, self.parent, Qt.AnchorBottom)
+    @property
+    def rightBlock(self):
+        return self.itemB
 
-        def dragEnterEvent(self,event):
-            if not event.mimeData().hasText():
-                event.setAccepted(False)
-                return
-            
-            data = json.loads(str(event.mimeData().text()))
-            if 'block' in data:
-                event.setAccepted(True)
-                self.dragOver = True
-            else:
-                event.setAccepted(False)
+    def link(self):
+        l = self.parent.parent.layout()
+        # If you have a block to your left, connect
+        if self.leftBlock:
+            l.addAnchor(self, Qt.AnchorLeft, self.leftBlock, Qt.AnchorRight)
+            l.addAnchor(self, Qt.AnchorTop, self.leftBlock, Qt.AnchorTop)
+            l.addAnchor(self, Qt.AnchorBottom, self.leftBlock, Qt.AnchorBottom)
+        # Otherwise connect to left container edge
+        else:
+            l.addAnchor(self, Qt.AnchorLeft, self.parent, Qt.AnchorLeft)
+            l.addAnchor(self, Qt.AnchorTop, self.parent, Qt.AnchorTop)
+            l.addAnchor(self, Qt.AnchorBottom, self.parent, Qt.AnchorBottom)
 
-        def dragLeaveEvent(self,event):
-            self.dragOver = False
+        # If you have a block to your right, connect
+        if self.rightBlock:
+            l.addAnchor(self, Qt.AnchorRight, self.rightBlock, Qt.AnchorLeft)
+            l.addAnchor(self, Qt.AnchorTop, self.rightBlock, Qt.AnchorTop)
+            l.addAnchor(self, Qt.AnchorBottom, self.rightBlock, Qt.AnchorBottom)
+        # Otherwise connect to the right container edge
+        else:
+            l.addAnchor(self, Qt.AnchorRight, self.parent, Qt.AnchorRight)
+            l.addAnchor(self, Qt.AnchorTop, self.parent, Qt.AnchorTop)
+            l.addAnchor(self, Qt.AnchorBottom, self.parent, Qt.AnchorBottom)
 
-        def dropEvent(self,event):
-            self.dragOver = False
-            # Dragged Index
-            data = json.loads(str(event.mimeData().text()))
-            if not 'block' in data:
-                raise Exception("Wrong drag data type!")
-            srcIdx = data['block']
-            # Left Index
-            lowerIdx = self.leftBlock.index if self.leftBlock else None
-            upperIdx = self.rightBlock.index if self.rightBlock else None
-            blocks = self.parent.parent.topology.blocks
+    def dragEnterEvent(self,event):
+        if not event.mimeData().hasText():
+            event.setAccepted(False)
+            return
+        data = json.loads(str(event.mimeData().text()))
+        if 'block' in data:
+            event.setAccepted(True)
+            self.dragOver = True
+            print "Drag ENTER"
+        else:
+            event.setAccepted(False)
 
-            lastIdx = None
-            currIdx = srcIdx
-            # If we are moving to the right, lowerIdx is the target index.
-            # Clear the dragged block's index, then shift all effected block
-            # indices left.
-            # NOTE: See issue #12
-            if lowerIdx > srcIdx:
-                while isinstance(currIdx,int) and currIdx < (upperIdx or lowerIdx+1): # In case upperIdx is None, use lower+1
-                    nextIdx = blocks[currIdx].rightBlock.index if blocks[currIdx].rightBlock else None
-                    blocks[currIdx].index = lastIdx
-                    print "%s -> %s"%(str(currIdx),str(lastIdx))
-                    lastIdx = currIdx
-                    currIdx = nextIdx
-                assert lastIdx == lowerIdx, "%r %r"%(lastIdx,upperIdx)
+    def dragLeaveEvent(self,event):
+        self.dragOver = False
 
-            # If we are moving to the left, upperIdx is the target index.
-            # Clear the dragged blocks index, then shift all effected blocks right
-            elif upperIdx < srcIdx:
-                while isinstance(currIdx,int) and currIdx > lowerIdx:
-                    nextIdx = blocks[currIdx].leftBlock.index if blocks[currIdx].leftBlock else None
-                    blocks[currIdx].index = lastIdx
-                    print "%s -> %s"%(str(currIdx),str(lastIdx))
-                    lastIdx = currIdx
-                    currIdx = nextIdx
-                assert lastIdx == upperIdx, "%r %r"%(lastIdx,upperIdx)
+    def dropEvent(self,event):
+        self.dragOver = False
+        # Dragged Index
+        data = json.loads(str(event.mimeData().text()))
+        if not 'block' in data:
+            raise Exception("Wrong drag data type!")
+        srcIdx = data['block']
+        # Left Index
+        lowerIdx = self.leftBlock.block.index if self.leftBlock else None
+        upperIdx = self.rightBlock.block.index if self.rightBlock else None
+        blocks = self.parent.parent.topology.blocks
 
-            # Otherwise we are just dragging to the side a bit and nothing is 
-            # really moving anywhere. Return immediately to avoid trying to give
-            # the block a new index and unnecessary extra linking actions.
-            else:
-                print "No op!"
-                return
-            # Finally give the moved object its desired destination. Then make 
-            # the DrawingBoard relink all the objects again.
-            blocks[srcIdx].index = lastIdx
-            self.parent.parent.link()
+        lastIdx = None
+        currIdx = srcIdx
+        # If we are moving to the right, lowerIdx is the target index.
+        # Clear the dragged block's index, then shift all effected block
+        # indices left.
+        # NOTE: See issue #12
+        if lowerIdx > srcIdx:
+            while isinstance(currIdx,int) and currIdx < (upperIdx or lowerIdx+1): # In case upperIdx is None, use lower+1
+                nextIdx = blocks[currIdx].rightBlock.index if blocks[currIdx].rightBlock else None
+                blocks[currIdx].index = lastIdx
+                print "%s -> %s"%(str(currIdx),str(lastIdx))
+                lastIdx = currIdx
+                currIdx = nextIdx
+            assert lastIdx == lowerIdx, "%r %r"%(lastIdx,upperIdx)
+
+        # If we are moving to the left, upperIdx is the target index.
+        # Clear the dragged blocks index, then shift all effected blocks right
+        elif upperIdx < srcIdx:
+            while isinstance(currIdx,int) and currIdx > lowerIdx:
+                nextIdx = blocks[currIdx].leftBlock.index if blocks[currIdx].leftBlock else None
+                blocks[currIdx].index = lastIdx
+                print "%s -> %s"%(str(currIdx),str(lastIdx))
+                lastIdx = currIdx
+                currIdx = nextIdx
+            assert lastIdx == upperIdx, "%r %r"%(lastIdx,upperIdx)
+
+        # Otherwise we are just dragging to the side a bit and nothing is 
+        # really moving anywhere. Return immediately to avoid trying to give
+        # the block a new index and unnecessary extra linking actions.
+        else:
+            print "No op!"
+            return
+        # Finally give the moved object its desired destination. Then make 
+        # the DrawingBoard relink all the objects again.
+        blocks[srcIdx].index = lastIdx
+        self.parent.parent.link()
+
+    def paint(self,painter,option,widget):
+        painter.setPen(Qt.NoPen)
+        painter.drawRect(self.rect())
 
 
-        def paint(self,painter,option,widget):
-            painter.setPen(Qt.NoPen)
-            painter.drawRect(self.rect())
-
-
-
-class MyBlock(QGraphicsWidget):
-    """ Visual Block, with right hand spacer """
+class BlockItem(SpacerContainer.Item):
     def __init__(self,parent,block):
-        super(MyBlock,self).__init__(parent=parent)
-        self.parent = typecheck(parent,DrawingBoard,"parent")
+        typecheck(parent,DrawingBoard,"parent")
+        super(BlockItem,self).__init__(parent,parent.blockRibbon)
         self.block = block
         self.block.visual = self
         self.setContentsMargins(5,5,5,5)
-
         # We want to have a little space above and below the Emitter/Collector,
         # Set up top and bottom margin to give that space. 
         self._topMargin = MyBlockHorizontalSpacer(self)
@@ -321,16 +267,19 @@ class MyBlock(QGraphicsWidget):
         self.myEmitter = MyEmitter(self)
         self.myCollector = MyCollector(self)
 
+    def itemA(self):
+        return self.block.leftBlock.visual if self.block.leftBlock else None
+
+    def itemB(self):
+        return self.block.rightBlock.visual if self.block.rightBlock else None
+
+    def isUsed(self):
+        return True
+
     def link(self):
-        print "linking block",self.block.index
+        super(BlockItem,self).link()
+        
         l = self.parent.layout()
-
-        leftSpacer = self.parent.blockRibbon.getLeftSpacer(self.block)
-        rightSpacer = self.parent.blockRibbon.getRightSpacer(self.block)
-        # Link the spacers once you have both of them
-        leftSpacer.link()
-        rightSpacer.link()
-
         # Link with top and bottom margins
         l.addAnchor(self,Qt.AnchorTop, self._topMargin, Qt.AnchorTop)
         l.addAnchor(self,Qt.AnchorLeft, self._topMargin, Qt.AnchorLeft)
@@ -370,6 +319,249 @@ class MyBlock(QGraphicsWidget):
 
 
 
+
+# class BlockRibbon(QGraphicsWidget):
+#     """ A band like object for holding Blocks """
+#     def __init__(self,parent):
+#         super(BlockRibbon,self).__init__(parent=parent)
+#         self.parent = typecheck(parent,DrawingBoard,"parent")
+#         self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.Preferred))
+#         self.setMinimumWidth(15)
+#         # This is a list of spacers in this container
+#         self._spacers = list() 
+# 
+#     def getLeftSpacer(self,block):
+#         ret = filter(lambda x: x.rightBlock == block, self._spacers)
+#         # Delete outdated spacers
+#         for spacer in ret:
+#             if not spacer.leftBlock == block.leftBlock:
+#                 # Delete this object, it doesnt match anymore
+#                 self._spacers.remove(spacer)
+# 
+#         ret = filter(lambda x: x.rightBlock == block, self._spacers)
+#         # return existing space if only one exists. There should not be extras
+#         if len(ret) == 1 and ret[0].leftBlock == block.leftBlock:
+#             return ret[0]
+#         elif len(ret) >= 1:
+#             raise Exception("To many spacers found $d"%len(ret))
+#         # No existing spacers fit - create a new spacer
+#         spacer = BlockRibbon.Spacer(self)
+#         spacer.rightBlock = block
+#         spacer.leftBlock = block.leftBlock
+#         self._spacers.append(spacer)
+#         return spacer
+# 
+#     def getRightSpacer(self,block):
+#         ret = filter(lambda x: x.leftBlock == block, self._spacers)
+#         # Remove outdated spacers
+#         for spacer in ret:
+#             if not spacer.rightBlock == block.rightBlock:
+#                 # Remove this spacer, it does not match anymore
+#                 self._spacers.remove(spacer)
+# 
+#         ret = filter(lambda x: x.leftBlock == block, self._spacers)
+#         # return existing spacer if only one exists. there should not be extras
+#         if len(ret) == 1 and ret[0].rightBlock == block.rightBlock:
+#             return ret[0]
+#         elif len(ret) >= 1:
+#             raise Exception("To many spacers found! %d"%len(ret))
+# 
+#         # No existing spacers fit - create a new one
+#         spacer = BlockRibbon.Spacer(self)
+#         spacer.leftBlock = block
+#         spacer.rightBlock = block.rightBlock
+#         self._spacers.append(spacer)
+#         return spacer
+# 
+#     def mousePressEvent(self,event):
+#         pos = event.pos()
+#         super(MyContainer,self).mousePressEvent(event)
+# 
+#     def mouseReleaseEvent(self,event):
+#         self.setCursor(Qt.ArrowCursor)
+#         super(MyContainer,self).mouseReleaseEvent(event)
+# 
+# 
+#     def paint(self,painter,option,widget):
+#         painter.setPen(Qt.green)
+#         painter.drawRect(self.rect())
+# 
+#     class Spacer(QGraphicsWidget):
+#         """ Block Spacer """
+#         def __init__(self,parent):
+#             self.parent = typecheck(parent,BlockRibbon,"parent")
+#             super(BlockRibbon.Spacer,self).__init__(parent=parent)
+#             self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.Preferred))
+#             self.setPreferredWidth(15)
+#             self.setMinimumWidth(15)
+#             self.setAcceptDrops(True)
+#             self.leftBlock = None
+#             self.rightBlock = None
+# 
+#         def link(self):
+#             l = self.parent.parent.layout()
+#             # If you have a block to your left, connect
+#             if self.leftBlock and self.leftBlock.visual:
+#                 l.addAnchor(self, Qt.AnchorLeft, self.leftBlock.visual, Qt.AnchorRight)
+#                 l.addAnchor(self, Qt.AnchorTop, self.leftBlock.visual, Qt.AnchorTop)
+#                 l.addAnchor(self, Qt.AnchorBottom, self.leftBlock.visual, Qt.AnchorBottom)
+#             # Otherwise connect to left container edge
+#             else:
+#                 l.addAnchor(self, Qt.AnchorLeft, self.parent, Qt.AnchorLeft)
+#                 l.addAnchor(self, Qt.AnchorTop, self.parent, Qt.AnchorTop)
+#                 l.addAnchor(self, Qt.AnchorBottom, self.parent, Qt.AnchorBottom)
+# 
+#             # If you have a block to your right, connect
+#             if self.rightBlock and self.rightBlock.visual:
+#                 l.addAnchor(self, Qt.AnchorRight, self.rightBlock.visual, Qt.AnchorLeft)
+#                 l.addAnchor(self, Qt.AnchorTop, self.rightBlock.visual, Qt.AnchorTop)
+#                 l.addAnchor(self, Qt.AnchorBottom, self.rightBlock.visual, Qt.AnchorBottom)
+#             # Otherwise connect to the right container edge
+#             else:
+#                 l.addAnchor(self, Qt.AnchorRight, self.parent, Qt.AnchorRight)
+#                 l.addAnchor(self, Qt.AnchorTop, self.parent, Qt.AnchorTop)
+#                 l.addAnchor(self, Qt.AnchorBottom, self.parent, Qt.AnchorBottom)
+# 
+#         def dragEnterEvent(self,event):
+#             if not event.mimeData().hasText():
+#                 event.setAccepted(False)
+#                 return
+#             
+#             data = json.loads(str(event.mimeData().text()))
+#             if 'block' in data:
+#                 event.setAccepted(True)
+#                 self.dragOver = True
+#             else:
+#                 event.setAccepted(False)
+# 
+#         def dragLeaveEvent(self,event):
+#             self.dragOver = False
+# 
+#         def dropEvent(self,event):
+#             self.dragOver = False
+#             # Dragged Index
+#             data = json.loads(str(event.mimeData().text()))
+#             if not 'block' in data:
+#                 raise Exception("Wrong drag data type!")
+#             srcIdx = data['block']
+#             # Left Index
+#             lowerIdx = self.leftBlock.index if self.leftBlock else None
+#             upperIdx = self.rightBlock.index if self.rightBlock else None
+#             blocks = self.parent.parent.topology.blocks
+# 
+#             lastIdx = None
+#             currIdx = srcIdx
+#             # If we are moving to the right, lowerIdx is the target index.
+#             # Clear the dragged block's index, then shift all effected block
+#             # indices left.
+#             # NOTE: See issue #12
+#             if lowerIdx > srcIdx:
+#                 while isinstance(currIdx,int) and currIdx < (upperIdx or lowerIdx+1): # In case upperIdx is None, use lower+1
+#                     nextIdx = blocks[currIdx].rightBlock.index if blocks[currIdx].rightBlock else None
+#                     blocks[currIdx].index = lastIdx
+#                     print "%s -> %s"%(str(currIdx),str(lastIdx))
+#                     lastIdx = currIdx
+#                     currIdx = nextIdx
+#                 assert lastIdx == lowerIdx, "%r %r"%(lastIdx,upperIdx)
+# 
+#             # If we are moving to the left, upperIdx is the target index.
+#             # Clear the dragged blocks index, then shift all effected blocks right
+#             elif upperIdx < srcIdx:
+#                 while isinstance(currIdx,int) and currIdx > lowerIdx:
+#                     nextIdx = blocks[currIdx].leftBlock.index if blocks[currIdx].leftBlock else None
+#                     blocks[currIdx].index = lastIdx
+#                     print "%s -> %s"%(str(currIdx),str(lastIdx))
+#                     lastIdx = currIdx
+#                     currIdx = nextIdx
+#                 assert lastIdx == upperIdx, "%r %r"%(lastIdx,upperIdx)
+# 
+#             # Otherwise we are just dragging to the side a bit and nothing is 
+#             # really moving anywhere. Return immediately to avoid trying to give
+#             # the block a new index and unnecessary extra linking actions.
+#             else:
+#                 print "No op!"
+#                 return
+#             # Finally give the moved object its desired destination. Then make 
+#             # the DrawingBoard relink all the objects again.
+#             blocks[srcIdx].index = lastIdx
+#             self.parent.parent.link()
+# 
+# 
+#         def paint(self,painter,option,widget):
+#             painter.setPen(Qt.NoPen)
+#             painter.drawRect(self.rect())
+# 
+# 
+# 
+# class MyBlock(QGraphicsWidget):
+#     """ Visual Block, with right hand spacer """
+#     def __init__(self,parent,block):
+#         super(MyBlock,self).__init__(parent=parent)
+#         self.parent = typecheck(parent,DrawingBoard,"parent")
+#         self.block = block
+#         self.block.visual = self
+#         self.setContentsMargins(5,5,5,5)
+# 
+#         # We want to have a little space above and below the Emitter/Collector,
+#         # Set up top and bottom margin to give that space. 
+#         self._topMargin = MyBlockHorizontalSpacer(self)
+#         self._botMargin = MyBlockHorizontalSpacer(self)
+#         # TODO: Set up left and right margins as well
+# 
+#         # Set up Emitter and Collector Containers. They will sit inside the 
+#         # block margins
+#         self.myEmitter = MyEmitter(self)
+#         self.myCollector = MyCollector(self)
+# 
+#     def link(self):
+#         print "linking block",self.block.index
+#         l = self.parent.layout()
+# 
+#         leftSpacer = self.parent.blockRibbon.getLeftSpacer(self.block)
+#         rightSpacer = self.parent.blockRibbon.getRightSpacer(self.block)
+#         # Link the spacers once you have both of them
+#         leftSpacer.link()
+#         rightSpacer.link()
+# 
+#         # Link with top and bottom margins
+#         l.addAnchor(self,Qt.AnchorTop, self._topMargin, Qt.AnchorTop)
+#         l.addAnchor(self,Qt.AnchorLeft, self._topMargin, Qt.AnchorLeft)
+#         l.addAnchor(self,Qt.AnchorRight, self._topMargin, Qt.AnchorRight)
+#         l.addAnchor(self,Qt.AnchorBottom, self._botMargin, Qt.AnchorBottom)
+#         l.addAnchor(self,Qt.AnchorLeft, self._botMargin, Qt.AnchorLeft)
+#         l.addAnchor(self,Qt.AnchorRight, self._botMargin, Qt.AnchorRight)
+# 
+#         # Link with emitter and collector containers
+#         l.addAnchor(self._topMargin, Qt.AnchorBottom, self.myEmitter, Qt.AnchorTop)
+#         l.addAnchor(self._botMargin, Qt.AnchorTop, self.myEmitter, Qt.AnchorBottom)
+#         l.addAnchor(self._topMargin, Qt.AnchorBottom, self.myCollector, Qt.AnchorTop)
+#         l.addAnchor(self._botMargin, Qt.AnchorTop, self.myCollector, Qt.AnchorBottom)
+#         l.addAnchor(self, Qt.AnchorLeft, self.myCollector, Qt.AnchorLeft)
+#         l.addAnchor(self, Qt.AnchorRight, self.myEmitter, Qt.AnchorRight)
+#         l.addAnchor(self.myCollector, Qt.AnchorRight, self.myEmitter, Qt.AnchorLeft)
+# 
+#     def mousePressEvent(self,event):
+#         pos = event.pos()
+#         print "Block:",self.block.index
+#         self.setCursor(Qt.ClosedHandCursor)
+# 
+#     def mouseMoveEvent(self, event):
+#         drag = QDrag(event.widget())
+#         mimeData = QMimeData()
+#         mimeData.setText(json.dumps({'block':self.block.index}))
+#         drag.setMimeData(mimeData)
+#         drag.start()
+# 
+#     def mouseReleaseEvent(self,event):
+#         print "hi",
+#         self.setCursor(Qt.ArrowCursor)
+# 
+#     def paint(self,painter,option,widget):
+#         painter.setPen(Qt.red)
+#         painter.drawRect(self.rect())
+# 
+# 
+
 class MyBlockHorizontalSpacer(QGraphicsWidget):
     def __init__(self,parent):
         super(MyBlockHorizontalSpacer,self).__init__(parent=parent)
@@ -382,7 +574,8 @@ class MyContainer(QGraphicsWidget):
     """ Emitter or Collector """
     def __init__(self,parent):
         super(MyContainer,self).__init__(parent=parent)
-        self.parent = typecheck(parent,MyBlock,"parent")
+#         self.parent = typecheck(parent,MyBlock,"parent")
+        self.parent = typecheck(parent,BlockItem,"parent")
         self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.Preferred))
 #         self.setPreferredWidth(15)
         self.setMinimumWidth(15)
@@ -687,7 +880,7 @@ class DrawingBoard(QGraphicsWidget):
         self.visualSnaps = list()
 
         self.bandStack = BandStack(self)
-        self.blockRibbon = BlockRibbon(self)
+        self.blockRibbon = BlockRibbon2(self)
 
     def autoLayout(self,topology):
         """ Populates the visualBlocks and visualSnaps lists """
@@ -699,7 +892,8 @@ class DrawingBoard(QGraphicsWidget):
 
         for index,block in topology.blocks.items():
             print "adding block",index
-            vertexBlock = MyBlock(self,block)
+#             vertexBlock = MyBlock(self,block)
+            vertexBlock = BlockItem(self,block)
             self.visualBlocks.append(vertexBlock)
             for snap in block.emitter.values()+block.collector.values():
                 print "adding snap",snap.order
