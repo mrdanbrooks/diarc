@@ -81,10 +81,6 @@ class BandSpacer(SpacerContainer.Spacer):
         painter.setPen(Qt.lightGray)
         painter.drawRect(self.rect())
 
-
-
-
-
 class BandItem(SpacerContainer.Item):
     def __init__(self,parent,band):
         typecheck(parent,DrawingBoard,"parent")
@@ -690,7 +686,6 @@ class DrawingBoard(QGraphicsWidget):
         self.visualBlocks = list()
         self.visualSnaps = list()
 
-#         self.bandStack = BandStack(self)
         self.bandStack = BandStack(self)
         self.blockRibbon = BlockRibbon(self)
 
@@ -699,7 +694,6 @@ class DrawingBoard(QGraphicsWidget):
         self.topology = topology
         for altitude,band in topology.bands.items():
             print "adding band",altitude
-#             visualBand = MyBand(self,band)
             visualBand = BandItem(self,band)
             self.visualBands.append(visualBand)
 
