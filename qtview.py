@@ -76,11 +76,46 @@ class BandSpacer(SpacerContainer.Spacer):
         print "Band Spacer: Above=",self.topBand.band.altitude if self.topBand else None,
         print "Below=",self.bottomBand.band.altitude if self.bottomBand else None 
 
+    def dragEnterEvent(self,event):
+        if not event.mimeData().hasText():
+            event.setAccepted(False)
+            return
+        data = json.loads(str(event.mimeData().text()))
+        if not 'band' in data:
+            event.setAccepted(False)
+            return
+        # To know if the band being dragged is on the same side of the blockRibbon,
+        # we look at the altitudes of the bands on either side of the spacer. 
+        # We need to look at both because neither is guarenteed to be a real band
+        # (the furthest and closest bands to the blockRibbon will each have a 
+        # non existant band on one side).
+        topAltitude = self.topBand.band.altitude if self.topBand else 0
+        bottomAltitude = self.bottomBand.band.altitude if self.bottomBand else 0
+        # Accept a positive altitude band
+        if data['band'] > 0 and (topAltitude > 0 or bottomAltitude > 0):
+            event.setAccepted(True)
+            self.dragOver = True
+            print "Drag Positive ENTER"
+        # Accept a negative altitude band
+        elif data['band'] < 0 and (topAltitude < 0 or bottomAltitude < 0):
+            event.setAccepted(True)
+            self.dragOver = True
+            print "Drag Negative ENTER"
+        else:
+            event.setAccepted(False)
+
+    def dragLeaveEvent(self,event):
+        self.dragOver = False
+
+
+
+
     def paint(self,painter,option,widget):
-        pen = QPen()
-        pen.setBrush(Qt.lightGray)
-        pen.setStyle(Qt.DotLine)
-        painter.setPen(pen)
+#         pen = QPen()
+#         pen.setBrush(Qt.lightGray)
+#         pen.setStyle(Qt.DotLine)
+#         painter.setPen(pen)
+        painter.setPen(Qt.NoPen)
         painter.drawRect(self.rect())
 
 class BandItem(SpacerContainer.Item):
@@ -133,6 +168,17 @@ class BandItem(SpacerContainer.Item):
         print "Band:",self.band.altitude
         sys.stdout.flush()
         self.setCursor(Qt.ClosedHandCursor)
+
+    def mouseMoveEvent(self, event):
+        drag = QDrag(event.widget())
+        mimeData = QMimeData()
+        mimeData.setText(json.dumps({'band':self.band.altitude}))
+        drag.setMimeData(mimeData)
+        drag.start()
+
+    def mouseReleaseEvent(self,event):
+        print "hi",
+        self.setCursor(Qt.ArrowCursor)
 
     def paint(self,painter,option,widget):
         if self.band.isUsed():
@@ -607,6 +653,10 @@ class SnapBandLink(QGraphicsWidget):
         self.setMinimumHeight(5)
  
     def paint(self,painter,option,widget):
+        brush = QBrush()
+        brush.setStyle(Qt.SolidPattern)
+        brush.setColor(Qt.white)
+        painter.fillRect(self.rect(),brush)
         pen = QPen()
         pen.setBrush(Qt.red)
         pen.setStyle(Qt.DashLine)
@@ -668,19 +718,19 @@ class DrawingBoard(QGraphicsWidget):
         self.layout().addAnchor(self.bandStack, Qt.AnchorRight, self.blockRibbon, Qt.AnchorRight)
 
         # Start anchoring the other blocks
-        print "\n\n__linking bands__"
         print "Current Spacers="
         for spacer in self.bandStack._spacers:
             print spacer.itemA.band.altitude if spacer.itemA else None,spacer.itemB.band.altitude if spacer.itemB else None
         print "End Spacers"
-        for b in self.visualBands:
-            b.link()
         print "\n\n__Linking blocks__"
         for b in self.visualBlocks:
             b.link()
         print "\n\n__Linking snaps__"
         for s in self.visualSnaps:
             s.link()
+        print "\n\n__linking bands__"
+        for b in self.visualBands:
+            b.link()
 
         self.layout().invalidate()
         
