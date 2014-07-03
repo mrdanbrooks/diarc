@@ -107,7 +107,20 @@ class BandSpacer(SpacerContainer.Spacer):
     def dragLeaveEvent(self,event):
         self.dragOver = False
 
-
+    def dropEvent(self,event):
+        data = json.loads(str(event.mimeData().text()))
+        topAltitude = self.topBand.band.altitude if self.topBand else 0
+        bottomAltitude = self.bottomBand.band.altitude if self.bottomBand else 0
+        # Accept a positive altitude band
+        if data['band'] > 0 and (topAltitude > 0 or bottomAltitude > 0):
+            event.setAccepted(True)
+            self.dragOver = True
+            print "Droped Positive!"
+        # Accept a negative altitude band
+        elif data['band'] < 0 and (topAltitude < 0 or bottomAltitude < 0):
+            event.setAccepted(True)
+            self.dragOver = True
+            print "Droped Negative!"
 
 
     def paint(self,painter,option,widget):
