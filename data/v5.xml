@@ -42,12 +42,14 @@
   <edges>
     <edge id="0">
       <band altitude='1' rank='0'/>
+      <band altitude='-4' rank='0'/>
     </edge>
     <edge id="1">
       <band altitude='3' rank='1' />
       <band altitude='-3' rank='1' />
     </edge>
     <edge id="2">
+      <band altitude='4' rank='2'/>
       <band altitude='-1' rank='2' />
     </edge>
     <edge id="3">
