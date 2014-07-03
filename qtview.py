@@ -263,8 +263,8 @@ class BlockItem(SpacerContainer.Item):
 
         # We want to have a little space above and below the Emitter/Collector,
         # Set up top and bottom margin to give that space. 
-        self._topMargin = MyBlockHorizontalSpacer(self)
-        self._botMargin = MyBlockHorizontalSpacer(self)
+        self._topMargin = BlockItem.HorizontalSpacer(self)
+        self._botMargin = BlockItem.HorizontalSpacer(self)
         # TODO: Set up left and right margins as well
 
         # Set up Emitter and Collector Containers. They will sit "inside" the 
@@ -331,6 +331,12 @@ class BlockItem(SpacerContainer.Item):
         painter.drawRect(self.rect())
 
 
+    class HorizontalSpacer(QGraphicsWidget):
+        def __init__(self,parent):
+            super(BlockItem.HorizontalSpacer,self).__init__(parent=parent)
+            self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.MinimumExpanding))
+            self.setPreferredHeight(5)
+            self.setMinimumHeight(5)
 
 
 
