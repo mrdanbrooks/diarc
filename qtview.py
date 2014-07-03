@@ -527,6 +527,11 @@ class SnapItem(SpacerContainer.Item):
         self.setSizePolicy(QSizePolicy(QSizePolicy.Preferred,QSizePolicy.Preferred))
         self.setPreferredWidth(20)
         self.setPreferredHeight(40)
+        self.setMaximumHeight(40)
+
+        #Create two SnapBandLinks - one for each band
+        self.upLink = SnapBandLink(None)
+        self.downLink = SnapBandLink(None)
  
     def itemA(self):
         """ We use itemA for the SnapItem to the left """
@@ -539,6 +544,31 @@ class SnapItem(SpacerContainer.Item):
     def isUsed(self):
         return True
 
+    def link(self):
+        super(SnapItem,self).link()
+
+        #Connect bandlinks
+        l = self.parent.layout()
+        if self.snap.posBandLink:
+            self.upLink.setVisible(True)
+            l.addAnchor(self, Qt.AnchorTop, self.upLink, Qt.AnchorBottom)
+            l.addAnchor(self.snap.posBandLink.visual, Qt.AnchorTop, self.upLink, Qt.AnchorTop)
+            l.addAnchor(self, Qt.AnchorLeft, self.upLink, Qt.AnchorLeft)
+            l.addAnchor(self, Qt.AnchorRight, self.upLink, Qt.AnchorRight)
+        else:
+            self.upLink.setVisible(False)
+            self.upLink.setParent(None)
+
+        if self.snap.negBandLink:
+            self.downLink.setVisible(True)
+            l.addAnchor(self, Qt.AnchorBottom, self.downLink, Qt.AnchorTop)
+            l.addAnchor(self.snap.negBandLink.visual, Qt.AnchorBottom, self.downLink, Qt.AnchorBottom)
+            l.addAnchor(self, Qt.AnchorLeft, self.downLink, Qt.AnchorLeft)
+            l.addAnchor(self, Qt.AnchorRight, self.downLink, Qt.AnchorRight)
+        else:
+            self.downLink.setVisible(False)
+            self.downLink.setParent(None)
+            
 
     def mousePressEvent(self,event):
         pos = event.pos()
@@ -566,13 +596,21 @@ class SnapItem(SpacerContainer.Item):
             painter.drawText(3,rect.height()-3,str(self.snap.negBandLink.altitude))
 
 
-
-class MyArc(QGraphicsWidget):
+class SnapBandLink(QGraphicsWidget):
     def __init__(self,parent):
-        super(MyArc,self).__init__(parent=parent)
+        super(SnapBandLink,self).__init__(parent=parent)
+        self.setVisible(False)
+        self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.MinimumExpanding))
+        self.setPreferredWidth(5)
+        self.setMinimumWidth(5)
+        self.setPreferredHeight(5)
+        self.setMinimumHeight(5)
  
     def paint(self,painter,option,widget):
-        painter.setPen(Qt.red)
+        pen = QPen()
+        pen.setBrush(Qt.red)
+        pen.setStyle(Qt.DashLine)
+        painter.setPen(pen)
         painter.drawRect(self.rect())
 
 
