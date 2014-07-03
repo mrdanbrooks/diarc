@@ -22,8 +22,6 @@ class SpacerContainer(QGraphicsWidget):
         self._spacerType = None #SpacerContainer.Spacer
 
     def getSpacerA(self,item):
-#         print "A=",item
-#         sys.stdout.flush()
         # Determine if the item is currently being used
         isUsed = item.isUsed()
         # Find spacers where item is itemB (making this spacer A)
@@ -31,27 +29,17 @@ class SpacerContainer(QGraphicsWidget):
         # Delete old unused spacers. Remove them from the QLayout system so 
         # they don't try to draw anymore and from our list of spacers so we
         # don't try to search it anymore.
-#         print "found ",len(ret)," matches"
-#         sys.stdout.flush()
         for spacer in ret:
-#             print spacer.itemA,"==",item.itemA(),"?"
-#             sys.stdout.flush()
             if (not spacer.itemA == item.itemA()) or (not isUsed):
-#                 print "Removing old spacer",spacer.itemA.band.altitude if spacer.itemA else None,spacer.itemB.band.altitude if spacer.itemB else None
-#                 sys.stdout.flush()
                 spacer.setParent(None)
                 self._spacers.remove(spacer)
         ret = filter(lambda x: x.itemB == item, self._spacers)
         # Once we have deleted old spacers, make sure we are using the band.
         # If we are not, don't return anything (just None)
         if not isUsed:
-#             print "#hspacers",len(self._spacers),"not used"
-#             sys.stdout.flush()
             return None
         # Return existing spacer if only one exists. There should not be extras
         if len(ret) == 1 and ret[0].itemA == item.itemA():
-#             print "#hspacers",len(self._spacers), "already exists"
-#             sys.stdout.flush()
             return ret[0]
         elif len(ret) >= 1:
             raise Exception("To many spacers found %d"%len(ret))
@@ -60,13 +48,9 @@ class SpacerContainer(QGraphicsWidget):
         spacer.itemB = item
         spacer.itemA = item.itemA()
         self._spacers.append(spacer)
-#         print "#hspacers",len(self._spacers), "added one"
-#         sys.stdout.flush()
         return spacer
 
     def getSpacerB(self,item):
-#         print "B=",item
-#         sys.stdout.flush()
         """ Finds the spacer for an item in direction b """
         # Determine if the item is currently being used
         isUsed = item.isUsed()
@@ -75,14 +59,8 @@ class SpacerContainer(QGraphicsWidget):
         # Delete old unused spacers. Remove them from the QLayout system so 
         # they don't try to draw anymore and from our list of spacers so we
         # don't try to search it anymore.
-#         print "found ",len(ret)," matches"
-#         sys.stdout.flush()
         for spacer in ret:
-#             print spacer.itemB,"==",item.itemB(),"?"
-#             sys.stdout.flush()
             if (not spacer.itemB == item.itemB()) or (not isUsed):
-#                 print "Removing old spacer",spacer.itemA.band.altitude if spacer.itemA else None,spacer.itemB.band.altitude if spacer.itemB else None
-#                 sys.stdout.flush()
                 spacer.setParent(None)
                 self._spacers.remove(spacer)
         # TODO: This next line may not be needed
@@ -90,13 +68,9 @@ class SpacerContainer(QGraphicsWidget):
         # Once we have deleted old spacers, make sure we are using the band.
         # If we are not, don't return anything (just None)
         if not isUsed:
-#             print "#hspacers",len(self._spacers),"not used"
-#             sys.stdout.flush()
             return None
         # Return existing spacer if only one exists. There should not be extras
         if len(ret) == 1 and ret[0].itemB == item.itemB():
-#             print "#hspacers",len(self._spacers), "already exists"
-#             sys.stdout.flush()
             return ret[0]
         elif len(ret) >= 1:
             raise Exception("To many spacers found %d"%len(ret))
@@ -105,8 +79,6 @@ class SpacerContainer(QGraphicsWidget):
         spacer.itemA = item
         spacer.itemB = item.itemB()
         self._spacers.append(spacer)
-#         print "#hspacers",len(self._spacers), "added one"
-#         sys.stdout.flush()
         return spacer
 
     def _get_spacerType(self):
@@ -161,13 +133,9 @@ class SpacerContainer(QGraphicsWidget):
             # Calculate Spacers A and B - deleteing old spacers to this item
             # when necessary, reusing existing spacers if possible, and otherwise
             # creating new spacers
-#             print "Looking for spacers"
-#             sys.stdout.flush()
             spacerA = self.container.getSpacerA(self)
             spacerB = self.container.getSpacerB(self)
             if isinstance(spacerA,types.NoneType) or isinstance(spacerB,types.NoneType):
-#                 print "Not linking band",self.band.altitude
-#                 sys.stdout.flush()
                 self.setVisible(False)
                 return
             self.setVisible(True)

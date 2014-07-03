@@ -77,7 +77,6 @@ class BandSpacer(SpacerContainer.Spacer):
         print "Below=",self.bottomBand.band.altitude if self.bottomBand else None 
 
     def paint(self,painter,option,widget):
-#             painter.setPen(Qt.NoPen)
         pen = QPen()
         pen.setBrush(Qt.lightGray)
         pen.setStyle(Qt.DotLine)
@@ -593,12 +592,10 @@ class DrawingBoard(QGraphicsWidget):
 
         for index,block in topology.blocks.items():
             print "adding block",index
-#             vertexBlock = MyBlock(self,block)
             vertexBlock = BlockItem(self,block)
             self.visualBlocks.append(vertexBlock)
             for snap in block.emitter.values()+block.collector.values():
                 print "adding snap",snap.order
-#                 mySnap = MySnap(self,snap)
                 mySnap = SnapItem(self,snap)
                 self.visualSnaps.append(mySnap)
         self.link()
