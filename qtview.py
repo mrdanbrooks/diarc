@@ -10,9 +10,9 @@ import json
 import sys
 
 
-class BandStack2(SpacerContainer):
+class BandStack(SpacerContainer):
     def __init__(self,parent):
-        super(BandStack2,self).__init__(parent)
+        super(BandStack,self).__init__(parent)
         self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.Preferred))
         self.setMinimumWidth(15)
         self.spacerType = BandSpacer
@@ -691,7 +691,7 @@ class DrawingBoard(QGraphicsWidget):
         self.visualSnaps = list()
 
 #         self.bandStack = BandStack(self)
-        self.bandStack = BandStack2(self)
+        self.bandStack = BandStack(self)
         self.blockRibbon = BlockRibbon(self)
 
     def autoLayout(self,topology):
