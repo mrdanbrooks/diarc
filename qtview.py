@@ -78,7 +78,10 @@ class BandSpacer(SpacerContainer.Spacer):
 
     def paint(self,painter,option,widget):
 #             painter.setPen(Qt.NoPen)
-        painter.setPen(Qt.lightGray)
+        pen = QPen()
+        pen.setBrush(Qt.lightGray)
+        pen.setStyle(Qt.DotLine)
+        painter.setPen(pen)
         painter.drawRect(self.rect())
 
 class BandItem(SpacerContainer.Item):
@@ -250,33 +253,43 @@ class BlockSpacer(SpacerContainer.Spacer):
 
 
 class BlockItem(SpacerContainer.Item):
+    """ This is a QGraphicsWidget for a Diarc Block. """
     def __init__(self,parent,block):
         typecheck(parent,DrawingBoard,"parent")
         super(BlockItem,self).__init__(parent,parent.blockRibbon)
         self.block = block
         self.block.visual = self
         self.setContentsMargins(5,5,5,5)
+
         # We want to have a little space above and below the Emitter/Collector,
         # Set up top and bottom margin to give that space. 
         self._topMargin = MyBlockHorizontalSpacer(self)
         self._botMargin = MyBlockHorizontalSpacer(self)
         # TODO: Set up left and right margins as well
 
-        # Set up Emitter and Collector Containers. They will sit inside the 
+        # Set up Emitter and Collector Containers. They will sit "inside" the 
         # block margins
         self.myEmitter = MyEmitter(self)
         self.myCollector = MyCollector(self)
 
     def itemA(self):
+        """ We use itemA for the BlockItem to the left. """
         return self.block.leftBlock.visual if self.block.leftBlock else None
 
     def itemB(self):
+        """ We use itemB for the BlockItem to the right. """
         return self.block.rightBlock.visual if self.block.rightBlock else None
 
     def isUsed(self):
+        """ Right now, BlockItem cannot 'disappear' """
         return True
 
     def link(self):
+        """ Link to other objects around you. In addition to linking to other 
+        blocks, we need to link to our top and bottom margins, and the emitter
+        and collector containers 
+        """
+        # Link with other BlockItems
         super(BlockItem,self).link()
         
         l = self.parent.layout()
@@ -881,6 +894,10 @@ class DrawingBoard(QGraphicsWidget):
 
         self.bandStack = BandStack(self)
         self.blockRibbon = BlockRibbon2(self)
+ 
+    def mousePressEvent(self,event):
+        print "Spacers:",len(self.bandStack._spacers)+len(self.blockRibbon._spacers)
+
 
     def autoLayout(self,topology):
         """ Populates the visualBlocks and visualSnaps lists """
