@@ -109,9 +109,24 @@ class BandItem(SpacerContainer.Item):
         print "*** linking band",self.band.altitude,"***"
         sys.stdout.flush()
         super(BandItem,self).link()
-
-        l = self.parent.layout()
-        l.addAnchor(self, Qt.AnchorHorizontalCenter, self.parent.blockRibbon, Qt.AnchorHorizontalCenter)
+        
+        # TODO: This needs optimized because the isUsed call is expensive. we 
+        # should see if we can call it once at the begining of link perhaps? 
+        # then we could cache the value?
+        if self.band.isUsed():
+            l = self.parent.layout()
+            emitters = self.band.emitters
+            collectors = self.band.collectors
+            emitters.sort(lambda x,y: x.block.index - y.block.index)
+            collectors.sort(lambda x,y: x.block.index - y.block.index)
+            print "emitters=",[s.block.index for s in emitters]
+            print "collectors=",[s.block.index for s in collectors]
+            if self.band.isPositive:
+                l.addAnchor(self, Qt.AnchorLeft, emitters[0].visual, Qt.AnchorLeft)
+                l.addAnchor(self, Qt.AnchorRight, collectors[-1].visual, Qt.AnchorRight)
+            else:
+                l.addAnchor(self, Qt.AnchorLeft, collectors[0].visual, Qt.AnchorLeft)
+                l.addAnchor(self, Qt.AnchorRight, emitters[-1].visual, Qt.AnchorRight)
 
     def mousePressEvent(self,event):
         pos = event.pos()
