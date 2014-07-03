@@ -493,18 +493,11 @@ class SnapSpacer(SpacerContainer.Spacer):
         painter.drawRect(self.rect())
 
 class MyEmitter(SnapContainer):
-    def __init__(self,parent):
-        print "**********************"
-        print type(super(MyEmitter,self))
-
-        super(MyEmitter,self).__init__(parent)
     def paint(self,painter,option,widget):
         painter.setPen(Qt.blue)
         painter.drawRect(self.rect())
    
 class MyCollector(SnapContainer):
-    def __init__(self,parent):
-        super(MyCollector,self).__init__(parent)
     def paint(self,painter,option,widget):
         painter.setPen(Qt.green)
         painter.drawRect(self.rect())
