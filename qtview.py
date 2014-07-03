@@ -339,6 +339,229 @@ class BlockItem(SpacerContainer.Item):
             self.setMinimumHeight(5)
 
 
+class SnapContainer(SpacerContainer):
+    def __init__(self,parent):
+        super(SnapContainer,self).__init__(parent.parent)
+        self.parentBlock = typecheck(parent,BlockItem,"parent")
+
+        self.spacerType = SnapSpacer
+        self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.Preferred))
+        self.setMinimumWidth(15)
+
+    def strType(self):
+        """ prints the container type as a string """
+        return "emitter" if isinstance(self,MyEmitter) else "collector" if isinstance(self,MyCollector) else "unknown"
+
+    def paint(self,painter,option,widget):
+        painter.setPen(Qt.green)
+        painter.drawRect(self.rect())
+
+    def mousePressEvent(self,event):
+        pos = event.pos()
+        print "Emitter" if isinstance(self,MyEmitter) else "Collector" if isinstance(self,MyCollector) else "Container"
+        super(SnapContainer,self).mousePressEvent(event)
+
+    def mouseReleaseEvent(self,event):
+        print "hi"
+        self.setCursor(Qt.ArrowCursor)
+        super(SnapContainer,self).mouseReleaseEvent(event)
+
+
+class SnapSpacer(SpacerContainer.Spacer):
+    def __init__(self,parent):
+        super(SnapSpacer,self).__init__(parent)
+        self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.Preferred))
+        self.setPreferredWidth(15)
+        self.setMinimumWidth(15)
+        self.setAcceptDrops(True)
+
+    @property
+    def leftSnap(self):
+        return self.itemA
+
+    @property
+    def rightSnap(self):
+        return self.itemB
+
+    def link(self):
+        l = self.parent.parent.layout()
+
+        # If you have a snap to your left, connect
+        target = None
+        if self.leftSnap:
+            l.addAnchor(self, Qt.AnchorLeft, self.leftSnap, Qt.AnchorRight)
+            l.addAnchor(self, Qt.AnchorVerticalCenter, self.leftSnap, Qt.AnchorVerticalCenter)
+#                 l.addAnchor(self, Qt.AnchorTop, self.leftSnap, Qt.AnchorTop)
+#                 l.addAnchor(self, Qt.AnchorBottom, self.leftSnap, Qt.AnchorBottom)
+
+        # Otherwise connect to left container edge
+        else:
+            l.addAnchor(self, Qt.AnchorLeft, self.parent, Qt.AnchorLeft)
+            l.addAnchor(self, Qt.AnchorVerticalCenter, self.parent, Qt.AnchorVerticalCenter)
+#                 l.addAnchor(self, Qt.AnchorTop, self.parent, Qt.AnchorTop)
+#                 l.addAnchor(self, Qt.AnchorBottom, self.parent, Qt.AnchorBottom)
+
+        # if you have a snap to your right, connect
+        if self.rightSnap:
+            l.addAnchor(self, Qt.AnchorRight, self.rightSnap, Qt.AnchorLeft)
+            l.addAnchor(self, Qt.AnchorVerticalCenter, self.rightSnap, Qt.AnchorVerticalCenter)
+#                 l.addAnchor(self, Qt.AnchorTop, self.rightSnap, Qt.AnchorTop)
+#                 l.addAnchor(self, Qt.AnchorBottom, self.rightSnap, Qt.AnchorBottom)
+
+        # Otherwise connect to the right container edge
+        else:
+            l.addAnchor(self, Qt.AnchorRight, self.parent, Qt.AnchorRight)
+            l.addAnchor(self, Qt.AnchorVerticalCenter, self.parent, Qt.AnchorVerticalCenter)
+#                 l.addAnchor(self, Qt.AnchorTop, self.parent, Qt.AnchorTop)
+#                 l.addAnchor(self, Qt.AnchorBottom, self.parent, Qt.AnchorBottom)
+
+    def dragEnterEvent(self,event):
+        """ Decides whether or not the information being dragged can be placed here"""
+        if not event.mimeData().hasText():
+            event.setAccepted(False)
+            return
+        data = json.loads(str(event.mimeData().text()))
+        if not set(['block','container','snap']).issubset(set(data.keys())):
+            event.setAccepted(False)
+            return
+        if not data['block'] == self.parent.parentBlock.block.index:
+            event.setAccepted(False)
+            return
+        if not self.parent.strType() == data['container']:
+            event.setAccepted(False)
+            return
+        event.setAccepted(True)
+
+
+    def dropEvent(self,event):
+        """ Relocates a MySnap to this position """
+        data = json.loads(str(event.mimeData().text()))
+        assert(data['block'] == self.parent.parentBlock.block.index)
+        assert(data['container'] == self.parent.strType())
+
+        srcIdx = data['snap']
+        lowerIdx = self.leftSnap.snap.order if self.leftSnap else None
+        upperIdx = self.rightSnap.snap.order if self.rightSnap else None
+        snaps = self.parent.parentBlock.block.emitter if isinstance(self.parent,MyEmitter) else self.parent.parentBlock.block.collector
+        print snaps.keys()
+        print "move snap",srcIdx,"between",lowerIdx,"and",upperIdx
+
+        lastIdx = None
+        currIdx = srcIdx
+        # If we are moving to the right, lowerIdx is the target index.
+        # Clear the dragged snaps's order, then shift all effected snap
+        # indices left.
+        # NOTE: see #12
+        if lowerIdx > srcIdx:
+            while isinstance(currIdx,int) and currIdx < (upperIdx or lowerIdx+1):
+                nextIdx = snaps[currIdx].rightSnap.order if snaps[currIdx].rightSnap else None
+                snaps[currIdx].order = lastIdx
+                print "%s -> %s"%(str(currIdx),str(lastIdx))
+                lastIdx = currIdx
+                currIdx = nextIdx
+            # Assertion check. TODO: Remove
+            assert lastIdx == lowerIdx, "%r %r"%(lastIdx,lowerIdx)
+
+        # If we are moving to the left, upperIdx is the target index.
+        # Clear the dragged snaps order, then shift all effected snaps
+        # indices right
+        elif upperIdx < srcIdx:
+            while isinstance(currIdx,int) and currIdx > lowerIdx:
+                nextIdx = snaps[currIdx].leftSnap.order if snaps[currIdx].leftSnap else None
+                snaps[currIdx].order = lastIdx
+                print "%s -> %s"%(str(currIdx),str(lastIdx))
+                lastIdx = currIdx
+                currIdx = nextIdx
+            # Assertion check. TODO remove
+            assert lastIdx == upperIdx, "%r %r"%(lastIdx,upperIdx)
+
+        # Otherwise we are just dragging to the side a bit and nothing is
+        # really moving anywhere. Return immediately to avoid trying to
+        # give the snap a new order and unnecessary extra linking actions.
+        else:
+            print "No op!"
+            return
+
+        # Finally give the moved object its desired destination. Then
+        # make the DrawingBoard relink all the objects again.
+        snaps[srcIdx].order = lastIdx
+        self.parent.parentBlock.parent.link()
+
+
+    def paint(self,painter,option,widget):
+        painter.setPen(Qt.NoPen)
+        painter.drawRect(self.rect())
+
+class MyEmitter(SnapContainer):
+    def __init__(self,parent):
+        print "**********************"
+        print type(super(MyEmitter,self))
+
+        super(MyEmitter,self).__init__(parent)
+    def paint(self,painter,option,widget):
+        painter.setPen(Qt.blue)
+        painter.drawRect(self.rect())
+   
+class MyCollector(SnapContainer):
+    def __init__(self,parent):
+        super(MyCollector,self).__init__(parent)
+    def paint(self,painter,option,widget):
+        painter.setPen(Qt.green)
+        painter.drawRect(self.rect())
+ 
+class SnapItem(SpacerContainer.Item):
+    def __init__(self,parent,snap):
+        typecheck(parent,DrawingBoard,"parent")
+        self.snap = snap
+        self.snap.visual = self
+        # Determine which container you are in
+        container = snap.block.visual.myEmitter if snap.isSource() else snap.block.visual.myCollector
+        super(SnapItem,self).__init__(parent,container)
+        self.setSizePolicy(QSizePolicy(QSizePolicy.Preferred,QSizePolicy.Preferred))
+        self.setPreferredWidth(20)
+        self.setPreferredHeight(40)
+ 
+    def itemA(self):
+        """ We use itemA for the SnapItem to the left """
+        return self.snap.leftSnap.visual if self.snap.leftSnap else None
+
+    def itemB(self):
+        """ We use itemB for the SnapItem to the right """
+        return self.snap.rightSnap.visual if self.snap.rightSnap else None
+
+    def isUsed(self):
+        return True
+
+
+    def mousePressEvent(self,event):
+        pos = event.pos()
+        print "Snap:",self.snap.order
+
+    def mouseMoveEvent(self, event):
+        drag = QDrag(event.widget())
+        mimeData = QMimeData()
+        mimeData.setText(json.dumps({'block': self.snap.block.index,'container': "emitter" if self.snap.isSource() else "collector",'snap':self.snap.order}))
+        drag.setMimeData(mimeData)
+        drag.start()
+
+
+    def mouseReleaseEvent(self,event):
+        print "hi"
+        self.setCursor(Qt.ArrowCursor)
+
+    def paint(self,painter,option,widget):
+        painter.setPen(Qt.red)
+        painter.drawRect(self.rect())
+        rect = self.geometry()
+        if self.snap.posBandLink:
+            painter.drawText(6,12,str(self.snap.posBandLink.altitude))
+        if self.snap.negBandLink:
+            painter.drawText(3,rect.height()-3,str(self.snap.negBandLink.altitude))
+
+
+
+
+
 
 class MyContainer(QGraphicsWidget):
     """ Emitter or Collector """
@@ -558,16 +781,16 @@ class MyContainer(QGraphicsWidget):
             painter.drawRect(self.rect())
 
 
-class MyEmitter(MyContainer):
-    def paint(self,painter,option,widget):
-        painter.setPen(Qt.blue)
-        painter.drawRect(self.rect())
-   
-class MyCollector(MyContainer):
-    def paint(self,painter,option,widget):
-        painter.setPen(Qt.green)
-        painter.drawRect(self.rect())
-   
+# class MyEmitter(MyContainer):
+#     def paint(self,painter,option,widget):
+#         painter.setPen(Qt.blue)
+#         painter.drawRect(self.rect())
+#    
+# class MyCollector(MyContainer):
+#     def paint(self,painter,option,widget):
+#         painter.setPen(Qt.green)
+#         painter.drawRect(self.rect())
+#    
 
 
 
@@ -671,7 +894,8 @@ class DrawingBoard(QGraphicsWidget):
             self.visualBlocks.append(vertexBlock)
             for snap in block.emitter.values()+block.collector.values():
                 print "adding snap",snap.order
-                mySnap = MySnap(self,snap)
+#                 mySnap = MySnap(self,snap)
+                mySnap = SnapItem(self,snap)
                 self.visualSnaps.append(mySnap)
         self.link()
         
