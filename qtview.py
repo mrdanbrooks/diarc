@@ -235,6 +235,7 @@ class BandItem(SpacerContainer.Item):
         self.setSizePolicy(QSizePolicy(QSizePolicy.Preferred,QSizePolicy.MinimumExpanding))
         self.setPreferredHeight(15)
         self.setMinimumHeight(15)
+        self.setZValue(self.band.rank)
 
     def itemA(self):
         """ Set itemA to be the topBand """
@@ -704,6 +705,7 @@ class SnapItem(SpacerContainer.Item):
         l = self.parent.layout()
         if self.snap.posBandLink:
             self.upLink.setVisible(True)
+            self.upLink.setZValue(self.snap.posBandLink.rank)
             l.addAnchor(self, Qt.AnchorTop, self.upLink, Qt.AnchorBottom)
             l.addAnchor(self.snap.posBandLink.visual, Qt.AnchorTop, self.upLink, Qt.AnchorTop)
             l.addAnchor(self, Qt.AnchorLeft, self.upLink, Qt.AnchorLeft)
@@ -714,6 +716,7 @@ class SnapItem(SpacerContainer.Item):
 
         if self.snap.negBandLink:
             self.downLink.setVisible(True)
+            self.downLink.setZValue(self.snap.negBandLink.rank)
             l.addAnchor(self, Qt.AnchorBottom, self.downLink, Qt.AnchorTop)
             l.addAnchor(self.snap.negBandLink.visual, Qt.AnchorBottom, self.downLink, Qt.AnchorBottom)
             l.addAnchor(self, Qt.AnchorLeft, self.downLink, Qt.AnchorLeft)
