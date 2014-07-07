@@ -5,7 +5,20 @@ import sys
 
 
 class SpacerContainer(QGraphicsWidget):
-    """ Creates Spacers
+    """ A SpacerContainer is a specialized widget for creating artifical
+    spacing between other widgets "inside" it. These spaces consist of Spacer
+    objects, which are usually drawn blank to give the same effect as margins.
+    Items and spacers occur in a linear arrangement, but the direction is unspecified.
+    The items and spacers are intended to be linked together using an AnchoredLayout,
+    as part of a two level layout process. The first level is called 'linking',
+    in which we actually reassign new AnchoredLayout properties to objects that
+    are defined to be beside each other. The second level is for the layout mechanism
+    to perform the acutal layout, with items being children of the SpacerContainer's 
+    parent object and Spacers being children of the SpacerContainer itself. 
+    Spacer objects can be used as targets for drag and drop operations.
+    This code is a generalization of repeated code used in qtview.
+
+    
     +--------+          +---------+          +--------+
     | Item A | Spacer A | Current | Spacer B | Item B |
     +--------+          +---------+          +--------+
@@ -16,12 +29,19 @@ class SpacerContainer(QGraphicsWidget):
     """
     def __init__(self,parent):
         super(SpacerContainer,self).__init__(parent=parent)
+        # Parent needs to be of type "DrawingBoard" to make sure that 
 #         self.parent = typecheck(parent,DrawingBoard,"parent")
         self.parent = parent
         self._spacers = list()
+        # We need to know what specific type of spacer we are using, since
+        # all new spacers are instantiated inside getSpacerA or getSpacerB. 
         self._spacerType = None #SpacerContainer.Spacer
 
     def getSpacerA(self,item):
+        """ Return the current spacer, or create a new one, in the direction of 
+        the current item's 'itemA'. This is used by SpacerContainer.Item objects
+        during the linking process.
+        """
         # Determine if the item is currently being used
         isUsed = item.isUsed()
         # Find spacers where item is itemB (making this spacer A)
@@ -93,7 +113,13 @@ class SpacerContainer(QGraphicsWidget):
 
 
     class Spacer(QGraphicsWidget):
-        """ A Spacer between two items. """
+        """ A Spacer between two items. 
+        Spacers are automatically created and removed by the SpacerContainer to
+        seperate adjacent Items. You must create your own Spacer object that 
+        implements the link() method to define how the spacers connect to the
+        Items on either side of it. The implementation may also contain hooks
+        for receiving drag and drop events. 
+        """
         def __init__(self,parent):
             self.parent = typecheck(parent,SpacerContainer,"parent")
             self.parent = parent
@@ -102,14 +128,19 @@ class SpacerContainer(QGraphicsWidget):
             self.itemB = None
 
         def layout(self):
+            """ Returns the QGraphicsLayout that is being used. """
             return self.parent.parent.layout()
 
         def link(self):
+            """ Must be implemented by the subclass. This method should consist
+            of self.layout().addAnchor(self, ..., self.itemA/B, ...) calls anchoring
+            the sides of itemA and itemB to this spacer. 
+            """
             raise Exception("You must implement the linking to the spacersA and B")
 
 
     class Item(QGraphicsWidget):
-        """ An Item with spacers around it """
+        """ An Item with spacers around it. """
         def __init__(self,parent,container):
 #             self.parent = typecheck(parent,DrawingBoard,"parent")
             self.parent = parent
@@ -129,6 +160,10 @@ class SpacerContainer(QGraphicsWidget):
             raise Exception("You must implement a way to return if the item is used")
 
         def link(self):
+            """ This method manages the spacer objects linked on either side of 
+            the item. When the spacers link() method is called, the anchored
+            layout will hook into the object.
+            """
             l = self.parent.layout()
             # Calculate Spacers A and B - deleteing old spacers to this item
             # when necessary, reusing existing spacers if possible, and otherwise
