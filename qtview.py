@@ -154,19 +154,23 @@ class BandSpacer(SpacerContainer.Spacer):
         else:
             # top altitude is None if we are just below the block ribbon.
             # In that case, we want to be as close to the ribbon as possible.
-            upperAlt = topAltitude or -1
-            lband = bands[upperAlt].bottomBand # only calculate topBand once...
-            lowerAlt = lband.altitude if isinstance(lband,Band) else None
+            upperAlt = topAltitude 
+            if isinstance(upperAlt,int):
+                lband = bands[upperAlt].bottomBand # only calculate topBand once...
+                lowerAlt = lband.altitude if isinstance(lband,Band) else None
+            else:
+                # If upperAlt is None, we are just below the block ribbon
+                lowerAlt = -1
 
         print "Moving band",srcAlt,"between",lowerAlt, "and",upperAlt
 
         lastAlt = None
         currAlt = srcAlt
 
-        # If we are a positive band moving up, lowerAlt is the target altitude. 
+        # If we are moving up, lowerAlt is the target altitude. 
         # Clear the dragged bands's altitude, then shift all effected bands
         # down. See issue #12
-        if srcAlt > 0 and isinstance(lowerAlt,int) and lowerAlt > srcAlt:
+        if isinstance(lowerAlt,int) and lowerAlt > srcAlt:
             print "Moving positive up"
             while isinstance(currAlt,int) and currAlt < (upperAlt or lowerAlt+1):
                 tband = bands[currAlt].topBand
@@ -178,9 +182,9 @@ class BandSpacer(SpacerContainer.Spacer):
             # Assertion check
             assert lastAlt == lowerAlt, "%r %r"%(lastAlt,lowerAlt)
 
-        # If we are a positive band moving down, upperAlt is the target altitude.
+        # If we are moving down, upperAlt is the target altitude.
         # Clear the dragged bands altitude, then shift all effected bands up.
-        elif srcAlt > 0 and isinstance(upperAlt,int) and upperAlt <= srcAlt:
+        elif isinstance(upperAlt,int) and upperAlt <= srcAlt:
             print "Moving positive down"
             while isinstance(currAlt,int) and currAlt > (lowerAlt or upperAlt-1):
                 lband = bands[currAlt].bottomBand
