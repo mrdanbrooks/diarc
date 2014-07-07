@@ -108,19 +108,109 @@ class BandSpacer(SpacerContainer.Spacer):
         self.dragOver = False
 
     def dropEvent(self,event):
+        """ Reorder the band altitudes to put the dropped band in the new position"""
+        # Not all bands are necessarily being shown due to the fact that depending
+        # on the ordering of the blocks, edge connections could travel different 
+        # directions. When reordering bands, we need to take into account ALL
+        # the bands (both shown and not shown). 
+
+        # Decode the drag metadata into a dict
         data = json.loads(str(event.mimeData().text()))
-        topAltitude = self.topBand.band.altitude if self.topBand else 0
-        bottomAltitude = self.bottomBand.band.altitude if self.bottomBand else 0
-        # Accept a positive altitude band
-        if data['band'] > 0 and (topAltitude > 0 or bottomAltitude > 0):
-            event.setAccepted(True)
-            self.dragOver = True
-            print "Droped Positive!"
-        # Accept a negative altitude band
-        elif data['band'] < 0 and (topAltitude < 0 or bottomAltitude < 0):
-            event.setAccepted(True)
-            self.dragOver = True
-            print "Droped Negative!"
+        # Get the altitude of the band that was dragged
+        srcAlt = data['band']
+        # Get the altitudes of the bands displayed above and below this spacer.
+        topAltitude = self.topBand.band.altitude if self.topBand else None
+        bottomAltitude = self.bottomBand.band.altitude if self.bottomBand else None
+
+        print "topAltitude=",topAltitude,"bottomAltitude=",bottomAltitude
+
+        # Get a copy of the dictionary of bands in the topology
+        bands = self.parent.parent.topology.bands
+
+        # These don't necessarily exist if the band is adjacent to the block ribbon
+        # or either the top or bottom of the BandStack. In these cases, the values
+        # will remain None, so we need to look at both in case one is not good
+        # (e.g. currAlt < (upperAlt or lowerAlt+1))
+        lowerAlt = None
+        upperAlt = None
+
+        # The dragEnterEvent() should prevent positive altitude bands from being
+        # dragged below the block ribbon and vice versa. This is necessary because
+        # having multiple positive or negative bands for a single edge defeats the
+        # purpose of have one band of each edge. So we only need to deal with 
+        # reordering all positive or all negative bands. We also need to
+        # determine exactly where we want to place the band by determining the 
+        # bands on we want to put the dragged band between. For positive bands,
+        # we want to be just above the spacer's bottom band. For negative bands
+        # we want to be just below the spacer's top band. 
+        if srcAlt > 0:
+            lowerAlt = bottomAltitude 
+            if isinstance(lowerAlt,int):
+                tband = bands[lowerAlt].topBand # only calculate topBand once...
+                upperAlt = tband.altitude if isinstance(tband,Band) else None
+            else:
+                # If lowerAlt is None, we are just above the block ribbon
+                upperAlt = 1
+        else:
+            # top altitude is None if we are just below the block ribbon.
+            # In that case, we want to be as close to the ribbon as possible.
+            upperAlt = topAltitude or -1
+            lband = bands[upperAlt].bottomBand # only calculate topBand once...
+            lowerAlt = lband.altitude if isinstance(lband,Band) else None
+
+        print "Moving band",srcAlt,"between",lowerAlt, "and",upperAlt
+
+        lastAlt = None
+        currAlt = srcAlt
+
+        # If we are a positive band moving up, lowerAlt is the target altitude. 
+        # Clear the dragged bands's altitude, then shift all effected bands
+        # down. See issue #12
+        if srcAlt > 0 and isinstance(lowerAlt,int) and lowerAlt > srcAlt:
+            print "Moving positive up"
+            while isinstance(currAlt,int) and currAlt < (upperAlt or lowerAlt+1):
+                tband = bands[currAlt].topBand
+                nextAlt = tband.altitude if isinstance(tband,Band) else None
+                bands[currAlt].altitude = lastAlt
+                print "%s -> %s"%(str(currAlt),str(lastAlt))
+                lastAlt = currAlt
+                currAlt = nextAlt
+            # Assertion check
+            assert lastAlt == lowerAlt, "%r %r"%(lastAlt,lowerAlt)
+
+        # If we are a positive band moving down, upperAlt is the target altitude.
+        # Clear the dragged bands altitude, then shift all effected bands up.
+        elif srcAlt > 0 and isinstance(upperAlt,int) and upperAlt <= srcAlt:
+            print "Moving positive down"
+            while isinstance(currAlt,int) and currAlt > (lowerAlt or upperAlt-1):
+                lband = bands[currAlt].bottomBand
+                nextAlt = lband.altitude if isinstance(lband,Band) else None
+                bands[currAlt].altitude = lastAlt
+                print "%s -> %s"%(str(currAlt),str(lastAlt))
+                lastAlt = currAlt
+                currAlt = nextAlt
+            # Assertion check
+            assert lastAlt == upperAlt, "%r %r"%(lastAlt,upperAlt)
+
+        else:
+            print "No op!"
+            return
+
+        # Finally, give the moved object its desired destination. Then make
+        # the drawingboard relink all the objects again
+        bands[srcAlt].altitude = lastAlt
+        self.parent.parent.link()
+
+
+#         if srcAlt > 0 and (topAltitude > 0 or bottomAltitude > 0):
+#             event.setAccepted(True)
+#             self.dragOver = True
+#             print "Droped Positive!"
+#         elif srcAlt < 0 and (topAltitude < 0 or bottomAltitude < 0):
+#             event.setAccepted(True)
+#             self.dragOver = True
+#             print "Droped Negative!"
+
 
 
     def paint(self,painter,option,widget):
