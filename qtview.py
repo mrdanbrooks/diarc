@@ -289,6 +289,10 @@ class BandItem(SpacerContainer.Item):
         self.setCursor(Qt.ArrowCursor)
 
     def paint(self,painter,option,widget):
+        brush = QBrush()
+        brush.setStyle(Qt.SolidPattern)
+        brush.setColor(Qt.white)
+        painter.fillRect(self.rect(),brush)
         if self.band.isUsed():
             painter.setPen(Qt.red)
         else:
