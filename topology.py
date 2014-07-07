@@ -419,14 +419,14 @@ class Band(object):
     def __set_altitude(self,value):
         if self._altitude == value:
             return
-        if self._isPositive and value <= 0:
-            raise Exception("Altitude must be positive")
-        if (not self._isPositive) and value >= 0:
-            raise Exception("Altitude must be negative")
         # Always allow "unsetting" value
         if value is None:
             self._altitude = value
             return
+        if self._isPositive and value <= 0:
+            raise Exception("Altitude must be positive")
+        if (not self._isPositive) and value >= 0:
+            raise Exception("Altitude must be negative")
         # Make sure the altitude is unique among all bands 
         allEdges = self._topology._edges
         allBands = filter(lambda x: isinstance(x,Band),[band for edge in allEdges for band in [edge.posBand,edge.negBand]])
