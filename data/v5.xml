@@ -50,11 +50,11 @@
     </edge>
     <edge id="2">
       <band altitude='4' rank='2'/>
-      <band altitude='-1' rank='2' />
+      <band altitude='-1' rank='3' />
     </edge>
     <edge id="3">
       <band altitude='2' rank='3' />
-      <band altitude='-2' rank='3' />
+      <band altitude='-2' rank='2' />
     </edge>
   </edges>
 </topology>
