@@ -709,9 +709,9 @@ class SnapItem(SpacerContainer.Item):
         l = self.parent.layout()
         if self.snap.posBandLink:
             self.upLink.setVisible(True)
-            self.upLink.setZValue(self.snap.posBandLink.rank)
+            self.upLink.setZValue(self.snap.posBandLink.rank+0.5)
             l.addAnchor(self, Qt.AnchorTop, self.upLink, Qt.AnchorBottom)
-            l.addAnchor(self.snap.posBandLink.visual, Qt.AnchorTop, self.upLink, Qt.AnchorTop)
+            l.addAnchor(self.snap.posBandLink.visual, Qt.AnchorBottom, self.upLink, Qt.AnchorTop)
             l.addAnchor(self, Qt.AnchorLeft, self.upLink, Qt.AnchorLeft)
             l.addAnchor(self, Qt.AnchorRight, self.upLink, Qt.AnchorRight)
         else:
@@ -720,9 +720,9 @@ class SnapItem(SpacerContainer.Item):
 
         if self.snap.negBandLink:
             self.downLink.setVisible(True)
-            self.downLink.setZValue(self.snap.negBandLink.rank)
+            self.downLink.setZValue(self.snap.negBandLink.rank+0.5)
             l.addAnchor(self, Qt.AnchorBottom, self.downLink, Qt.AnchorTop)
-            l.addAnchor(self.snap.negBandLink.visual, Qt.AnchorBottom, self.downLink, Qt.AnchorBottom)
+            l.addAnchor(self.snap.negBandLink.visual, Qt.AnchorTop, self.downLink, Qt.AnchorBottom)
             l.addAnchor(self, Qt.AnchorLeft, self.downLink, Qt.AnchorLeft)
             l.addAnchor(self, Qt.AnchorRight, self.downLink, Qt.AnchorRight)
         else:
@@ -820,7 +820,7 @@ class DrawingBoard(QGraphicsWidget):
     def link(self):
         """ Links up the anchored layouts """
         l = QGraphicsAnchorLayout()
-        l.setSpacing(0)
+        l.setSpacing(0.0)
         self.setLayout(l)
 
 
@@ -839,13 +839,12 @@ class DrawingBoard(QGraphicsWidget):
         print "\n\n__Linking blocks__"
         for b in self.visualBlocks:
             b.link()
-        print "\n\n__Linking snaps__"
-        for s in self.visualSnaps:
-            s.link()
         print "\n\n__linking bands__"
         for b in self.visualBands:
             b.link()
-
+        print "\n\n__Linking snaps__"
+        for s in self.visualSnaps:
+            s.link()
         self.layout().invalidate()
         
         
