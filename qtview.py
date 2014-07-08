@@ -208,17 +208,6 @@ class BandSpacer(SpacerContainer.Spacer):
         self.parent.parent.link()
 
 
-#         if srcAlt > 0 and (topAltitude > 0 or bottomAltitude > 0):
-#             event.setAccepted(True)
-#             self.dragOver = True
-#             print "Droped Positive!"
-#         elif srcAlt < 0 and (topAltitude < 0 or bottomAltitude < 0):
-#             event.setAccepted(True)
-#             self.dragOver = True
-#             print "Droped Negative!"
-
-
-
     def paint(self,painter,option,widget):
 #         pen = QPen()
 #         pen.setBrush(Qt.lightGray)
