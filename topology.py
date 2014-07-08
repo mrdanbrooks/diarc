@@ -347,6 +347,8 @@ class Band(object):
         # but this has not been tested or proven. 
         sinkBlockIndices = [s.block.index for s in self.edge.sinks if isinstance(s.block.index,int)]
         sourceBlockIndices = [s.block.index for s in self.edge.sources if isinstance(s.block.index,int)]
+        if len(sinkBlockIndices) == 0 or len(sourceBlockIndices) == 0:
+            return False
         # If positive and there is a sink to the left of any source
         if self._isPositive and max(sinkBlockIndices) >= min(sourceBlockIndices):
             return True
