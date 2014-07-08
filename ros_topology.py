@@ -19,7 +19,7 @@ class RosSystemGraph(Topology):
 
     @property
     def nodes(self):
-        return self.vertices
+        return dict([(v.name,v) for v in self.vertices])
 
     @property
     def topics(self):
@@ -38,14 +38,14 @@ class RosSystemGraph(Topology):
 
 
 class Node(Vertex):
-    def __init__(self,rsg):
+    def __init__(self,rsg,name=None):
         typecheck(rsg,RosSystemGraph,"rsg")
         super(Node,self).__init__(rsg)
 
         # dumb placement - just get the next free index
         self.block.index = rsg.nextFreeNodeIndex()
 
-        self.name = None
+        self.name = name
         self.location = None
         self.pid = None
 
@@ -64,7 +64,7 @@ class Node(Vertex):
 
 
 class Topic(Edge):
-    def __init__(self,rsg):
+    def __init__(self,rsg,name=None,msgType=None):
         typecheck(rsg,RosSystemGraph,"rsg")
         super(Topic,self).__init__(rsg)
         
@@ -73,8 +73,8 @@ class Topic(Edge):
         self.posBand.rank = self.posBand.altitude
         self.negBand.rank = self.posBand.altitude
 
-        self.name = None
-        self.msgType = None
+        self.name = name
+        self.msgType = msgType
 
     @property
     def publishers(self):
