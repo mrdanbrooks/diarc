@@ -156,7 +156,7 @@ class Source(Connection):
             if vertex == source.vertex and edge == source.edge:
                 raise Exception("Duplicate Source!")
         self._topology._sources.append(self)
-        self.visual = None
+#         self.visual = None
 
 class Sink(Connection):
     """ A logical connection from an Edge to a Vertex. Graphically represented
@@ -188,6 +188,9 @@ class Block(object):
         self._rightBlock = None
         # Visual object
         self.visual = None
+
+    def __del__(self):
+        pass
 
     @property
     def vertex(self):
@@ -302,6 +305,11 @@ class Band(object):
         self._altitude = None
         self._rank = None
         # Visual Connections 
+        self.visual = None
+
+    def release(self):
+        """ Release all dependent references this object holds """
+        self.visual.release()
         self.visual = None
 
     @property
