@@ -42,6 +42,19 @@ def qtplot(args):
     graphView.raise_()
     sys.exit(app.exec_())
 
+def rostest():
+    import PyQt4.QtGui
+    import rosgraph_hooks
+    import qtview
+    topology = rosgraph_hooks.rsg_generator()
+    app = PyQt4.QtGui.QApplication([])
+    graphView = qtview.GraphView()
+    graphView.autoLayout(topology)
+    graphView.activateWindow()
+    graphView.raise_()
+    sys.exit(app.exec_())
+
+
 
 if __name__=="__main__":
     available_tests = dict(inspect.getmembers(sys.modules[__name__],inspect.isfunction))

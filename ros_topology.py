@@ -76,6 +76,16 @@ class Topic(Edge):
         self.name = name
         self.msgType = msgType
 
+    def remove(self):
+        """ Removes the topic and all associated objects.
+        This includes publishers, subscribers, and corresponding objects such
+        as bands and snaps.
+        """
+        del self.posBand
+        del self.negBand
+        for connection in 
+
+
     @property
     def publishers(self):
         # NOTE: See note on Node class about why this MUST be a property.
@@ -85,6 +95,8 @@ class Topic(Edge):
     def subscribers(self):
         # NOTE: See note on Node class about why this MUST be a property.
         return self.sinks
+
+
 
 
 class Publisher(Source):

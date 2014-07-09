@@ -98,14 +98,32 @@ class Edge(object):
         self._pBand = Band(self,True)
         self._nBand = Band(self,False)
 
+    def release(self):
+        """ Removes this edge from the topology """
+        # Release connections to and from this edge
+        for connection in self._topology._sources + self._topology._sinks:
+            if connection.edge == self:
+                connection.release()
+        # Release each of your bands
+        self._pBand.release()
+        self._nBand.release()
+        # Remove references to your bands
+        self._pBand = None
+        self._nBand = None
+        # Release youself from the topology
+        self._topology._edges.remove(self)
+        # Remove reference to the topology
+        self._topology = None
+
     @property
     def sources(self):
+        """ returns list of all source connections to this edge """
         return filter(lambda x: x.edge == self, self._topology._sources)
 
     @property
     def sinks(self):
+        """ returns list of all sink connections from this edge """
         return filter(lambda x: x.edge == self, self._topology._sinks)
-
 
     @property
     def posBand(self):
@@ -128,6 +146,19 @@ class Connection(object):
         if (not isinstance(self,Source)) and (not isinstance(self,Sink)):
             raise Exception("Do not create connections directly! Use Source or Sink")
         self._snap = Snap(self)
+
+    def release(self):
+        """ Removes this connection between a vertex and an edge from the topology.
+        This does NOT release either the vertex or the edge objects, it simply
+        removes this particular reference to them. 
+        """
+        # Release and remove the reference to your snap
+        self._snap.release()
+        self._snap = None
+        # Remove references to vertex and edge
+        self._vertex = None
+        self._edge = None
+
 
     @property
     def snap(self):
@@ -157,6 +188,11 @@ class Source(Connection):
                 raise Exception("Duplicate Source!")
         self._topology._sources.append(self)
 
+    def release(self):
+        super(Source,self).release()
+        # Remove yourself from the topology
+        self._topology._sources.remove(self)
+
 class Sink(Connection):
     """ A logical connection from an Edge to a Vertex. Graphically represented
     by a Snap object. 
@@ -168,6 +204,11 @@ class Sink(Connection):
             if vertex == sink.vertex and edge == sink.edge:
                 raise Exception("Duplicate Sink!")
         self._topology._sinks.append(self)
+
+    def release(self):
+        super(Sink,self).release()
+        # Remove youself from the topology
+        self._topology._sources.remove(self)
 
 
 class Block(object):
@@ -188,8 +229,9 @@ class Block(object):
         # Visual object
         self.visual = None
 
-    def __del__(self):
-        pass
+    def _release(self):
+        """ releases this block from the topology """
+
 
     @property
     def vertex(self):
