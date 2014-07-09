@@ -156,7 +156,6 @@ class Source(Connection):
             if vertex == source.vertex and edge == source.edge:
                 raise Exception("Duplicate Source!")
         self._topology._sources.append(self)
-#         self.visual = None
 
 class Sink(Connection):
     """ A logical connection from an Edge to a Vertex. Graphically represented
