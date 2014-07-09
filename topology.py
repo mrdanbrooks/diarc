@@ -105,8 +105,8 @@ class Edge(object):
             if connection.edge == self:
                 connection.release()
         # Release each of your bands
-        self._pBand.release()
-        self._nBand.release()
+        self._pBand._release()
+        self._nBand._release()
         # Remove references to your bands
         self._pBand = None
         self._nBand = None
@@ -153,7 +153,7 @@ class Connection(object):
         removes this particular reference to them. 
         """
         # Release and remove the reference to your snap
-        self._snap.release()
+        self._snap._release()
         self._snap = None
         # Remove references to vertex and edge
         self._vertex = None
@@ -348,9 +348,9 @@ class Band(object):
         # Visual Connections 
         self.visual = None
 
-    def release(self):
+    def _release(self):
         """ Release all dependent references this object holds """
-        self.visual.release()
+        self.visual._release()
         self.visual = None
 
     @property
@@ -500,6 +500,12 @@ class Snap(object):
         self._connection = typecheck(connection,Connection,"connection")
         self._order = None
         self.visual = None
+
+    def _release(self):
+        if not isinstance(self.visual,types.NoneType):
+            self.visual._release()
+            self.visual = None
+        self._connection = None
 
     @property
     def posBandLink(self):
