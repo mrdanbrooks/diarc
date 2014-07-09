@@ -16,8 +16,6 @@ class BandStack(SpacerContainer):
         self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.Preferred))
         self.setMinimumWidth(15)
         self.spacerType = BandSpacer
-        # List of BandItems 
-        self.visualBands = list()
 
 class BandSpacer(SpacerContainer.Spacer):
     def __init__(self,parent):
@@ -301,8 +299,6 @@ class BlockRibbon(SpacerContainer):
         self.parent = typecheck(parent,DrawingBoard,"parent")
         self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.Preferred))
         self.setMinimumWidth(15)
-        # List of BlockItems associated with diarc topology blocks
-        self.visualBlocks = list()
 
     def paint(self,painter,option,widget):
         painter.setPen(Qt.green)
@@ -781,7 +777,6 @@ class DrawingBoard(QGraphicsWidget):
         self.setAcceptedMouseButtons(Qt.LeftButton)
         self.resize(0,0)
         self.topology = None
-        self.visualSnaps = list()
 
         self.bandStack = BandStack(self)
         self.blockRibbon = BlockRibbon(self)
@@ -796,16 +791,13 @@ class DrawingBoard(QGraphicsWidget):
         for altitude,band in topology.bands.items():
             print "adding band",altitude
             visualBand = BandItem(self,band)
-            self.bandStack.visualBands.append(visualBand)
 
         for index,block in topology.blocks.items():
             print "adding block",index
             vertexBlock = BlockItem(self,block)
-            self.blockRibbon.visualBlocks.append(vertexBlock)
             for snap in block.emitter.values()+block.collector.values():
                 print "adding snap",snap.order
                 mySnap = SnapItem(self,snap)
-                self.visualSnaps.append(mySnap)
         self.link()
         
     def link(self):
@@ -828,14 +820,14 @@ class DrawingBoard(QGraphicsWidget):
             print spacer.itemA.band.altitude if spacer.itemA else None,spacer.itemB.band.altitude if spacer.itemB else None
         print "End Spacers"
         print "\n\n__Linking blocks__"
-        for b in self.blockRibbon.visualBlocks:
-            b.link()
+        for block in self.topology.blocks.values():
+            block.visual.link()
+            # TODO: This could be optimized by implementing a topology.connections
+            for snap in block.emitter.values()+block.collector.values():
+                snap.visual.link()
         print "\n\n__linking bands__"
-        for b in self.bandStack.visualBands:
-            b.link()
-        print "\n\n__Linking snaps__"
-        for s in self.visualSnaps:
-            s.link()
+        for band in self.topology.bands.values():
+            band.visual.link()
         self.layout().invalidate()
         
         
