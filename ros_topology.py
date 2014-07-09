@@ -23,7 +23,7 @@ class RosSystemGraph(Topology):
 
     @property
     def topics(self):
-        return dict(filter(lambda x: None not in x[0], [((topic.name,topic.msgType),topic) for topic in self.edges]))
+        return dict(filter(lambda x: None not in x, [(topic.name,topic) for topic in self.edges]))
 
 
     def nextFreeNodeIndex(self):
