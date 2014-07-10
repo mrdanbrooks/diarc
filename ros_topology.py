@@ -25,7 +25,6 @@ class RosSystemGraph(Topology):
     def topics(self):
         return dict(filter(lambda x: None not in x, [(topic.name,topic) for topic in self.edges]))
 
-
     def nextFreeNodeIndex(self):
         """ returns the next available node index """
         return max(self.blocks.keys())+1 if len(self.blocks)>0 else 0
@@ -75,16 +74,6 @@ class Topic(Edge):
 
         self.name = name
         self.msgType = msgType
-
-    def remove(self):
-        """ Removes the topic and all associated objects.
-        This includes publishers, subscribers, and corresponding objects such
-        as bands and snaps.
-        """
-        del self.posBand
-        del self.negBand
-        for connection in 
-
 
     @property
     def publishers(self):
