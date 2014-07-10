@@ -11,6 +11,8 @@
 #   Connection, Source, Sink        Snap(s)
 # 
 #
+# TODO:
+# - Document how to create a topology, and how to remove objects from it.
 from util import *
 import types
 
