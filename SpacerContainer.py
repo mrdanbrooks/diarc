@@ -37,6 +37,18 @@ class SpacerContainer(QGraphicsWidget):
         # all new spacers are instantiated inside getSpacerA or getSpacerB. 
         self._spacerType = None #SpacerContainer.Spacer
 
+    def _release(self):
+        """ releases all spacer objects and dissasociates from parent """
+        self.setVisible(False)
+        self.setParent(None)
+        self.parent = None
+        for spacer in self._spacers:
+            spacer._release()
+            self._spacers.remove(spacer)
+
+
+
+
     def getSpacerA(self,item):
         """ Return the current spacer, or create a new one, in the direction of 
         the current item's 'itemA'. This is used by SpacerContainer.Item objects
@@ -127,6 +139,13 @@ class SpacerContainer(QGraphicsWidget):
             self.itemA = None
             self.itemB = None
 
+        def _release(self):
+            self.setVisible(False)
+            self.itemA = None
+            self.itemB = None
+            self.setParent(None)
+            self.parent = None
+
         def layout(self):
             """ Returns the QGraphicsLayout that is being used. """
             return self.parent.parent.layout()
@@ -146,6 +165,13 @@ class SpacerContainer(QGraphicsWidget):
             self.parent = parent
             self.container = typecheck(container,SpacerContainer,"container")
             super(SpacerContainer.Item,self).__init__(parent=parent)
+
+        def _release(self):
+            self.setVisible(False)
+            self.setParent(None)
+            self.parent = None
+            self.container = None
+            # TODO: This may need to delete former spacers too!
 
         def itemA(self):
             raise Exception("You must implement a way to return itemA")
