@@ -62,6 +62,28 @@ class Vertex(object):
         # Visual Component
         self._block = Block(self)
 
+    def release(self):
+        print "releasing vertex %r"%self
+
+        print "... removing from topology"
+        # Release yourself from the topology and remove the reference. This
+        # needs to be done before destroying blocks, since we preclaculate 
+        # block neighbors and that depends on iterating over the vertex list.
+        # If we don't cache block neighbors, then the order no longer matters.
+        self._topology._vertices.remove(self)
+
+        # Release connections to and from the vertex
+        print "... destroying connections"
+        for connection in  self._topology._sources + self._topology._sinks:
+            if connection.vertex == self:
+                connection.release()
+        print "... releasing associated block"
+        # Release the block object associated with this vertex 
+        self._block._release()
+        self._block = None
+        print "... destroying reference to topology"
+        self._topology = None
+
     @property
     def sources(self):
         """ Returns an unordered list of outgoing connections (Source objects)
@@ -100,16 +122,20 @@ class Edge(object):
 
     def release(self):
         """ Removes this edge from the topology """
+        print "releasing edge %r"%self
         # Release connections to and from this edge
+        print "... destroying connections"
         for connection in self._topology._sources + self._topology._sinks:
             if connection.edge == self:
                 connection.release()
         # Release each of your bands
+        print "... releasing associated bands"
         self._pBand._release()
         self._nBand._release()
         # Remove references to your bands
         self._pBand = None
         self._nBand = None
+        print "... removing from topology"
         # Release youself from the topology
         self._topology._edges.remove(self)
         # Remove reference to the topology
@@ -152,9 +178,11 @@ class Connection(object):
         This does NOT release either the vertex or the edge objects, it simply
         removes this particular reference to them. 
         """
+        print "... releasing associated snap"
         # Release and remove the reference to your snap
         self._snap._release()
         self._snap = None
+        print "... deleting pointer to vertex and edge"
         # Remove references to vertex and edge
         self._vertex = None
         self._edge = None
@@ -189,9 +217,12 @@ class Source(Connection):
         self._topology._sources.append(self)
 
     def release(self):
+        print "Releasing Source %r"%self
         super(Source,self).release()
         # Remove yourself from the topology
+        print "... removing from topology"
         self._topology._sources.remove(self)
+        self._topology = None
 
 class Sink(Connection):
     """ A logical connection from an Edge to a Vertex. Graphically represented
@@ -206,9 +237,12 @@ class Sink(Connection):
         self._topology._sinks.append(self)
 
     def release(self):
+        print "Releasing Sink %r"%self
         super(Sink,self).release()
         # Remove youself from the topology
-        self._topology._sources.remove(self)
+        print "... removing from topology"
+        self._topology._sinks.remove(self)
+        self._topology = None
 
 
 class Block(object):
@@ -230,7 +264,35 @@ class Block(object):
         self.visual = None
 
     def _release(self):
-        """ releases this block from the topology """
+        """ releases this block from the topology.
+        This should only be called by Vertex.release()
+        """
+        print "removing block %r"%self
+        # Remove references of your visual component
+        print "... releasing visual"
+        if not isinstance(self.visual,types.NoneType):
+            self.visual._release()
+            self.visual = None
+        print "... removing references to left and right blocks"
+        #This needs to recalculate the left and right blocks on either side
+        #NOTE: This does not collapse index values, so there becomes a "hole"
+        # in the index values
+        if self._leftBlock:
+            self._leftBlock._updateNeighbors()
+        if self._rightBlock:
+            self._rightBlock._updateNeighbors()
+        # Remove cached references to left and right blocks
+        self._leftBlock = None
+        self._rightBlock = None
+        print "... remove reference to vertex"
+        # We don't need to call release() on the vertex, it should already be
+        # called, we just need to remove the reference
+        self._vertex = None
+        print "... removing reference to topology"
+        self._topology = None
+
+
+
 
 
     @property
@@ -350,8 +412,16 @@ class Band(object):
 
     def _release(self):
         """ Release all dependent references this object holds """
-        self.visual._release()
-        self.visual = None
+        print "removing band %r"%self
+        print "... removing visual"
+        if not isinstance(self.visual,types.NoneType):
+            self.visual._release()
+            self.visual = None
+        print "... removing edge reference"
+        self._edge = None
+        print "... removing reference to topology"
+        self._topology = None
+
 
     @property
     def emitters(self):
@@ -502,10 +572,17 @@ class Snap(object):
         self.visual = None
 
     def _release(self):
+        """ This should only be called by a Connection.release() """
+        print "releasing snap %r"%self
+        print "... releasing visual"
         if not isinstance(self.visual,types.NoneType):
             self.visual._release()
             self.visual = None
+        # the connection should 
+        print "... removing reference to connection"
         self._connection = None
+        print "... removing reference to topology"
+        self._topology = None
 
     @property
     def posBandLink(self):
