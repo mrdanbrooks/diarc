@@ -3,12 +3,11 @@ from qtview import *
 from ros_topology import *
 import gc
 
-class RosDrawingBoard(DrawingBoard):
-    def __init__(self,diarcWidget):
-        super(RosDrawingBoard,self).__init__()
+class RosTopologyWidget(TopologyWidget):
+    def __init__(self,topology,diarcWidget):
+        super(RosTopologyWidget,self).__init__(topology)
         self.diarcWidget = diarcWidget
-        self.topology = diarcWidget.rsg
-        self.autoLayout(self.topology)
+        self.autoLayout()
     def mousePressEvent(self,event):
 #         self.diarcWidget.updater.update(self.topology)
         self.topology.update()
@@ -39,12 +38,9 @@ class RosDiarcWidget(QGraphicsView):
         self.rsg.update()
         
         self.setScene(QGraphicsScene(self))
-        self.drawingBoard = RosDrawingBoard(self)
-        self.scene().addItem(self.drawingBoard)
+        self.topologyWidget = RosTopologyWidget(self.rsg,self)
+        self.scene().addItem(self.topologyWidget)
         self.resize(1024,768)
         self.show()
 
-#     def autoLayout(self):
-#         self.updater.update(self.rsg)
-#         self.drawingBoard.autoLayout(self.rsg)
 
