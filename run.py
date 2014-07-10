@@ -44,16 +44,10 @@ def qtplot(args):
 
 def rostest():
     import PyQt4.QtGui
-    import rosgraph_hooks
-    import ros_topology
-    import qtview
-    updater = rosgraph_hooks.RsgUpdater()
-#     topology = rosgraph_hooks.rsg_generator()
-    topology = ros_topology.RosSystemGraph()
-    updater.update(topology)
+    import ros_diarc
     app = PyQt4.QtGui.QApplication([])
-    graphView = qtview.GraphView()
-    graphView.autoLayout(topology)
+    graphView = ros_diarc.RosDiarcWidget(None)
+#     graphView.autoLayout()
     graphView.activateWindow()
     graphView.raise_()
     sys.exit(app.exec_())
