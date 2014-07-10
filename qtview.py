@@ -227,8 +227,8 @@ class BandItem(SpacerContainer.Item):
         self.setZValue(self.band.rank)
 
     def _release(self):
-        self.setParent(None)
         self.band = None
+        super(BandItem,self)._release()
 
     def itemA(self):
         """ Set itemA to be the topBand """
@@ -438,10 +438,14 @@ class BlockItem(SpacerContainer.Item):
         self.myCollector = MyCollector(self)
     
     def _release(self):
+        super(BlockItem,self)._release()
         print "releasing BlockItem %r"%self
-        self.setParent(None)
-        self.myEmitter.setParent(None)
-        self.myCollector.setParent(None)
+        self._topMargin.setParent(None)
+        self._botMargin.setParent(None)
+        self._topMargin = None
+        self._botMargin = None
+        self.myEmitter._release()
+        self.myCollector._release()
         self.myEmitter = None
         self.myCollector = None
         self.block  = None
@@ -513,6 +517,7 @@ class BlockItem(SpacerContainer.Item):
             self.setMinimumHeight(5)
 
 
+
 class SnapContainer(SpacerContainer):
     def __init__(self,parent):
         super(SnapContainer,self).__init__(parent.parent)
@@ -521,6 +526,10 @@ class SnapContainer(SpacerContainer):
         self.spacerType = SnapSpacer
         self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.Preferred))
         self.setMinimumWidth(15)
+    
+    def _release(self):
+        super(SnapContainer,self)._release()
+        self.parentBlock = None
 
     def strType(self):
         """ prints the container type as a string """
@@ -695,12 +704,13 @@ class SnapItem(SpacerContainer.Item):
  
     def _release(self):
         print "releasing SnapItem %r"%self
-        self.setParent(None)
         self.upLink.setParent(None)
         self.downLink.setParent(None)
         self.upLink = None
         self.downLink = None
         self.snap = None
+        self.setVisible(False)
+        super(SnapItem,self)._release()
 
 
     def itemA(self):
