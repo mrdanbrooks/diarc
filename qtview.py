@@ -201,7 +201,7 @@ class BandSpacer(SpacerContainer.Spacer):
             return
 
         # Finally, give the moved object its desired destination. Then make
-        # the drawingboard relink all the objects again
+        # the TopologyWidget relink all the objects again
         bands[srcAlt].altitude = lastAlt
         self.parent.parent.link()
 
@@ -216,7 +216,8 @@ class BandSpacer(SpacerContainer.Spacer):
 
 class BandItem(SpacerContainer.Item):
     def __init__(self,parent,band):
-        typecheck(parent,DrawingBoard,"parent")
+#         typecheck(parent,DrawingBoard,"parent")
+        typecheck(parent,TopologyWidget,"parent")
         super(BandItem,self).__init__(parent,parent.bandStack)
         self.band = band
         self.band.visual = self
@@ -300,7 +301,8 @@ class BlockRibbon(SpacerContainer):
     def __init__(self,parent):
         super(BlockRibbon,self).__init__(parent)
         self.spacerType = BlockSpacer
-        self.parent = typecheck(parent,DrawingBoard,"parent")
+#         self.parent = typecheck(parent,DrawingBoard,"parent")
+        self.parent = typecheck(parent,TopologyWidget,"parent")
         self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.Preferred))
         self.setMinimumWidth(15)
 
@@ -408,7 +410,7 @@ class BlockSpacer(SpacerContainer.Spacer):
             print "No op!"
             return
         # Finally give the moved object its desired destination. Then make 
-        # the DrawingBoard relink all the objects again.
+        # the TopologyWidget relink all the objects again.
         blocks[srcIdx].index = lastIdx
         self.parent.parent.link()
 
@@ -420,7 +422,8 @@ class BlockSpacer(SpacerContainer.Spacer):
 class BlockItem(SpacerContainer.Item):
     """ This is a QGraphicsWidget for a Diarc Block. """
     def __init__(self,parent,block):
-        typecheck(parent,DrawingBoard,"parent")
+#         typecheck(parent,DrawingBoard,"parent")
+        typecheck(parent,TopologyWidget,"parent")
         super(BlockItem,self).__init__(parent,parent.blockRibbon)
         self.block = block
         self.block.visual = self
@@ -666,7 +669,7 @@ class SnapSpacer(SpacerContainer.Spacer):
             return
 
         # Finally give the moved object its desired destination. Then
-        # make the DrawingBoard relink all the objects again.
+        # make the TopologyWidget relink all the objects again.
         snaps[srcIdx].order = lastIdx
         self.parent.parentBlock.parent.link()
 
@@ -687,7 +690,8 @@ class MyCollector(SnapContainer):
  
 class SnapItem(SpacerContainer.Item):
     def __init__(self,parent,snap):
-        typecheck(parent,DrawingBoard,"parent")
+#         typecheck(parent,DrawingBoard,"parent")
+        typecheck(parent,TopologyWidget,"parent")
         self.snap = snap
         self.snap.visual = self
         # Determine which container you are in
@@ -804,7 +808,73 @@ class SnapBandLink(QGraphicsWidget):
 
 
 
+
+class TopologyWidget(QGraphicsWidget):
+    def __init__(self,topology):
+        super(TopologyWidget,self).__init__(parent=None)
+        self.setAcceptedMouseButtons(Qt.LeftButton)
+        self.resize(0,0)
+        self.topology = topology
+
+        self.bandStack = BandStack(self)
+        self.blockRibbon = BlockRibbon(self)
+ 
+    def autoLayout(self):
+        """ Populates the visualBlocks and visualSnaps lists """
+        topology = self.topology
+        for altitude,band in topology.bands.items():
+            print "adding band",altitude
+            visualBand = BandItem(self,band)
+
+        for index,block in topology.blocks.items():
+            print "adding block",index
+            vertexBlock = BlockItem(self,block)
+            for snap in block.emitter.values()+block.collector.values():
+                print "adding snap",snap.order
+                mySnap = SnapItem(self,snap)
+        self.link() 
+
+    def mousePressEvent(self,event):
+        print "Spacers:",len(self.bandStack._spacers)+len(self.blockRibbon._spacers)
+
+    def link(self):
+        """ Links up the anchored layouts """
+        l = QGraphicsAnchorLayout()
+        l.setSpacing(0.0)
+        self.setLayout(l)
+
+
+        # Anchor BandStack to Layout
+        # Anchor BlockRibbon to BandStack
+        self.layout().addAnchor(self.blockRibbon, Qt.AnchorTop, self.layout(), Qt.AnchorTop)
+        self.layout().addAnchor(self.blockRibbon, Qt.AnchorLeft, self.layout(), Qt.AnchorLeft)
+        self.layout().addAnchor(self.bandStack, Qt.AnchorLeft, self.blockRibbon, Qt.AnchorLeft)
+        self.layout().addAnchor(self.bandStack, Qt.AnchorRight, self.blockRibbon, Qt.AnchorRight)
+
+        # Start anchoring the other blocks
+        print "Current Spacers="
+        for spacer in self.bandStack._spacers:
+            print spacer.itemA.band.altitude if spacer.itemA else None,spacer.itemB.band.altitude if spacer.itemB else None
+        print "End Spacers"
+        print "\n\n__Linking blocks__"
+        for block in self.topology.blocks.values():
+            block.visual.link()
+            # TODO: This could be optimized by implementing a topology.connections
+            for snap in block.emitter.values()+block.collector.values():
+                snap.visual.link()
+        print "\n\n__linking bands__"
+        for band in self.topology.bands.values():
+            band.visual.link()
+        self.layout().invalidate()
+        
+    def paint(self,painter,option,widget):
+        painter.setPen(Qt.blue)
+        painter.drawRect(self.rect())
+
+
+
 class DrawingBoard(QGraphicsWidget):
+    """ corresponds with the topology """
     def __init__(self):
         super(DrawingBoard,self).__init__(parent=None)
         self.setAcceptedMouseButtons(Qt.LeftButton)
@@ -871,13 +941,13 @@ class DrawingBoard(QGraphicsWidget):
 
 
 class GraphView(QGraphicsView):
-    def __init__(self):
+    def __init__(self,topology):
         super(GraphView,self).__init__(parent=None)
         self.setScene(QGraphicsScene(self))
         # We might want to do this later to speed things up
-        self.drawingBoard = DrawingBoard()
+        self.topologyWidget = TopologyWidget(topology)
 
-        self.scene().addItem(self.drawingBoard)
+        self.scene().addItem(self.topologyWidget)
         # Basically, I'm not sure how to tell a widget where to go inside a scene.
         # But widgets placed inside widgets seem to be pretty reliable.
 
@@ -887,8 +957,8 @@ class GraphView(QGraphicsView):
         # Show the window
         self.show()
 
-    def autoLayout(self,topology):
-        self.drawingBoard.autoLayout(topology)
+    def autoLayout(self):
+        self.topologyWidget.autoLayout()
 
     def mousePressEvent(self,event):
         pos = event.pos()

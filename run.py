@@ -36,8 +36,8 @@ def qtplot(args):
     import qtview
     topology = parser.parseFile(args[0])
     app = PyQt4.QtGui.QApplication(sys.argv)
-    graphView = qtview.GraphView()
-    graphView.autoLayout(topology)
+    graphView = qtview.GraphView(topology)
+    graphView.autoLayout()
     graphView.activateWindow()
     graphView.raise_()
     sys.exit(app.exec_())
