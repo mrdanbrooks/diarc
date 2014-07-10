@@ -226,6 +226,10 @@ class BandItem(SpacerContainer.Item):
         self.setMinimumHeight(15)
         self.setZValue(self.band.rank)
 
+    def _release(self):
+        self.setParent(None)
+        self.band = None
+
     def itemA(self):
         """ Set itemA to be the topBand """
         return self.band.topBand.visual if self.band.topBand else None
@@ -432,6 +436,15 @@ class BlockItem(SpacerContainer.Item):
         # block margins
         self.myEmitter = MyEmitter(self)
         self.myCollector = MyCollector(self)
+    
+    def _release(self):
+        print "releasing BlockItem %r"%self
+        self.setParent(None)
+        self.myEmitter.setParent(None)
+        self.myCollector.setParent(None)
+        self.myEmitter = None
+        self.myCollector = None
+        self.block  = None
 
     def itemA(self):
         """ We use itemA for the BlockItem to the left. """
@@ -680,6 +693,16 @@ class SnapItem(SpacerContainer.Item):
         self.upLink = SnapBandLink(None)
         self.downLink = SnapBandLink(None)
  
+    def _release(self):
+        print "releasing SnapItem %r"%self
+        self.setParent(None)
+        self.upLink.setParent(None)
+        self.downLink.setParent(None)
+        self.upLink = None
+        self.downLink = None
+        self.snap = None
+
+
     def itemA(self):
         """ We use itemA for the SnapItem to the left """
         return self.snap.leftSnap.visual if self.snap.leftSnap else None
