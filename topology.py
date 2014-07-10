@@ -260,8 +260,8 @@ class Block(object):
         # Visual Properties
         self._index = None
         # blocks to left and right
-        self._leftBlock = None
-        self._rightBlock = None
+#         self._leftBlock = None
+#         self._rightBlock = None
         # Visual object
         self.visual = None
 
@@ -279,13 +279,13 @@ class Block(object):
         #This needs to recalculate the left and right blocks on either side
         #NOTE: This does not collapse index values, so there becomes a "hole"
         # in the index values
-        if self._leftBlock:
-            self._leftBlock._updateNeighbors()
-        if self._rightBlock:
-            self._rightBlock._updateNeighbors()
+#         if self._leftBlock:
+#             self._leftBlock._updateNeighbors()
+#         if self._rightBlock:
+#             self._rightBlock._updateNeighbors()
         # Remove cached references to left and right blocks
-        self._leftBlock = None
-        self._rightBlock = None
+#         self._leftBlock = None
+#         self._rightBlock = None
         print "... remove reference to vertex"
         # We don't need to call release() on the vertex, it should already be
         # called, we just need to remove the reference
@@ -322,58 +322,77 @@ class Block(object):
 
     @property
     def leftBlock(self):
-        """ Returns the block to the left, determined by block wich has the next
-        lowest index value. This value is cached when the index is set.  
-        """
-        return self._leftBlock
+#         """ Returns the block to the left, determined by block wich has the next
+#         lowest index value. This value is cached when the index is set.  
+#         """
+#         return self._leftBlock
+        if not isinstance(self._index,int):
+            return None
+        blocks = self._topology.blocks
+        if len(blocks) == 0:
+            return None
+        if self._index > min(blocks.keys()):
+            return blocks[max([b for b in blocks.keys() if b < self._index])]
+        # Else
+        return None
 
     @property
     def rightBlock(self):
-        """ returns the block to the right, determined by block which has the next
-        highest index value. This  value is cached when the index is set. 
-        """
-        return self._rightBlock
-
-
-    def _updateNeighbors(self):
-        """ Update leftIndex and rightIndex, as well as previous neighbors """
+#         """ returns the block to the right, determined by block which has the next
+#         highest index value. This  value is cached when the index is set. 
+#         """
+#         return self._rightBlock
+        if not isinstance(self._index,int):
+            return None
         blocks = self._topology.blocks
-        # First update your former neighbor's left and right values
-        # If there was an item to the left, it needs a new right hand value
-        if len(blocks) > 0:
-            # update old neighbors
-            if not isinstance(self._leftBlock,types.NoneType):
-                if self._leftBlock.index < max(blocks.keys()):
-                    self._leftBlock._rightBlock = blocks[min([b for b in blocks.keys() if b > self._leftBlock.index])]
-                else:
-                    self._leftBlock._rightBlock = None
+        if len(blocks) == 0:
+            return None
+        if self._index < max(blocks.keys()):
+            return blocks[min([b for b in blocks.keys() if b > self._index])]
+        # Else:
+        return None
 
-            if not isinstance(self._rightBlock,types.NoneType):
-                if self._rightBlock.index > min(blocks.keys()):
-                    self._rightBlock._leftBlock = blocks[max([b for b in blocks.keys() if b < self._rightBlock.index])]
 
-                else: 
-                    self._rightBlock._leftBlock = None
 
-        # Set my current neighbors
-        if isinstance(self._index,types.NoneType):
-            self._leftBlock = None
-            self._rightBlock = None
-        else:
-            # Calculate new values of left and right blocks
-            # update the right value of the left block and left value of the right block
-            # If you are on an edge, leave the value at None
-            if self._index > min(blocks.keys()):
-                self._leftBlock = blocks[max([b for b in blocks.keys() if b < self._index])]
-                self._leftBlock._rightBlock = self
-            else:
-                self._leftBlock = None
-
-            if self._index < max(blocks.keys()):
-                self._rightBlock = blocks[min([b for b in blocks.keys() if b > self._index])]
-                self._rightBlock._leftBlock = self
-            else:
-                self._rightBlock = None
+#     def _updateNeighbors(self):
+#         """ Update leftIndex and rightIndex, as well as previous neighbors """
+#         blocks = self._topology.blocks
+#         # First update your former neighbor's left and right values
+#         # If there was an item to the left, it needs a new right hand value
+#         if len(blocks) > 0:
+#             # update old neighbors
+#             if not isinstance(self._leftBlock,types.NoneType):
+#                 if self._leftBlock.index < max(blocks.keys()):
+#                     self._leftBlock._rightBlock = blocks[min([b for b in blocks.keys() if b > self._leftBlock.index])]
+#                 else:
+#                     self._leftBlock._rightBlock = None
+# 
+#             if not isinstance(self._rightBlock,types.NoneType):
+#                 if self._rightBlock.index > min(blocks.keys()):
+#                     self._rightBlock._leftBlock = blocks[max([b for b in blocks.keys() if b < self._rightBlock.index])]
+# 
+#                 else: 
+#                     self._rightBlock._leftBlock = None
+# 
+#         # Set my current neighbors
+#         if isinstance(self._index,types.NoneType):
+#             self._leftBlock = None
+#             self._rightBlock = None
+#         else:
+#             # Calculate new values of left and right blocks
+#             # update the right value of the left block and left value of the right block
+#             # If you are on an edge, leave the value at None
+#             if self._index > min(blocks.keys()):
+#                 self._leftBlock = blocks[max([b for b in blocks.keys() if b < self._index])]
+#                 self._leftBlock._rightBlock = self
+#             else:
+#                 self._leftBlock = None
+# 
+#             if self._index < max(blocks.keys()):
+#                 self._rightBlock = blocks[min([b for b in blocks.keys() if b > self._index])]
+#                 self._rightBlock._leftBlock = self
+#             else:
+#                 self._rightBlock = None
 
 
     def __get_index(self):
@@ -384,14 +403,14 @@ class Block(object):
             return
         if isinstance(value,types.NoneType):
             self._index = value
-            self._updateNeighbors()
+#             self._updateNeighbors()
             return
         allVertices = self._topology._vertices
         allBlocks = [v.block for v in allVertices]
         if value in [b.index for b in allBlocks]:
             raise Exception("Block with index %r already exists!"%value)
         self._index = value
-        self._updateNeighbors()
+#         self._updateNeighbors()
 
     index = property(__get_index,__set_index)
 
