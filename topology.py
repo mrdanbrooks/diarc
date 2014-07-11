@@ -13,6 +13,32 @@
 #
 # TODO:
 # - Document how to create a topology, and how to remove objects from it.
+#
+# t = Topology()
+#
+# v1 = Vertext(t)
+# v2 = Vertext(t)
+# v3 = Vertext(t)
+#
+# Create an edge from v1 to v2 
+# e1 = Edge(t)
+# src1 = Source(t,v1,e1)
+# snk1 = Sink(t,v2,e1)
+# 
+# Add connect the edge to v3 as well
+# snk2 = Sink(t,v3,e1)
+#
+# Add an edge from v3 to v1
+# e2 = Edge(t)
+# src2 = Source(t,v3,e2)
+# snk3 = Sink(t,v1,e2)
+#
+# arrange the vertices in order v1 v2 v3 
+# v1.block.index = 0
+# v2.block.index = 1
+# v3.block.index = 2
+
+
 from util import *
 import types
 
