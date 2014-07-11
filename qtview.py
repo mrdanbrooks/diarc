@@ -821,17 +821,17 @@ class TopologyWidget(QGraphicsWidget):
  
     def autoLayout(self):
         """ Populates the visualBlocks and visualSnaps lists """
-        topology = self.topology
-        for altitude,band in topology.bands.items():
-            print "adding band",altitude
-            visualBand = BandItem(self,band)
-
-        for index,block in topology.blocks.items():
-            print "adding block",index
-            vertexBlock = BlockItem(self,block)
-            for snap in block.emitter.values()+block.collector.values():
-                print "adding snap",snap.order
-                mySnap = SnapItem(self,snap)
+#         topology = self.topology
+#         for altitude,band in topology.bands.items():
+#             print "adding band",altitude
+#             visualBand = BandItem(self,band)
+# 
+#         for index,block in topology.blocks.items():
+#             print "adding block",index
+#             vertexBlock = BlockItem(self,block)
+#             for snap in block.emitter.values()+block.collector.values():
+#                 print "adding snap",snap.order
+#                 mySnap = SnapItem(self,snap)
         self.link() 
 
     def mousePressEvent(self,event):
