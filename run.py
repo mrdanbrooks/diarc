@@ -37,7 +37,18 @@ def qtplot(args):
     topology = parser.parseFile(args[0])
     app = PyQt4.QtGui.QApplication(sys.argv)
     graphView = qtview.GraphView(topology)
-    graphView.autoLayout()
+    # Create Visual Objects
+    for altitude,band in topology.bands.items():
+        print "adding band",altitude
+        visualBand = qtview.BandItem(graphView.topologyWidget,band)
+    for index,block in topology.blocks.items():
+        print "adding block",index
+        vertexBlock = qtview.BlockItem(graphView.topologyWidget,block)
+        for snap in block.emitter.values()+block.collector.values():
+            print "adding snap",snap.order
+            mySnap = qtview.SnapItem(graphView.topologyWidget,snap)
+    graphView.topologyWidget.link()
+
     graphView.activateWindow()
     graphView.raise_()
     sys.exit(app.exec_())
@@ -47,7 +58,6 @@ def rostest():
     import ros_diarc
     app = PyQt4.QtGui.QApplication([])
     graphView = ros_diarc.RosDiarcWidget(None)
-#     graphView.autoLayout()
     graphView.activateWindow()
     graphView.raise_()
     sys.exit(app.exec_())

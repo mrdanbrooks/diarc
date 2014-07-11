@@ -818,21 +818,6 @@ class TopologyWidget(QGraphicsWidget):
 
         self.bandStack = BandStack(self)
         self.blockRibbon = BlockRibbon(self)
- 
-    def autoLayout(self):
-        """ Populates the visualBlocks and visualSnaps lists """
-#         topology = self.topology
-#         for altitude,band in topology.bands.items():
-#             print "adding band",altitude
-#             visualBand = BandItem(self,band)
-# 
-#         for index,block in topology.blocks.items():
-#             print "adding block",index
-#             vertexBlock = BlockItem(self,block)
-#             for snap in block.emitter.values()+block.collector.values():
-#                 print "adding snap",snap.order
-#                 mySnap = SnapItem(self,snap)
-        self.link() 
 
     def mousePressEvent(self,event):
         print "Spacers:",len(self.bandStack._spacers)+len(self.blockRibbon._spacers)
@@ -888,9 +873,6 @@ class GraphView(QGraphicsView):
 
         # Show the window
         self.show()
-
-    def autoLayout(self):
-        self.topologyWidget.autoLayout()
 
     def mousePressEvent(self,event):
         pos = event.pos()

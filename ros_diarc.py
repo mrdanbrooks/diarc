@@ -7,7 +7,6 @@ class RosTopologyWidget(TopologyWidget):
     def __init__(self,topology,diarcWidget):
         super(RosTopologyWidget,self).__init__(topology)
         self.diarcWidget = diarcWidget
-        self.autoLayout()
 
     def mousePressEvent(self,event):
         self.topology.update()
