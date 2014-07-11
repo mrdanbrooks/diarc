@@ -34,7 +34,7 @@ class RosDiarcWidget(QGraphicsView):
     def __init__(self,context):
         super(RosDiarcWidget,self).__init__(context)
         # Instantiate a diarc topology
-        self.rsg = RosSystemGraph() 
+        self.rsg = LiveRosSystemGraph() 
         self.rsg.update()
         
         self.setScene(QGraphicsScene(self))

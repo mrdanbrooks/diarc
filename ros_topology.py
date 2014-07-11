@@ -18,7 +18,6 @@ QUIET_NAMES = ['/rosout']
 class RosSystemGraph(Topology):
     def __init__(self):
         super(RosSystemGraph,self).__init__()
-        self._master = rosgraph.Master('/RosSystemGraph')
 
     @property
     def nodes(self):
@@ -36,6 +35,13 @@ class RosSystemGraph(Topology):
         """ returns a 2-tuple of (posAltitude,negAltitude) of the avaliable altitudes """
         altitudes = [band.altitude for band in self.bands.values()] + [0]
         return (max(altitudes)+1,min(altitudes)-1)
+
+
+
+class LiveRosSystemGraph(RosSystemGraph):
+    def __init__(self):
+        super(LiveRosSystemGraph,self).__init__()
+        self._master = rosgraph.Master('/RosSystemGraph')
 
     def update(self):
         print "*** UPDATING GRAPH ***"
@@ -107,6 +113,9 @@ class RosSystemGraph(Topology):
                 if nodeName not in [sub.node.name for sub in rsgSubscribers]:
                     subscriber = Subscriber(self,self.nodes[nodeName],self.topics[topicName])
         print "*** FINISHED UPDATING ***"
+
+
+
 
 
 
