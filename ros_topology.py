@@ -42,6 +42,8 @@ class LiveRosSystemGraph(RosSystemGraph):
     def __init__(self):
         super(LiveRosSystemGraph,self).__init__()
         self._master = rosgraph.Master('/RosSystemGraph')
+        # This callback will pass the object created
+        self.new_object_callback = None
 
     def update(self):
         print "*** UPDATING GRAPH ***"
@@ -61,6 +63,8 @@ class LiveRosSystemGraph(RosSystemGraph):
         for topicName, topicType in allCurrentTopics:
             if topicName not in rsgTopics: # and topicName not in QUIET_NAMES:
                 topic = Topic(self,topicName,topicType)
+                if self.new_object_callback:
+                    self.new_object_callback(topic)
 #                 topic.posBand.visual = self.visualBandType()
 
         # Compile a list of node names
@@ -78,6 +82,8 @@ class LiveRosSystemGraph(RosSystemGraph):
         for name in allCurrentNodes:
             if name not in rsgNodes: # and name not in QUIET_NAMES:
                 node = Node(self,name)
+                if self.new_object_callback:
+                    self.new_object_callback(node)
                 try:
                     node.location = self._master.lookupNode(name)
                 except socket.error:
@@ -98,6 +104,8 @@ class LiveRosSystemGraph(RosSystemGraph):
             for nodeName in publishersList:
                 if nodeName not in [pub.node.name for pub in rsgPublishers]:
                     publisher = Publisher(self,self.nodes[nodeName],self.topics[topicName])
+                    if self.new_object_callback:
+                        self.new_object_callback(publisher)
 
         # Process subscribers
         for topicName, subscribersList in systemState[1]:
@@ -112,6 +120,9 @@ class LiveRosSystemGraph(RosSystemGraph):
             for nodeName in subscribersList:
                 if nodeName not in [sub.node.name for sub in rsgSubscribers]:
                     subscriber = Subscriber(self,self.nodes[nodeName],self.topics[topicName])
+                    if self.new_object_callback:
+                        self.new_object_callback(subscriber)
+
         print "*** FINISHED UPDATING ***"
 
 
