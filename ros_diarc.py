@@ -42,8 +42,9 @@ class RosTopologyWidget(TopologyWidget):
 
        
 class RosDiarcWidget(QGraphicsView):
-    def __init__(self,context):
-        super(RosDiarcWidget,self).__init__(context)
+    def __init__(self):
+        super(RosDiarcWidget,self).__init__(None)
+        self.setDragMode(QGraphicsView.ScrollHandDrag)
         # Instantiate a diarc topology
         self.rsg = LiveRosSystemGraph() 
 
@@ -59,7 +60,26 @@ class RosDiarcWidget(QGraphicsView):
         self.resize(1024,768)
         self.show()
 
-           
+    def mousePressEvent(self,event):
+        if event.button() == Qt.MidButton:
+            print "what"
+            print event.modifiers()
+            fakeevent = QMouseEvent(event.type(),event.pos(),Qt.LeftButton,Qt.LeftButton,event.modifiers())
+#             fakeevent.setModifier(Qt.ShiftModifier)
+#             self.mousePressEvent()
+        elif event.modifiers() == Qt.ShiftModifier:
+            print "now!"
+        else:
+            super(RosDiarcWidget,self).mousePressEvent(event)
+
+    def mouseReleaseEvent(self,event):
+        if event.button() == Qt.MidButton:
+            self.mouseReleaseEvent(QMouseEvent(event.type(),event.pos(),Qt.LeftButton,Qt.LeftButton,event.modifiers()))
+        else:
+            super(RosDiarcWidget,self).mouseReleaseEvent(event)
+
+
+
     def wheelEvent(self,event):
         self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
         scaleFactor = 1.15

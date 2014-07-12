@@ -274,11 +274,14 @@ class BandItem(SpacerContainer.Item):
         self.setCursor(Qt.ClosedHandCursor)
 
     def mouseMoveEvent(self, event):
-        drag = QDrag(event.widget())
-        mimeData = QMimeData()
-        mimeData.setText(json.dumps({'band':self.band.altitude}))
-        drag.setMimeData(mimeData)
-        drag.start()
+        if event.buttons() != Qt.LeftButton:
+            super(BandItem,self).mouseMoveEvent(event)
+        else:
+            drag = QDrag(event.widget())
+            mimeData = QMimeData()
+            mimeData.setText(json.dumps({'band':self.band.altitude}))
+            drag.setMimeData(mimeData)
+            drag.start()
 
     def mouseReleaseEvent(self,event):
         print "hi",
@@ -499,11 +502,14 @@ class BlockItem(SpacerContainer.Item):
         self.setCursor(Qt.ClosedHandCursor)
 
     def mouseMoveEvent(self, event):
-        drag = QDrag(event.widget())
-        mimeData = QMimeData()
-        mimeData.setText(json.dumps({'block':self.block.index}))
-        drag.setMimeData(mimeData)
-        drag.start()
+        if event.buttons() != Qt.LeftButton:
+            super(BlockItem,self).mouseMoveEvent(event)
+        else:
+            drag = QDrag(event.widget())
+            mimeData = QMimeData()
+            mimeData.setText(json.dumps({'block':self.block.index}))
+            drag.setMimeData(mimeData)
+            drag.start()
 
     def mouseReleaseEvent(self,event):
         print "hi",
@@ -763,11 +769,14 @@ class SnapItem(SpacerContainer.Item):
         print "Snap:",self.snap.order
 
     def mouseMoveEvent(self, event):
-        drag = QDrag(event.widget())
-        mimeData = QMimeData()
-        mimeData.setText(json.dumps({'block': self.snap.block.index,'container': "emitter" if self.snap.isSource() else "collector",'snap':self.snap.order}))
-        drag.setMimeData(mimeData)
-        drag.start()
+        if event.buttons() != Qt.LeftButton:
+            super(SnapItem,self).mouseMoveEvent(event)
+        else:
+            drag = QDrag(event.widget())
+            mimeData = QMimeData()
+            mimeData.setText(json.dumps({'block': self.snap.block.index,'container': "emitter" if self.snap.isSource() else "collector",'snap':self.snap.order}))
+            drag.setMimeData(mimeData)
+            drag.start()
 
 
     def mouseReleaseEvent(self,event):
@@ -886,5 +895,11 @@ class GraphView(QGraphicsView):
         print pos.x(),pos.y()
         super(GraphView,self).mouseReleaseEvent(event)
 
-
+    def wheelEvent(self,event):
+        self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
+        scaleFactor = 1.15
+        if event.delta() > 0:
+            self.scale(scaleFactor, scaleFactor)
+        else:
+            self.scale(1.0/scaleFactor, 1.0/scaleFactor)
 

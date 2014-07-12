@@ -57,7 +57,7 @@ def rostest():
     import PyQt4.QtGui
     import ros_diarc
     app = PyQt4.QtGui.QApplication([])
-    graphView = ros_diarc.RosDiarcWidget(None)
+    graphView = ros_diarc.RosDiarcWidget()
     graphView.activateWindow()
     graphView.raise_()
     sys.exit(app.exec_())
