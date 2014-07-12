@@ -13,7 +13,7 @@
 from topology import *
 import rosgraph
 import rosnode
-QUIET_NAMES = ['/rosout']
+QUIET_NAMES = ['/rosout','/tf']
 
 class RosSystemGraph(Topology):
     def __init__(self):
@@ -111,7 +111,11 @@ class LiveRosSystemGraph(RosSystemGraph):
         for topicName, subscribersList in systemState[1]:
             if topicName in QUIET_NAMES: 
                 continue
-            rsgSubscribers = self.topics[topicName].subscribers
+            try:
+                rsgSubscribers = self.topics[topicName].subscribers
+            except:
+                print topicName,"not found in"
+                continue
             # Remove subscribers that don't exist anymore
             for subscriber in rsgSubscribers:
                 if subscriber.node.name not in subscribersList:

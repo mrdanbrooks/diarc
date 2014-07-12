@@ -59,4 +59,10 @@ class RosDiarcWidget(QGraphicsView):
         else:
             raise Exception("Unexpected type %r"%type(obj))
             
-
+    def wheelEvent(self,event):
+        self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
+        scaleFactor = 1.15
+        if event.delta() > 0:
+            self.scale(scaleFactor, scaleFactor)
+        else:
+            self.scale(1.0/scaleFactor, 1.0/scaleFactor)

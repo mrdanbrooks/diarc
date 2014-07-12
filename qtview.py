@@ -131,8 +131,10 @@ class BandSpacer(SpacerContainer.Spacer):
         # or either the top or bottom of the BandStack. In these cases, the values
         # will remain None, so we need to look at both in case one is not good
         # (e.g. currAlt < (upperAlt or lowerAlt+1))
-        lowerAlt = None
-        upperAlt = None
+#         lowerAlt = None
+#         upperAlt = None
+        lowerAlt = bottomAltitude
+        upperAlt = topAltitude
 
         # The dragEnterEvent() should prevent positive altitude bands from being
         # dragged below the block ribbon and vice versa. This is necessary because
@@ -143,25 +145,25 @@ class BandSpacer(SpacerContainer.Spacer):
         # bands on we want to put the dragged band between. For positive bands,
         # we want to be just above the spacer's bottom band. For negative bands
         # we want to be just below the spacer's top band. 
-        if srcAlt > 0:
-            lowerAlt = bottomAltitude 
-            if isinstance(lowerAlt,int):
-                tband = bands[lowerAlt].topBand # only calculate topBand once...
-                upperAlt = tband.altitude if isinstance(tband,Band) else None
-            else:
-                # If lowerAlt is None, we are just above the block ribbon
-                upperAlt = 1
-        else:
-            # top altitude is None if we are just below the block ribbon.
-            # In that case, we want to be as close to the ribbon as possible.
-            upperAlt = topAltitude 
-            if isinstance(upperAlt,int):
-                lband = bands[upperAlt].bottomBand # only calculate topBand once...
-                lowerAlt = lband.altitude if isinstance(lband,Band) else None
-            else:
-                # If upperAlt is None, we are just below the block ribbon
-                lowerAlt = -1
-
+#         if srcAlt > 0:
+#             lowerAlt = bottomAltitude 
+#             if isinstance(lowerAlt,int):
+#                 tband = bands[lowerAlt].topBand # only calculate topBand once...
+#                 upperAlt = tband.altitude if isinstance(tband,Band) else None
+#             else:
+#                 # If lowerAlt is None, we are just above the block ribbon
+#                 upperAlt = 1
+#         else:
+#             # top altitude is None if we are just below the block ribbon.
+#             # In that case, we want to be as close to the ribbon as possible.
+#             upperAlt = topAltitude 
+#             if isinstance(upperAlt,int):
+#                 lband = bands[upperAlt].bottomBand # only calculate topBand once...
+#                 lowerAlt = lband.altitude if isinstance(lband,Band) else None
+#             else:
+#                 # If upperAlt is None, we are just below the block ribbon
+#                 lowerAlt = -1
+# 
         print "Moving band",srcAlt,"between",lowerAlt, "and",upperAlt
 
         lastAlt = None

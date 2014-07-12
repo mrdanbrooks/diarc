@@ -477,6 +477,8 @@ class Band(object):
         # away sink (depending on pos/neg altitude).
         sinkBlockIndices = [s.block.index for s in self.edge.sinks]
         sinkBlockIndices = filter(lambda x: isinstance(x,int), sinkBlockIndices)
+        if len(sinkBlockIndices) < 1:
+            return list()
         sources = list()
         # Find Sources if this is a  Positive Bands
         if self._altitude and self._altitude > 0:
@@ -493,6 +495,8 @@ class Band(object):
         """ returns list of sink snaps that reach this band """
         sourceBlockIndices = [s.block.index for s in self.edge.sources]
         sourceBlockIndices = filter(lambda x: isinstance(x,int), sourceBlockIndices)
+        if len(sourceBlockIndices) < 1:
+            return list()
         sinks = list()
         # Find Sinks if this is a  Positive Bands
         if self._altitude and self._altitude > 0:
@@ -511,14 +515,16 @@ class Band(object):
         """
         # This should be equivalent to checking if any sinks reach this band,
         # but this has not been tested or proven. 
-        sinkBlockIndices = [s.block.index for s in self.edge.sinks if isinstance(s.block.index,int)]
-        sourceBlockIndices = [s.block.index for s in self.edge.sources if isinstance(s.block.index,int)]
+#         sinkBlockIndices = [s.block.index for s in self.edge.sinks if isinstance(s.block.index,int)]
+#         sourceBlockIndices = [s.block.index for s in self.edge.sources if isinstance(s.block.index,int)]
+        sinkBlockIndices = [s.block.index for s in self.collectors]
+        sourceBlockIndices = [s.block.index for s in self.emitters]
         if len(sinkBlockIndices) == 0 or len(sourceBlockIndices) == 0:
             return False
         # If positive and there is a sink to the left of any source
-        if self._isPositive and max(sinkBlockIndices) >= min(sourceBlockIndices):
+        if self._isPositive and max(sinkBlockIndices) > min(sourceBlockIndices):
             return True
-        elif (not self._isPositive) and min(sinkBlockIndices) < max(sourceBlockIndices):
+        elif (not self._isPositive) and min(sinkBlockIndices) <= max(sourceBlockIndices):
             return True
         else:
             return False
