@@ -324,7 +324,8 @@ class BlockRibbon(SpacerContainer):
         self.setMinimumWidth(15)
 
     def paint(self,painter,option,widget):
-        painter.setPen(Qt.green)
+#         painter.setPen(Qt.green)
+        painter.setPen(Qt.NoPen)
         painter.drawRect(self.rect())
 
 class BlockSpacer(SpacerContainer.Spacer):
@@ -465,6 +466,7 @@ class BlockItem(SpacerContainer.Item):
         # Set up top and bottom margin to give that space. 
         self._topMargin = BlockItem.HorizontalSpacer(self)
         self._botMargin = BlockItem.HorizontalSpacer(self)
+        self._middleSpacer = BlockItem.MiddleSpacer(self)
         # TODO: Set up left and right margins as well
 
         # Set up Emitter and Collector Containers. They will sit "inside" the 
@@ -477,8 +479,10 @@ class BlockItem(SpacerContainer.Item):
         print "releasing BlockItem %r"%self
         self._topMargin.setParent(None)
         self._botMargin.setParent(None)
+        self._middleSpacer.setParent(None)
         self._topMargin = None
         self._botMargin = None
+        self._middleSpacer = None
         self.myEmitter._release()
         self.myCollector._release()
         self.myEmitter = None
@@ -519,9 +523,16 @@ class BlockItem(SpacerContainer.Item):
         l.addAnchor(self._botMargin, Qt.AnchorTop, self.myEmitter, Qt.AnchorBottom)
         l.addAnchor(self._topMargin, Qt.AnchorBottom, self.myCollector, Qt.AnchorTop)
         l.addAnchor(self._botMargin, Qt.AnchorTop, self.myCollector, Qt.AnchorBottom)
+
+        l.addAnchor(self._middleSpacer, Qt.AnchorTop, self.myEmitter, Qt.AnchorTop)
+        l.addAnchor(self._middleSpacer, Qt.AnchorTop, self.myCollector, Qt.AnchorTop)
+        l.addAnchor(self._middleSpacer, Qt.AnchorBottom, self.myEmitter, Qt.AnchorBottom)
+        l.addAnchor(self._middleSpacer, Qt.AnchorBottom, self.myCollector, Qt.AnchorBottom)
+
         l.addAnchor(self, Qt.AnchorLeft, self.myCollector, Qt.AnchorLeft)
         l.addAnchor(self, Qt.AnchorRight, self.myEmitter, Qt.AnchorRight)
-        l.addAnchor(self.myCollector, Qt.AnchorRight, self.myEmitter, Qt.AnchorLeft)
+        l.addAnchor(self.myCollector, Qt.AnchorRight, self._middleSpacer, Qt.AnchorLeft)
+        l.addAnchor(self._middleSpacer, Qt.AnchorRight, self.myEmitter, Qt.AnchorLeft)
 
     def mousePressEvent(self,event):
         pos = event.pos()
@@ -545,6 +556,22 @@ class BlockItem(SpacerContainer.Item):
     def paint(self,painter,option,widget):
         painter.setPen(Qt.red)
         painter.drawRect(self.rect())
+
+
+    class MiddleSpacer(QGraphicsWidget):
+        def __init__(self,parent):
+            super(BlockItem.MiddleSpacer,self).__init__(parent=parent)
+            # NOTE: I originally tried to set this to Preferred, MinimumExpanding
+            # but ran into trouble when the layout could not compute itself when
+            # it set that mode. For some reason, it was very unhappy about giving
+            # it height policy information.
+            self.setSizePolicy(QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred))
+            self.setPreferredWidth(20)
+            self.setMinimumWidth(20)
+
+        def paint(self,painter,option,widget):
+            painter.setPen(Qt.NoPen)
+            painter.drawRect(self.rect())
 
 
     class HorizontalSpacer(QGraphicsWidget):
