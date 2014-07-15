@@ -36,36 +36,36 @@ class BandSpacer(SpacerContainer.Spacer):
 
     def link(self):
         l = self.layout()
-        print "Working on Spacer between bands",self.topBand.band.altitude if self.topBand else None, "and",self.bottomBand.band.altitude if self.bottomBand else None
+#         print "Working on Spacer between bands",self.topBand.band.altitude if self.topBand else None, "and",self.bottomBand.band.altitude if self.bottomBand else None
         sys.stdout.flush()
         # Link To your Top! If you have a band above, connect
         if self.topBand:
-            print "Linking to bottom of ",self.topBand.band.altitude
+#             print "Linking to bottom of ",self.topBand.band.altitude
             sys.stdout.flush()
             l.addAnchor(self, Qt.AnchorTop, self.topBand, Qt.AnchorBottom)
         # Otherwise, if it is a positive band, connect to the top of the BandStack
         elif self.bottomBand.band.isPositive:
-            print "linking band",self.bottomBand.band.altitude,"to top of band stack"
+#             print "linking band",self.bottomBand.band.altitude,"to top of band stack"
             sys.stdout.flush()
             l.addAnchor(self, Qt.AnchorTop, self.parent, Qt.AnchorTop)
         # Otherwise, if it is a negative band, connect to Block Ribbon
         elif not self.bottomBand.band.isPositive: 
-            print "linking band",self.bottomBand.band.altitude,"to bottom of ribbon"
+#             print "linking band",self.bottomBand.band.altitude,"to bottom of ribbon"
             sys.stdout.flush()
             l.addAnchor(self, Qt.AnchorTop, self.parent.parent.blockRibbon, Qt.AnchorBottom)
 
         # Link to your bottom! If you have a band below, connect
         if self.bottomBand:
-            print "Linking to top of ",self.bottomBand.band.altitude
+#             print "Linking to top of ",self.bottomBand.band.altitude
             sys.stdout.flush()
             l.addAnchor(self, Qt.AnchorBottom, self.bottomBand, Qt.AnchorTop)
         # Otherwise, if it is a positive band, connect to the block ribbon
         elif self.topBand.band.isPositive:
-            print "linking band",self.topBand.band.altitude,"to top of ribbon"
+#             print "linking band",self.topBand.band.altitude,"to top of ribbon"
             sys.stdout.flush()
             l.addAnchor(self, Qt.AnchorBottom, self.parent.parent.blockRibbon, Qt.AnchorTop)
         elif not self.topBand.band.isPositive:
-            print "linking band",self.topBand.band.altitude,"to bottom of band stack"
+#             print "linking band",self.topBand.band.altitude,"to bottom of band stack"
             sys.stdout.flush()
             l.addAnchor(self, Qt.AnchorBottom, self.parent, Qt.AnchorBottom)
         
@@ -73,9 +73,9 @@ class BandSpacer(SpacerContainer.Spacer):
         l.addAnchor(self, Qt.AnchorLeft, self.parent, Qt.AnchorLeft)
         l.addAnchor(self, Qt.AnchorRight, self.parent, Qt.AnchorRight)
 
-    def mousePressEvent(self,event):
-        print "Band Spacer: Above=",self.topBand.band.altitude if self.topBand else None,
-        print "Below=",self.bottomBand.band.altitude if self.bottomBand else None 
+#     def mousePressEvent(self,event):
+#         print "Band Spacer: Above=",self.topBand.band.altitude if self.topBand else None,
+#         print "Below=",self.bottomBand.band.altitude if self.bottomBand else None 
 
     def dragEnterEvent(self,event):
         if not event.mimeData().hasText():
@@ -130,7 +130,7 @@ class BandSpacer(SpacerContainer.Spacer):
         topAltitude = self.topBand.band.altitude if self.topBand else None
         bottomAltitude = self.bottomBand.band.altitude if self.bottomBand else None
 
-        print "topAltitude=",topAltitude,"bottomAltitude=",bottomAltitude
+#         print "topAltitude=",topAltitude,"bottomAltitude=",bottomAltitude
 
         # Get a copy of the dictionary of bands in the topology
         bands = self.parent.parent.topology.bands
@@ -172,7 +172,8 @@ class BandSpacer(SpacerContainer.Spacer):
 #                 # If upperAlt is None, we are just below the block ribbon
 #                 lowerAlt = -1
 # 
-        print "Moving band",srcAlt,"between",lowerAlt, "and",upperAlt
+
+#         print "Moving band",srcAlt,"between",lowerAlt, "and",upperAlt
 
         lastAlt = None
         currAlt = srcAlt
@@ -181,12 +182,12 @@ class BandSpacer(SpacerContainer.Spacer):
         # Clear the dragged bands's altitude, then shift all effected bands
         # down. See issue #12
         if isinstance(lowerAlt,int) and lowerAlt > srcAlt:
-            print "Moving positive up"
+#             print "Moving positive up"
             while isinstance(currAlt,int) and currAlt < (upperAlt or lowerAlt+1):
                 tband = bands[currAlt].topBand
                 nextAlt = tband.altitude if isinstance(tband,Band) else None
                 bands[currAlt].altitude = lastAlt
-                print "%s -> %s"%(str(currAlt),str(lastAlt))
+#                 print "%s -> %s"%(str(currAlt),str(lastAlt))
                 lastAlt = currAlt
                 currAlt = nextAlt
             # Assertion check
@@ -195,19 +196,19 @@ class BandSpacer(SpacerContainer.Spacer):
         # If we are moving down, upperAlt is the target altitude.
         # Clear the dragged bands altitude, then shift all effected bands up.
         elif isinstance(upperAlt,int) and upperAlt <= srcAlt:
-            print "Moving positive down"
+#             print "Moving positive down"
             while isinstance(currAlt,int) and currAlt > (lowerAlt or upperAlt-1):
                 lband = bands[currAlt].bottomBand
                 nextAlt = lband.altitude if isinstance(lband,Band) else None
                 bands[currAlt].altitude = lastAlt
-                print "%s -> %s"%(str(currAlt),str(lastAlt))
+#                 print "%s -> %s"%(str(currAlt),str(lastAlt))
                 lastAlt = currAlt
                 currAlt = nextAlt
             # Assertion check
             assert lastAlt == upperAlt, "%r %r"%(lastAlt,upperAlt)
 
         else:
-            print "No op!"
+#             print "No op!"
             return
 
         # Finally, give the moved object its desired destination. Then make
@@ -255,7 +256,7 @@ class BandItem(SpacerContainer.Item):
         return self.band.isUsed()
 
     def link(self):
-        print "*** linking band",self.band.altitude,"***"
+#         print "*** linking band",self.band.altitude,"***"
         sys.stdout.flush()
         super(BandItem,self).link()
         
@@ -268,13 +269,13 @@ class BandItem(SpacerContainer.Item):
             collectors = self.band.collectors
             emitters.sort(lambda x,y: x.block.index - y.block.index)
             collectors.sort(lambda x,y: x.block.index - y.block.index)
-            print "emitters=",[s.block.index for s in emitters]
-            print "collectors=",[s.block.index for s in collectors]
+#             print "emitters=",[s.block.index for s in emitters]
+#             print "collectors=",[s.block.index for s in collectors]
             if self.band.isPositive:
                 l.addAnchor(self, Qt.AnchorLeft, emitters[0].visual, Qt.AnchorLeft)
                 l.addAnchor(self, Qt.AnchorRight, collectors[-1].visual, Qt.AnchorRight)
             else:
-                print "linking to snaps",collectors[0].visual.snap.order,"in block",collectors[0].visual.snap.block.index,"and",emitters[-1].visual.snap.order,"in block",emitters[-1].visual.snap.block.index
+#                 print "linking to snaps",collectors[0].visual.snap.order,"in block",collectors[0].visual.snap.block.index,"and",emitters[-1].visual.snap.order,"in block",emitters[-1].visual.snap.block.index
                 l.addAnchor(self, Qt.AnchorLeft, collectors[0].visual, Qt.AnchorLeft)
                 l.addAnchor(self, Qt.AnchorRight, emitters[-1].visual, Qt.AnchorRight)
 
@@ -764,7 +765,7 @@ class SnapItem(SpacerContainer.Item):
     def link(self):
         super(SnapItem,self).link()
         l = self.parent.layout()
-        print "linking snap",self.snap.order,"in block",self.snap.block.index
+#         print "linking snap",self.snap.order,"in block",self.snap.block.index
         l.addAnchor(self, Qt.AnchorTop, self.container, Qt.AnchorTop)
         l.addAnchor(self, Qt.AnchorBottom, self.container, Qt.AnchorBottom)
 
@@ -887,17 +888,17 @@ class TopologyWidget(QGraphicsWidget):
         self.layout().addAnchor(self.bandStack, Qt.AnchorRight, self.blockRibbon, Qt.AnchorRight)
 
         # Start anchoring the other blocks
-        print "Current Spacers="
+#         print "Current Spacers="
         for spacer in self.bandStack._spacers:
             print spacer.itemA.band.altitude if spacer.itemA else None,spacer.itemB.band.altitude if spacer.itemB else None
-        print "End Spacers"
-        print "\n\n__Linking blocks__"
+#         print "End Spacers"
+#         print "\n\n__Linking blocks__"
         for block in self.topology.blocks.values():
             block.visual.link()
             # TODO: This could be optimized by implementing a topology.connections
             for snap in block.emitter.values()+block.collector.values():
                 snap.visual.link()
-        print "\n\n__linking bands__"
+#         print "\n\n__linking bands__"
         for band in self.topology.bands.values():
             band.visual.link()
         self.layout().invalidate()
