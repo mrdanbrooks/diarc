@@ -453,6 +453,10 @@ class BlockItem(SpacerContainer.Item):
 #         typecheck(parent,DrawingBoard,"parent")
         typecheck(parent,TopologyWidget,"parent")
         super(BlockItem,self).__init__(parent,parent.blockRibbon)
+        self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.MinimumExpanding))
+        self.setPreferredHeight(5)
+        self.setMinimumHeight(5)
+
         self.block = block
         self.block.visual = self
         self.setContentsMargins(5,5,5,5)
@@ -546,9 +550,11 @@ class BlockItem(SpacerContainer.Item):
     class HorizontalSpacer(QGraphicsWidget):
         def __init__(self,parent):
             super(BlockItem.HorizontalSpacer,self).__init__(parent=parent)
-            self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.MinimumExpanding))
+            self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.Preferred))
             self.setPreferredHeight(5)
             self.setMinimumHeight(5)
+            self.setMaximumHeight(5)
+            self.setMinimumWidth(5)
 
 
 
