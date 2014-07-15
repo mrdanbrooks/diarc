@@ -350,8 +350,8 @@ class Block(object):
         set in the topology, only return snaps where isLinked() is true. 
         """
         snaps = [(s.snap.order, s.snap) for s in self._vertex.sources if isinstance(s.snap.order, int)]
-#         if self._topology.hide_disconnected_snaps:
-#             snaps = [tup for tup in snaps if tup[1].isLinked()]
+        if self._topology.hide_disconnected_snaps:
+            snaps = [tup for tup in snaps if tup[1].isLinked()]
         return dict(snaps)
 #         return dict(filter(lambda x: isinstance(x[0],int), [(s.snap.order, s.snap) for s in self._vertex.sources]))
 
@@ -363,8 +363,8 @@ class Block(object):
         set in the topology, only return snaps where isLinked() is true. 
         """
         snaps = [(s.snap.order, s.snap) for s in self._vertex.sinks if isinstance(s.snap.order, int)]
-#         if self._topology.hide_disconnected_snaps:
-#             snaps = [tup for tup in snaps if tup[1].isLinked()]
+        if self._topology.hide_disconnected_snaps:
+            snaps = [tup for tup in snaps if tup[1].isLinked()]
         return dict(snaps)
 #         return dict(filter(lambda x: isinstance(x[0],int),[(s.snap.order,s.snap) for s in self._vertex.sinks]))
 
@@ -715,18 +715,18 @@ class Snap(object):
     def isSink(self):
         return isinstance(self._connection,Sink)
 
-#     def isLinked(self):
-#         """ returns true if this snap is connected to at least one sink, else false. """
-#         return True if self.posBandLink or self.negBandLink else False
-# 
-#     def isUsed(self):
-#         """ returns true if topology.hide_disconnected_snaps is True and isLinked is True, 
-#         or if topology.hide_disconnected_snaps is false. Otherwise, return true.
-#         """
-#         if self._connection._topology.hide_disconnected_snaps:
-#             return True if self.isLinked() else False
-#         else:
-#             return True
+    def isLinked(self):
+        """ returns true if this snap is connected to at least one sink, else false. """
+        return True if self.posBandLink or self.negBandLink else False
+
+    def isUsed(self):
+        """ returns true if topology.hide_disconnected_snaps is True and isLinked is True, 
+        or if topology.hide_disconnected_snaps is false. Otherwise, return true.
+        """
+        if self._connection._topology.hide_disconnected_snaps:
+            return True if self.isLinked() else False
+        else:
+            return True
 
     @property
     def leftSnap(self):
