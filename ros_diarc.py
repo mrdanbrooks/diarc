@@ -3,6 +3,24 @@ from qtview import *
 from ros_topology import *
 import gc
 
+class RosBandItem(BandItem):
+    def mousePressEvent(self,event):
+        print self.band.edge.name
+
+    def paint(self,painter,option,widget):
+        brush = QBrush()
+        brush.setStyle(Qt.SolidPattern)
+        brush.setColor(Qt.white)
+        painter.fillRect(self.rect(),brush)
+        if self.band.isUsed():
+            painter.setPen(Qt.red)
+        else:
+            painter.setPen(Qt.blue)
+        rect = self.geometry()
+        painter.drawRect(self.rect())
+        painter.drawText(0,rect.height()-2,self.band.edge.name)
+
+
 class RosTopologyWidget(TopologyWidget):
     def __init__(self,topology,diarcWidget):
         super(RosTopologyWidget,self).__init__(topology)
@@ -14,9 +32,9 @@ class RosTopologyWidget(TopologyWidget):
         print "new object is a ",type(obj)
         if isinstance(obj,Topic):
             print "Adding Band",obj.posBand.altitude
-            BandItem(self,obj.posBand)
+            RosBandItem(self,obj.posBand)
             print "Adding Band",obj.negBand.altitude
-            BandItem(self,obj.negBand)
+            RosBandItem(self,obj.negBand)
         elif isinstance(obj,Node):
             print "Adding Block",obj.block.index
             BlockItem(self,obj.block)
@@ -61,24 +79,24 @@ class RosDiarcWidget(QGraphicsView):
         self.resize(1024,768)
         self.show()
 
-    def mousePressEvent(self,event):
-        if event.button() == Qt.MidButton:
-            print "what"
-            print event.modifiers()
-            fakeevent = QMouseEvent(event.type(),event.pos(),Qt.LeftButton,Qt.LeftButton,event.modifiers())
-#             fakeevent.setModifier(Qt.ShiftModifier)
-#             self.mousePressEvent()
-            super(RosDiarcWidget,self).mousePressEvent(fakeevent)
-        elif event.modifiers() == Qt.ShiftModifier:
-            print "now!"
-        else:
-            super(RosDiarcWidget,self).mousePressEvent(event)
-
-    def mouseReleaseEvent(self,event):
-        if event.button() == Qt.MidButton:
-            self.mouseReleaseEvent(QMouseEvent(event.type(),event.pos(),Qt.LeftButton,Qt.LeftButton,event.modifiers()))
-        else:
-            super(RosDiarcWidget,self).mouseReleaseEvent(event)
+#     def mousePressEvent(self,event):
+#         if event.button() == Qt.MidButton:
+#             print "what"
+#             print event.modifiers()
+#             fakeevent = QMouseEvent(event.type(),event.pos(),Qt.LeftButton,Qt.LeftButton,event.modifiers())
+# #             fakeevent.setModifier(Qt.ShiftModifier)
+# #             self.mousePressEvent()
+#             super(RosDiarcWidget,self).mousePressEvent(fakeevent)
+#         elif event.modifiers() == Qt.ShiftModifier:
+#             print "now!"
+#         else:
+#             super(RosDiarcWidget,self).mousePressEvent(event)
+# 
+#     def mouseReleaseEvent(self,event):
+#         if event.button() == Qt.MidButton:
+#             self.mouseReleaseEvent(QMouseEvent(event.type(),event.pos(),Qt.LeftButton,Qt.LeftButton,event.modifiers()))
+#         else:
+#             super(RosDiarcWidget,self).mouseReleaseEvent(event)
 
 
 

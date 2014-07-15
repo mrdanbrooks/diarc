@@ -756,17 +756,17 @@ class SnapItem(SpacerContainer.Item):
 
     def itemA(self):
         """ We use itemA for the SnapItem to the left """
-        return self.snap.leftSnap.visual if self.isUsed() and self.snap.leftSnap else None
+        return self.snap.leftSnap.visual if self.snap.leftSnap else None
 
     def itemB(self):
         """ We use itemB for the SnapItem to the right """
         # When we don't display unused snaps, we are still reporting unused snaps to 
         # our left and right here - only they don't visually exists which causes problems
-        return self.snap.rightSnap.visual if self.isUsed() and self.snap.rightSnap else None
+        return self.snap.rightSnap.visual if self.snap.rightSnap else None
 
     def isUsed(self):
-        return True
-#         return self.snap.isUsed()
+#         return True
+        return self.snap.isUsed()
 
     def link(self):
         super(SnapItem,self).link()
@@ -823,7 +823,6 @@ class SnapItem(SpacerContainer.Item):
 
 
     def mouseReleaseEvent(self,event):
-        print "hi"
         self.setCursor(Qt.ArrowCursor)
 
     def paint(self,painter,option,widget):
