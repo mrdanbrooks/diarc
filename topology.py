@@ -49,6 +49,9 @@ class Topology(object):
         self._sources = TypedList(Source)
         self._sinks = TypedList(Sink)
 
+        # Visual Settings
+        self._hide_disconnected_snaps = False
+
     @property
     def vertices(self):
         """ returns an unordered list of vertex objects in the topology """
@@ -67,13 +70,22 @@ class Topology(object):
     @property
     def bands(self):
         """ Returns dictionary of all bands, by altitude. Bands which have not
-        been assigned altitudes are not reported. However, bands that are not 
-        being used (indicated by isUsed()) are shown. 
+        been assigned altitudes are not reported. All bands that have an altitude
+        (regardless of if they are being used (indicated by isUsed) are reported. 
         """
         allBands = [band for edge in self._edges for band in [edge.posBand,edge.negBand]]
         if None is [band.altitude for band in allBands]:
             print "WARNING: There are bands lacking altitude information! Not all bands are represented"
         return dict([(band.altitude,band) for band in filter(lambda x: isinstance(x.altitude,int),allBands)])
+
+    def __get_hide_disconnected_snaps(self):
+        return self._hide_disconnected_snaps
+    def __set_hide_disconnected_snaps(self, state):
+        typecheck(state, bool, "state")
+        self._hide_disconnected_snaps = state
+    hide_disconnected_snaps = property(__get_hide_disconnected_snaps, __set_hide_disconnected_snaps)
+
+
 
 
 class Vertex(object):
@@ -334,17 +346,27 @@ class Block(object):
     def emitter(self):
         """ Dictionary of Snaps that represent source connections for this block.
         Only snaps which have been assigned an order value are represented, since
-        the order is used as the dictionary key.
+        the order is used as the dictionary key. If hide_disconnected_snaps is 
+        set in the topology, only return snaps where isLinked() is true. 
         """
-        return dict(filter(lambda x: isinstance(x[0],int),[(s.snap.order,s.snap) for s in self._vertex.sources]))
+        snaps = [(s.snap.order, s.snap) for s in self._vertex.sources if isinstance(s.snap.order, int)]
+#         if self._topology.hide_disconnected_snaps:
+#             snaps = [tup for tup in snaps if tup[1].isLinked()]
+        return dict(snaps)
+#         return dict(filter(lambda x: isinstance(x[0],int), [(s.snap.order, s.snap) for s in self._vertex.sources]))
 
     @property
     def collector(self):
         """ Dictionary of Snaps that represent sink connections for this block.
         Only snaps which have been assigned an order value are represented, since
-        the order is used as the dictionary key.
+        the order is used as the dictionary key. If hide_disconnected_snaps is 
+        set in the topology, only return snaps where isLinked() is true. 
         """
-        return dict(filter(lambda x: isinstance(x[0],int),[(s.snap.order,s.snap) for s in self._vertex.sinks]))
+        snaps = [(s.snap.order, s.snap) for s in self._vertex.sinks if isinstance(s.snap.order, int)]
+#         if self._topology.hide_disconnected_snaps:
+#             snaps = [tup for tup in snaps if tup[1].isLinked()]
+        return dict(snaps)
+#         return dict(filter(lambda x: isinstance(x[0],int),[(s.snap.order,s.snap) for s in self._vertex.sinks]))
 
     @property
     def leftBlock(self):
@@ -537,6 +559,7 @@ class Band(object):
     def topBand(self):
         """ Returns the band with the next highest altitude, or None if either
         there is no band above this one or the block ribbon is above it.
+        Bands for which isUsed() is false are skipped over.
         """
         if not isinstance(self._altitude,int):
             return None
@@ -560,6 +583,7 @@ class Band(object):
     def bottomBand(self):
         """ Returns the band with the next lowest altitude, or None if either
         there is no band below this one or the block ribbon is below it.
+        Bands for which isUsed() is false are skipped over.
         """
         if not isinstance(self._altitude,int):
             return None
@@ -634,8 +658,8 @@ class Snap(object):
         # the connection should 
         print "... removing reference to connection"
         self._connection = None
-        print "... removing reference to topology"
-        self._topology = None
+#         print "... removing reference to topology"
+#         self._topology = None
 
     @property
     def posBandLink(self):
@@ -691,10 +715,24 @@ class Snap(object):
     def isSink(self):
         return isinstance(self._connection,Sink)
 
+#     def isLinked(self):
+#         """ returns true if this snap is connected to at least one sink, else false. """
+#         return True if self.posBandLink or self.negBandLink else False
+# 
+#     def isUsed(self):
+#         """ returns true if topology.hide_disconnected_snaps is True and isLinked is True, 
+#         or if topology.hide_disconnected_snaps is false. Otherwise, return true.
+#         """
+#         if self._connection._topology.hide_disconnected_snaps:
+#             return True if self.isLinked() else False
+#         else:
+#             return True
 
     @property
     def leftSnap(self):
-        """ Returns the snap directly to the left of this snap within either an emitter or collector. Returns None if this is leftmost snap. """
+        """ Returns the snap directly to the left of this snap within either an 
+        emitter or collector. Returns None if this is leftmost snap. 
+        """
         snaps = self.block.emitter if self.isSource() else self.block.collector
         if isinstance(self._order,int) and self._order > min(snaps.keys()):
             return snaps[max([s for s in snaps.keys() if s < self._order])]
@@ -703,7 +741,9 @@ class Snap(object):
 
     @property
     def rightSnap(self):
-        """ Returns the snap directly to the right of this snap within either an emitter or collector. Returns None if this is rightmost snap. """
+        """ Returns the snap directly to the right of this snap within either 
+        an emitter or collector. Returns None if this is rightmost snap.
+        """
         snaps = self.block.emitter if self.isSource() else self.block.collector
         if isinstance(self._order,int) and self._order < max(snaps.keys()):
             return snaps[min([s for s in snaps.keys() if s > self._order])]

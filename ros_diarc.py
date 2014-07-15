@@ -8,6 +8,7 @@ class RosTopologyWidget(TopologyWidget):
         super(RosTopologyWidget,self).__init__(topology)
         self.diarcWidget = diarcWidget
         self.topology.new_object_callback = lambda x: self.new_object_callback(x)
+        self.topology.hide_disconnected_snaps = True
 
     def new_object_callback(self,obj):
         print "new object is a ",type(obj)
@@ -67,6 +68,7 @@ class RosDiarcWidget(QGraphicsView):
             fakeevent = QMouseEvent(event.type(),event.pos(),Qt.LeftButton,Qt.LeftButton,event.modifiers())
 #             fakeevent.setModifier(Qt.ShiftModifier)
 #             self.mousePressEvent()
+            super(RosDiarcWidget,self).mousePressEvent(fakeevent)
         elif event.modifiers() == Qt.ShiftModifier:
             print "now!"
         else:

@@ -20,6 +20,7 @@ class BandStack(SpacerContainer):
 class BandSpacer(SpacerContainer.Spacer):
     def __init__(self,parent):
         super(BandSpacer,self).__init__(parent)
+        self.dragOver = False
         self.setSizePolicy(QSizePolicy(QSizePolicy.Preferred,QSizePolicy.MinimumExpanding))
         self.setPreferredHeight(15)
         self.setMinimumHeight(15)
@@ -95,19 +96,26 @@ class BandSpacer(SpacerContainer.Spacer):
         if data['band'] > 0 and (topAltitude > 0 or bottomAltitude > 0):
             event.setAccepted(True)
             self.dragOver = True
+            self.update()
             print "Drag Positive ENTER"
         # Accept a negative altitude band
         elif data['band'] < 0 and (topAltitude < 0 or bottomAltitude < 0):
             event.setAccepted(True)
             self.dragOver = True
+            self.update()
             print "Drag Negative ENTER"
         else:
             event.setAccepted(False)
+        self.setZValue(max([self.topBand.band.altitude if self.topBand else None,
+                            self.bottomBand.band.altitude if self.bottomBand else None]))
 
     def dragLeaveEvent(self,event):
         self.dragOver = False
+        self.update()
 
     def dropEvent(self,event):
+        self.dragOver = False
+        self.update()
         """ Reorder the band altitudes to put the dropped band in the new position"""
         # Not all bands are necessarily being shown due to the fact that depending
         # on the ordering of the blocks, edge connections could travel different 
@@ -209,11 +217,13 @@ class BandSpacer(SpacerContainer.Spacer):
 
 
     def paint(self,painter,option,widget):
-#         pen = QPen()
-#         pen.setBrush(Qt.lightGray)
-#         pen.setStyle(Qt.DotLine)
-#         painter.setPen(pen)
-        painter.setPen(Qt.NoPen)
+        if self.dragOver:
+            pen = QPen()
+            pen.setBrush(Qt.lightGray)
+            pen.setStyle(Qt.DashLine)
+            painter.setPen(pen)
+        else:
+            painter.setPen(Qt.NoPen)
         painter.drawRect(self.rect())
 
 class BandItem(SpacerContainer.Item):
@@ -264,6 +274,7 @@ class BandItem(SpacerContainer.Item):
                 l.addAnchor(self, Qt.AnchorLeft, emitters[0].visual, Qt.AnchorLeft)
                 l.addAnchor(self, Qt.AnchorRight, collectors[-1].visual, Qt.AnchorRight)
             else:
+                print "linking to snaps",collectors[0].visual.snap.order,"in block",collectors[0].visual.snap.block.index,"and",emitters[-1].visual.snap.order,"in block",emitters[-1].visual.snap.block.index
                 l.addAnchor(self, Qt.AnchorLeft, collectors[0].visual, Qt.AnchorLeft)
                 l.addAnchor(self, Qt.AnchorRight, emitters[-1].visual, Qt.AnchorRight)
 
@@ -318,6 +329,7 @@ class BlockRibbon(SpacerContainer):
 class BlockSpacer(SpacerContainer.Spacer):
     def __init__(self,parent):
         super(BlockSpacer,self).__init__(parent)
+        self.dragOver = False
         self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.Preferred))
         self.setPreferredWidth(15)
         self.setMinimumWidth(15)
@@ -364,14 +376,18 @@ class BlockSpacer(SpacerContainer.Spacer):
             event.setAccepted(True)
             self.dragOver = True
             print "Drag ENTER"
+            self.update()
         else:
             event.setAccepted(False)
 
     def dragLeaveEvent(self,event):
         self.dragOver = False
+        self.update()
+
 
     def dropEvent(self,event):
         self.dragOver = False
+        self.update()
         # Dragged Index
         data = json.loads(str(event.mimeData().text()))
         if not 'block' in data:
@@ -420,7 +436,13 @@ class BlockSpacer(SpacerContainer.Spacer):
         self.parent.parent.link()
 
     def paint(self,painter,option,widget):
-        painter.setPen(Qt.NoPen)
+        if self.dragOver:
+            pen = QPen()
+            pen.setBrush(Qt.lightGray)
+            pen.setStyle(Qt.DashLine)
+            painter.setPen(pen)
+        else:
+            painter.setPen(Qt.NoPen)
         painter.drawRect(self.rect())
 
 
@@ -727,20 +749,34 @@ class SnapItem(SpacerContainer.Item):
 
     def itemA(self):
         """ We use itemA for the SnapItem to the left """
-        return self.snap.leftSnap.visual if self.snap.leftSnap else None
+        return self.snap.leftSnap.visual if self.isUsed() and self.snap.leftSnap else None
 
     def itemB(self):
         """ We use itemB for the SnapItem to the right """
-        return self.snap.rightSnap.visual if self.snap.rightSnap else None
+        # When we don't display unused snaps, we are still reporting unused snaps to 
+        # our left and right here - only they don't visually exists which causes problems
+        return self.snap.rightSnap.visual if self.isUsed() and self.snap.rightSnap else None
 
     def isUsed(self):
         return True
+#         return self.snap.isUsed()
 
     def link(self):
         super(SnapItem,self).link()
+        l = self.parent.layout()
+        print "linking snap",self.snap.order,"in block",self.snap.block.index
+        l.addAnchor(self, Qt.AnchorTop, self.container, Qt.AnchorTop)
+        l.addAnchor(self, Qt.AnchorBottom, self.container, Qt.AnchorBottom)
+
+        # Don't draw any bandlinks if we are not being used.
+        if not self.isUsed():
+            self.upLink.setVisible(False)
+            self.upLink.setParent(None)
+            self.downLink.setVisible(False)
+            self.downLink.setParent(None)
+            return
 
         #Connect bandlinks
-        l = self.parent.layout()
         if self.snap.posBandLink:
             self.upLink.setVisible(True)
             self.upLink.setZValue(self.snap.posBandLink.rank+0.5)
@@ -784,7 +820,10 @@ class SnapItem(SpacerContainer.Item):
         self.setCursor(Qt.ArrowCursor)
 
     def paint(self,painter,option,widget):
-        painter.setPen(Qt.red)
+        if self.isUsed():
+            painter.setPen(Qt.red)
+        else:
+            painter.setPen(Qt.gray)
         painter.drawRect(self.rect())
         rect = self.geometry()
         if self.snap.posBandLink:
