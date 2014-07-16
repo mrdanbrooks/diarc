@@ -20,6 +20,41 @@ class RosBandItem(BandItem):
         painter.drawRect(self.rect())
         painter.drawText(0,rect.height()-2,self.band.edge.name)
 
+class RosMiddleSpacer(BlockItem.MiddleSpacer):
+    def paint(self,painter,option,widget):
+        super(RosMiddleSpacer,self).paint(painter,option,widget)
+        rect = self.rect()
+        painter.setPen(QPen(Qt.cyan))
+        painter.drawRect(rect)
+        painter.setPen(QPen(Qt.red))
+        painter.rotate(-90)
+        painter.drawText(-rect.height(),rect.width()-2,self.blockItem.block.vertex.name)
+
+
+class RosBlockItem(BlockItem):
+    def __init__(self,parent,block):
+        super(RosBlockItem,self).__init__(parent,block)
+        self._middleSpacer = RosMiddleSpacer(self)
+
+    def mousePressEvent(self,event):
+        print self.block.vertex.name
+
+#     def middlepaint(self,painter,option,widget):
+#         super(RosBlockItem,self).paint(painter,option,widget)
+#         painter.setPen(QPen(Qt.cyan))
+#         painter.drawRect(self.rect())
+#         painter.rotate(-90)
+#         rect = self.geometry()
+#         rect = self.mapFromItem(self._middleSpacer,self._middleSpacer.geometry())
+#         middlerect = self._middleSpacer.geometry()
+#         point = self.mapFromItem(self._middleSpacer, QPointF(middlerect.x(),middlerect.y()))
+#         painter.drawText(0,0,self.block.vertex.name)
+#         painter.drawText(middlerect.x(), middlerect.y(),self.block.vertex.name)
+#         print middlerect.x(),middlerect.y()
+        
+    
+
+
 
 class RosTopologyWidget(TopologyWidget):
     def __init__(self,topology,diarcWidget):
@@ -37,7 +72,7 @@ class RosTopologyWidget(TopologyWidget):
             RosBandItem(self,obj.negBand)
         elif isinstance(obj,Node):
             print "Adding Block",obj.block.index
-            BlockItem(self,obj.block)
+            RosBlockItem(self,obj.block)
         elif isinstance(obj,Publisher) or isinstance(obj,Subscriber):
             print "adding snap",obj.snap.order
             SnapItem(self,obj.snap)

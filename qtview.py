@@ -565,6 +565,7 @@ class BlockItem(SpacerContainer.Item):
             # but ran into trouble when the layout could not compute itself when
             # it set that mode. For some reason, it was very unhappy about giving
             # it height policy information.
+            self.blockItem = parent
             self.setSizePolicy(QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred))
             self.setPreferredWidth(20)
             self.setMinimumWidth(20)
