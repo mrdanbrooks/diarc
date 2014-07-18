@@ -1,3 +1,4 @@
+from snapkey import *
 from util import *
 from SpacerContainer import *
 from PyQt4.QtCore import *
@@ -529,12 +530,12 @@ class SnapSpacer(SpacerContainer.Spacer):
         painter.drawRect(self.rect())
 
 class SnapItem(SpacerContainer.Item):
-    def __init__(self, parent, block_index, container_name, snap_order):
+    def __init__(self, parent, snapkey):
+        block_index, container_name, snap_order = parse_snapkey(snapkey)
         self._layout_manager = typecheck(parent, LayoutManagerWidget, "parent")
         self._view = parent.view()
         self._adapter = parent.adapter()
 
-        # 
         assert(container_name in ["emitter","collector"])
         self.block_index = block_index
         self.snap_order = snap_order
@@ -665,92 +666,88 @@ class LayoutManagerWidget(QGraphicsWidget):
         self.bandStack = BandStack(self)
 
         # Visual Object we are tracking
-        self._block_items = TypedList(BlockItem)
-        self._band_items = TypedList(BandItem)
-        self._snap_items = TypedList(SnapItem)
+        self._block_items = TypedDict(int,BlockItem)  # index    #TypedList(BlockItem)
+        self._band_items = TypedDict(int,BandItem)    # altitude    #TypedList(BandItem)
+        self._snap_items = TypedDict(str,SnapItem)  # snapkey  #TypedList(SnapItem)
 
     def add_block_item(self, index):
+        print "Adding BlockItem %d"%index
         """ create a new BlockItem """
-        # Check to make sure the object does not exist
-        items = self._find_block_items(index)
-        if len(items) > 0:
-            raise Exception("%d Block Item with index %d already exists"%(len(items), index))
-        # Create the new item
+        if index in self._block_items:
+            raise DuplicateItemExistsError("Block Item with index %d already exists"%(index))
         item = BlockItem(self, index)
-        self._block_items.append(item)
+        self._block_items[index] = item
         return item
+
+    def has_block_item(self, index):
+        return True if index in self._block_items else False
+
+    def set_block_item_settings(self, index, left_index, right_index):
+        item = self._block_items[index]
+        item.left_block = self._block_items[left_index] if left_index is not None else None
+        item.right_block = self._block_items[right_index] if right_index is not None else None
 
     def get_block_item(self, index):
         """ Returns a BlockItem with specified index """
-        items = self._find_block_items(index)
-        if len(items) < 1:
-            raise LookupError("Block Item with index %d not found"%index)
-        elif len(items) == 1:
-            return items[0]
-        else:
-            raise Exception("Found %d objects reporting to have index %d"%(len(items), index))
-
-    def _find_block_items(self, index):
-        """ return a list of all block items that meet this criteria """
-        return [item for item in self._block_items if item.block_index == index]
-
+        return self._block_items[index]
 
     def add_band_item(self, altitude, rank):
         """ Create a new drawable object to correspond to a Band. """
-        # Make sure band does not exist
-        items = self._find_band_items(altitude)
-        if len(items) > 0:
-            raise Exception("%d BandItem with altitude %d already exists"%(len(items), altitude))
+        print "Adding BandItem with altitude %d"%altitude
+        if altitude in self._band_items:
+            raise DuplicateItemExistsError("BandItem with altitude %d already exists"%(altitude))
         item = BandItem(self, altitude, rank)
-        self._band_items.append(item)
+        self._band_items[altitude] = item
         return item
+
+    def has_band_item(self, altitude):
+        return True if altitude in self._band_items else False
 
     def remove_band_item(self, altitude):
         """ Remove the drawable object to correspond to a band """ 
         raise NotImplementedError()
 
     def get_band_item(self, altitude):
-        """ Returns the BandItem with the given altitude """
-        items = self._find_band_items(altitude)
-        if len(items) < 1:
-            raise LookupError("Band Item with altitude %d not found"%altitude)
-        elif len(items) == 1:
-            return items[0]
-        else:
-            raise Exception("Found %d objects reporting to have altitude %d"%(len(items), altitude))
+        return self._band_items[altitude]
+    
+    def set_band_item_settings(self, altitude, rank,
+                                top_band_alt, bot_band_alt,
+                                leftmost_snapkey, rightmost_snapkey):
+        item = self._band_items[altitude]
+        item.top_band = self._band_items[top_band_alt] if top_band_alt is not None else None
+        item.bot_band = self._band_items[bot_band_alt] if bot_band_alt is not None else None
+        item.left_most_snap = self._snap_items[leftmost_snapkey]
+        item.right_most_snap = self._snap_items[rightmost_snapkey]
 
-    def _find_band_items(self, altitude):
-        """ return a list of all BandItems that meet this criteria """
-        return [item for item in self._band_items if item.altitude == altitude]
 
-    def add_snap_item(self, block_index, container, order):
-        # Make sure item does not exist
-        items = self._find_snap_items(block_index, container, order)
-        if len(items) > 0:
-            raise Exception("%d BandItem with altitude %d already exists"%(len(items), altitude))
-        item = SnapItem(self, block_index, container, order)
-        self._snap_items.append(item)
+    def add_snap_item(self, snapkey):
+        print "Adding SnapItem with snapkey %s"%snapkey
+        if snapkey in self._snap_items:
+            raise DuplicateItemExistsError("SnapItem with snapkey %s already exists"%(snapkey))
+        item = SnapItem(self, snapkey)
+        self._snap_items[snapkey] = item
         return item
 
-    def get_snap_item(self, block_index, container, order):
-        """ Return the SnapItem """
-        items = self._find_snap_items(block_index, container, order)
-        if len(items) < 1:
-            raise LookupError("Snap Item with order %d for block %d %s not found"%(
-                    order, block_index, container))
-        elif len(items) == 1:
-            return items[0]
+    def has_snap_item(self, snapkey):
+        return True if snapkey in self._snap_items else False
+
+    def get_snap_items(self, snapkey):
+        return self._snap_item[snapkey]
+
+    def set_snap_item_settings(self, snapkey, left_order, right_order, pos_band_alt, neg_band_alt):
+        item = self._snap_items[snapkey]
+        if left_order is not None:
+            left_snapkey = gen_snapkey(item.block_index,item.container.strType(),left_order)
+            item.left_snap = self._snap_items[left_snapkey]
         else:
-            raise Exception("Found %d objects reporting to have order %d for block %d %s not found"%(
-                    len(items), order, block_index, container))
-
-    def _find_snap_items(self, block_index, container, order):
-        """ return a list of all SnapItems that meets the following criteria """
-        items = [item for item in self._snap_items if item.block_index == block_index]
-        items = [item for item in items if item.container.strType() == container]
-        items = [item for item in items if item.snap_order == order]
-        return items
-
+            item.left_snap = None
+        if right_order is not None:
+            right_snapkey = gen_snapkey(item.block_index,item.container.strType(),right_order)
+            item.right_snap = self._snap_items[right_snapkey]
+        else:
+            item.right_snap = None
+        item.posBandItem = self._band_items[pos_band_alt] if pos_band_alt is not None else None
+        item.negBandItem = self._band_items[neg_band_alt] if neg_band_alt is not None else None
 
     def view(self):
         return self._view
@@ -772,13 +769,18 @@ class LayoutManagerWidget(QGraphicsWidget):
         self.layout().addAnchor(self.bandStack, Qt.AnchorRight, self.block_container, Qt.AnchorRight)
 
         # Link block items
-        for item in self._block_items:
+        for item in self._block_items.values():
             item.link()
 
         # Link band items
-        for item in self._band_items:
+        for item in self._band_items.values():
             item.link()
 
         # Link Snap Items
-        for item in self._snap_items:
+        for item in self._snap_items.values():
             item.link()
+
+
+class DuplicateItemExistsError(Exception):
+    """ An Item with the specified parameters already exists """
+    pass

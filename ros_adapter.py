@@ -62,8 +62,8 @@ class RosAdapter(Adapter):
         # Finally give the moved object its desired destination. Then make 
         # the TopologyWidget relink all the objects again.
         blocks[srcIdx].index = lastIdx
+        #TODO: This is now wrong
         self._view.get_block_item(srcIdx).block_index = lastIdx
-#         self.parent.parent.link()
         self._update_view()
 
 
@@ -108,8 +108,8 @@ class RosAdapter(Adapter):
         # Finally, give the moved object its desired destination. Then make
         # the TopologyWidget relink all the objects again
         bands[srcAlt].altitude = lastAlt
+        #TODO: This is now wrong
         self._view.get_band_item(srcAlt).altitude = lastAlt
-#         self.parent.parent.link()
         self._update_view()
 
     def reorder_snaps(self, blockIdx, container, srcIdx, lowerIdx, upperIdx):
@@ -160,8 +160,8 @@ class RosAdapter(Adapter):
         # Finally give the moved object its desired destination. Then
         # make the TopologyWidget relink all the objects again.
         snaps[srcIdx].order = lastIdx
+        #TODO: This is now wrong
         self._view.get_snap_item(blockIdx, container, srcIdx).snap_order = lastIdx
-#         self.parent.parentBlock.parent.link()
         self._update_view()
 
 
@@ -184,10 +184,6 @@ class RosAdapter(Adapter):
         for topicName, topicType in allCurrentTopics:
             if topicName not in rsgTopics: # and topicName not in QUIET_NAMES:
                 topic = Topic(self._topology,topicName,topicType)
-                if topic.posBand.isUsed():
-                    self._view.add_band_item(topic.posBand.altitude,topic.posBand.rank)
-                if topic.negBand.isUsed():
-                    self._view.add_band_item(topic.negBand.altitude,topic.negBand.rank)
 
         # Compile a list of node names
         allCurrentNodes = rosnode.get_node_names()
@@ -204,7 +200,6 @@ class RosAdapter(Adapter):
         for name in allCurrentNodes:
             if name not in rsgNodes: # and name not in QUIET_NAMES:
                 node = Node(self._topology,name)
-                self._view.add_block_item(node.block.index)
                 try:
                     node.location = self._master.lookupNode(name)
                 except socket.error:
@@ -225,7 +220,6 @@ class RosAdapter(Adapter):
             for nodeName in publishersList:
                 if nodeName not in [pub.node.name for pub in rsgPublishers]:
                     publisher = Publisher(self._topology,self._topology.nodes[nodeName],self._topology.topics[topicName])
-                    self._view.add_snap_item(publisher.block.index, "emitter", publisher.snap.order)
 
         # Process subscribers
         for topicName, subscribersList in systemState[1]:
@@ -245,21 +239,42 @@ class RosAdapter(Adapter):
                 if nodeName not in [sub.node.name for sub in rsgSubscribers]:
                     subscriber = Subscriber(self._topology,self._topology.nodes[nodeName],self._topology.topics[topicName])
 
-                    self._view.add_snap_item(subscriber.block.index, "collector", subscriber.snap.order)
         self._update_view()
 
     def _update_view(self):
         """ updates the view - compute each items neigbors and then calls linking. """
 
-        # Compute left and right blocks
+        # Determine what items to create
         blocks = self._topology.blocks
+        bands = self._topology.bands
+        snaps = self._topology.snaps
+
+        for index in blocks:
+            if not self._view.has_block_item(index):
+                self._view.add_block_item(index)
+
+        for altitude in bands:
+            band = bands[altitude]
+            isUsed = band.isUsed()
+            if isUsed and not self._view.has_band_item(altitude):
+                self._view.add_band_item(altitude,band.rank)
+            elif not isUsed and self._view.has_band_item(altitude):
+                self._view.remove_band_item(altitude)
+
+        for snapkey in snaps:
+            snap = snaps[snapkey]
+            isUsed = snap.isUsed()
+            if isUsed and not self._view.has_snap_item(snapkey):
+                self._view.add_snap_item(snapkey)
+            elif not isUsed and self._view.has_snap_item(snapkey):
+                self._view.remove_snap_item(snapkey)
+
+        # Compute left and right blocks
         for index in blocks:
             block = blocks[index]
-            item = self._view.get_block_item(index)
             left_index = block.leftBlock.index if block.leftBlock is not None else None
             right_index = block.rightBlock.index if block.rightBlock is not None else None
-            item.left_block = self._view.get_block_item(left_index) if left_index is not None else None
-            item.right_block = self._view.get_block_item(right_index) if right_index is not None else None
+            self._view.set_block_item_settings(index, left_index, right_index)
             # Compute left and right snaps, and what bands are being touched
             emitter = blocks[index].emitter
             collector = blocks[index].collector
@@ -272,47 +287,22 @@ class RosAdapter(Adapter):
                     items_orders = [item.snap_order for item in items if item.block_index == snap.block.index]
                     assert(order not in items_orders)
                     continue
-                item = self._view.get_snap_item(index, containername, order)
                 left_order = snap.leftSnap.order if snap.leftSnap is not None else None
                 right_order = snap.rightSnap.order if snap.rightSnap is not None else None
-                item.left_snap = self._view.get_snap_item(index, containername, left_order) if left_order else None
-                item.right_snap = self._view.get_snap_item(index, containername, right_order) if right_order else None
-                try:
-                    item.posBandItem = self._view.get_band_item(snap.posBandLink.altitude) if snap.posBandLink else None
-                except LookupError:
-                    #TODO: make this a more specific exception
-                    item.posBandItem = self._view.add_band_item(snap.posBandLink.altitude,snap.posBandLink.rank)
-                try:
-                    item.negBandItem = self._view.get_band_item(snap.negBandLink.altitude) if snap.negBandLink else None
-                except LookupError:
-                    #TODO: make this a more specific exception
-                    item.negBandItem = self._view.add_band_item(snap.negBandLink.altitude,snap.negBandLink.rank)
-
-
+                pos_alt = snap.posBandLink.altitude if snap.posBandLink else None
+                neg_alt = snap.negBandLink.altitude if snap.negBandLink else None
+                self._view.set_snap_item_settings(snap.snapkey(), left_order, right_order, pos_alt, neg_alt)
+# 
         # Compute top and bottom bands, rank, leftmost, and rightmost snaps
-        bands = self._topology.bands
         for altitude in bands:
             # Skip bands that don't have an item 
             if not bands[altitude].isUsed():
-                item_alts = [b.altitude for b in self._view.layout_manager._band_items]
+                item_alts = [a for a in self._view.layout_manager._band_items]
                 assert(altitude not in item_alts)
                 continue
             band = bands[altitude]
-            item = self._view.get_band_item(altitude)
             top_alt = band.topBand.altitude if band.topBand else None
             bot_alt = band.bottomBand.altitude if band.bottomBand else None
-            try:
-                item.top_band = self._view.get_band_item(top_alt) if top_alt is not None else None 
-            except LookupError:
-                #TODO: make this a more specific exception
-                item.top_band = self._view.add_band_item(top_alt,band.rank)
-            try:
-                item.bot_band = self._view.get_band_item(bot_alt) if bot_alt is not None else None
-            except LookupError:
-                #TODO: make this a more specific exception
-                item.bot_band = self._view.add_band_item(bot_alt,band.rank)
-
-            item.rank = band.rank
             emitters = band.emitters
             collectors = band.collectors
             emitters.sort(lambda x,y: x.block.index - y.block.index)
@@ -326,27 +316,11 @@ class RosAdapter(Adapter):
             else:
                 left_snap = collectors[0]
                 right_snap = emitters[-1]
-            item.left_most_snap = self._view.get_snap_item(
-                                        left_snap.block.index,
-                                        "emitter" if left_snap.isSource() else "collector",
-                                        left_snap.order)
-            item.right_most_snap = self._view.get_snap_item(
-                                        right_snap.block.index,
-                                        "emitter" if right_snap.isSource() else "collector",
-                                        right_snap.order)
-
+            self._view.set_band_item_settings(altitude, band.rank, top_alt, bot_alt, left_snap.snapkey(), right_snap.snapkey() )
 
 
 
         self._view.update_view()
-
-
-#     def get_left_block_index(self, idx):
-#         return self._topology.blocks[idx].leftBlock.index
-# 
-#     def get_right_block_index(self, idx):
-#         return self._topology.blocks[idx].rightBlock.index
-# 
 
 
 
