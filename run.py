@@ -62,7 +62,17 @@ def rostest():
     graphView.raise_()
     sys.exit(app.exec_())
 
-
+def rostest2():
+    import PyQt4.QtGui
+    import ros_qt_view
+    import ros_adapter
+    app = PyQt4.QtGui.QApplication([])
+    view = ros_qt_view.RosView()
+    adapter = ros_adapter.RosAdapter(view)
+    adapter.update_model()
+    view.activateWindow()
+    view.raise_()
+    sys.exit(app.exec_())
 
 if __name__=="__main__":
     available_tests = dict(inspect.getmembers(sys.modules[__name__],inspect.isfunction))
