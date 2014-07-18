@@ -40,6 +40,7 @@
 
 
 from util import *
+from snapkey import *
 import types
 
 class Topology(object):
@@ -77,6 +78,16 @@ class Topology(object):
         if None is [band.altitude for band in allBands]:
             print "WARNING: There are bands lacking altitude information! Not all bands are represented"
         return dict([(band.altitude,band) for band in filter(lambda x: isinstance(x.altitude,int),allBands)])
+
+    @property
+    def snaps(self):
+        """ Returns dictionary of all snaps, by snapkey. Snaps which have not been
+        assigned an order are not reported. All snaps that have an order regardless
+        of if they are being used (indicated by isUsed) are reported. 
+        """
+        containers =  [container for block in [[v.block.emitter, v.block.collector] for v in self._vertices] for container in block]
+        snaps = [(snap.snapkey(),snap) for snaps in [container.values() for container in containers] for snap in snaps]
+        return dict(snaps)
 
     def __get_hide_disconnected_snaps(self):
         return self._hide_disconnected_snaps
@@ -647,6 +658,10 @@ class Snap(object):
         self._connection = typecheck(connection,Connection,"connection")
         self._order = None
         self.visual = None
+
+    def snapkey(self):
+        """ generates the snapkey for this snap """
+        return gen_snapkey(self.block.index, "collector" if self.isSink() else "emitter", self._order)
 
     def _release(self):
         """ This should only be called by a Connection.release() """
