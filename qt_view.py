@@ -671,13 +671,18 @@ class LayoutManagerWidget(QGraphicsWidget):
 
     def add_block_item(self, index):
         """ create a new BlockItem """
+        # Check to make sure the object does not exist
+        items = self._find_block_items(index)
+        if len(items) > 0:
+            raise Exception("%d Block Item with index %d already exists"%(len(items), index))
+        # Create the new item
         item = BlockItem(self, index)
         self._block_items.append(item)
         return item
 
     def get_block_item(self, index):
         """ Returns a BlockItem with specified index """
-        items = [item for item in self._block_items if item.block_index == index]
+        items = self._find_block_items(index)
         if len(items) < 1:
             raise LookupError("Block Item with index %d not found"%index)
         elif len(items) == 1:
@@ -685,8 +690,17 @@ class LayoutManagerWidget(QGraphicsWidget):
         else:
             raise Exception("Found %d objects reporting to have index %d"%(len(items), index))
 
+    def _find_block_items(self, index):
+        """ return a list of all block items that meet this criteria """
+        return [item for item in self._block_items if item.block_index == index]
+
+
     def add_band_item(self, altitude, rank):
         """ Create a new drawable object to correspond to a Band. """
+        # Make sure band does not exist
+        items = self._find_band_items(altitude)
+        if len(items) > 0:
+            raise Exception("%d BandItem with altitude %d already exists"%(len(items), altitude))
         item = BandItem(self, altitude, rank)
         self._band_items.append(item)
         return item
@@ -697,7 +711,7 @@ class LayoutManagerWidget(QGraphicsWidget):
 
     def get_band_item(self, altitude):
         """ Returns the BandItem with the given altitude """
-        items = [item for item in self._band_items if item.altitude == altitude]
+        items = self._find_band_items(altitude)
         if len(items) < 1:
             raise LookupError("Band Item with altitude %d not found"%altitude)
         elif len(items) == 1:
@@ -705,15 +719,22 @@ class LayoutManagerWidget(QGraphicsWidget):
         else:
             raise Exception("Found %d objects reporting to have altitude %d"%(len(items), altitude))
 
+    def _find_band_items(self, altitude):
+        """ return a list of all BandItems that meet this criteria """
+        return [item for item in self._band_items if item.altitude == altitude]
+
     def add_snap_item(self, block_index, container, order):
+        # Make sure item does not exist
+        items = self._find_snap_items(block_index, container, order)
+        if len(items) > 0:
+            raise Exception("%d BandItem with altitude %d already exists"%(len(items), altitude))
         item = SnapItem(self, block_index, container, order)
         self._snap_items.append(item)
         return item
 
     def get_snap_item(self, block_index, container, order):
-        items = [item for item in self._snap_items if item.block_index == block_index]
-        items = [item for item in items if item.container.strType() == container]
-        items = [item for item in items if item.snap_order == order]
+        """ Return the SnapItem """
+        items = self._find_snap_items(block_index, container, order)
         if len(items) < 1:
             raise LookupError("Snap Item with order %d for block %d %s not found"%(
                     order, block_index, container))
@@ -722,6 +743,13 @@ class LayoutManagerWidget(QGraphicsWidget):
         else:
             raise Exception("Found %d objects reporting to have order %d for block %d %s not found"%(
                     len(items), order, block_index, container))
+
+    def _find_snap_items(self, block_index, container, order):
+        """ return a list of all SnapItems that meets the following criteria """
+        items = [item for item in self._snap_items if item.block_index == block_index]
+        items = [item for item in items if item.container.strType() == container]
+        items = [item for item in items if item.snap_order == order]
+        return items
 
 
     def view(self):
