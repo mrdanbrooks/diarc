@@ -13,6 +13,10 @@ class TypedDict(dict):
         typecheck(val,self._objType,"val")
         super(TypedDict,self).__setitem__(key,val)
 
+    def __getitem__(self, key):
+        typecheck(key, self._keyType, "key")
+        return super(TypedDict,self).__getitem__(key)
+
 class TypedList(list):
     def __init__(self,_type):
         super(TypedList,self).__init__()
