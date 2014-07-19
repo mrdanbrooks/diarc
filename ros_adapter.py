@@ -14,7 +14,7 @@ class RosAdapter(Adapter):
 
     def __init__(self,view):
         super(RosAdapter,self).__init__(RosSystemGraph(),view)
-        self._topology.hide_disconnected_snaps = False
+        self._topology.hide_disconnected_snaps = True
         self._master = rosgraph.Master('/RosSystemGraph')
 
         # These are caching lists so I can remember what I had last time I drew.

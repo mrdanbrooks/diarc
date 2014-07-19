@@ -220,7 +220,7 @@ class BlockContainer(SpacerContainer):
         self.setMinimumWidth(15)
 
     def paint(self, painter, option, widget):
-        painter.setPen(Qt.green)
+        painter.setPen(Qt.NoPen)
         painter.drawRect(self.rect())
 
 class BlockSpacer(SpacerContainer.Spacer):
@@ -310,7 +310,6 @@ class BlockSpacer(SpacerContainer.Spacer):
 
 class BlockItem(SpacerContainer.Item):
     """ This is a QGraphicsWidget for a Diarc Block. """
-    #TODO: Item Release() and impelemnt the snap containers
     def __init__(self, parent, block_index):
         self._layout_manager = typecheck(parent, LayoutManagerWidget, "parent")
         self._view = parent.view()
@@ -593,14 +592,12 @@ class SnapItem(SpacerContainer.Item):
     def itemA(self):
         """ We use itemA for the SnapItem to the left """
         return self.left_snap
-#         return self.snap.leftSnap.visual if self.snap.leftSnap else None
 
     def itemB(self):
         """ We use itemB for the SnapItem to the right """
         # When we don't display unused snaps, we are still reporting unused snaps to 
         # our left and right here - only they don't visually exists which causes problems
         return self.right_snap
-#         return self.snap.rightSnap.visual if self.snap.rightSnap else None
 
     def isUsed(self):
         """ Deprecated """
@@ -609,7 +606,6 @@ class SnapItem(SpacerContainer.Item):
     def link(self):
         super(SnapItem, self).link()
         l = self.parent.layout()
-#         print "linking snap",self.snap.order,"in block",self.snap.block.index
         l.addAnchor(self, Qt.AnchorTop, self.container, Qt.AnchorTop)
         l.addAnchor(self, Qt.AnchorBottom, self.container, Qt.AnchorBottom)
 
@@ -724,7 +720,6 @@ class LayoutManagerWidget(QGraphicsWidget):
         item.right_block = self._block_items[right_index] if right_index is not None else None
 
     def remove_block_item(self, index):
-        # TODO: Hmmmm not sure what to do here yet. I'm sure it's something important.
         print "Removing BlockItem %d"%index
         self._block_items[index].release()
         self._block_items.pop(index)

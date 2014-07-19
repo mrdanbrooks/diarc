@@ -38,10 +38,6 @@ class RosView(QGraphicsView, View):
     def set_block_item_settings(self, index, left_index, right_index):
         return self.layout_manager.set_block_item_settings(index, left_index, right_index)
 
-#     def get_block_item(self, index):
-#         """ Returns a BlockItem with specified index to the the adapter """
-#         return self.layout_manager.get_block_item(index)
-
     def add_band_item(self, altitude, rank):
         """ Create a new drawable object to correspond to a Band. """
         return self.layout_manager.add_band_item(altitude, rank)
@@ -60,12 +56,6 @@ class RosView(QGraphicsView, View):
                     altitude, rank, top_band_alt, bot_band_alt, 
                     leftmost_snapkey, rightmost_snapkey)
 
-#     def get_band_item(self, altitude):
-#         """ Returns the BandItem with the given altitude """
-#         return self.layout_manager.get_band_item(altitude)
-
-#     def add_snap_item(self, block_index, container, order):
-#         return self.layout_manager.add_snap_item(block_index, container, order)
     def add_snap_item(self, snapkey):
         return self.layout_manager.add_snap_item(snapkey)
 
@@ -78,11 +68,6 @@ class RosView(QGraphicsView, View):
     def set_snap_item_settings(self, snapkey, left_order, right_order, pos_band_alt, neg_band_alt):
         return self.layout_manager.set_snap_item_settings(
                 snapkey, left_order, right_order, pos_band_alt, neg_band_alt)
-
-#     def get_snap_item(self, block_index, container, order):
-#         return self.layout_manager.get_snap_item(block_index, container, order)
-
-
 
     def wheelEvent(self,event):
         """ Implements scrollwheel zooming """
