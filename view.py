@@ -69,7 +69,7 @@ class View(object):
         raise NotImplementedError()
 
 
-    def remove_snap_item(self, block_index, container, order):
+    def remove_snap_item(self, snapkey):
         raise NotImplementedError()
 
     def set_snap_item_settings(self, snapkey, left_order, right_order, pos_band_alt, neg_band_alt):

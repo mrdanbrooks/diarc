@@ -33,7 +33,7 @@ class RosView(QGraphicsView, View):
         return self.layout_manager.has_block_item(index)
 
     def remove_block_item(self, index):
-        pass
+        return self.layout_manager.remove_block_item(index)
 
     def set_block_item_settings(self, index, left_index, right_index):
         return self.layout_manager.set_block_item_settings(index, left_index, right_index)
@@ -72,13 +72,12 @@ class RosView(QGraphicsView, View):
     def has_snap_item(self, snapkey):
         return self.layout_manager.has_snap_item(snapkey)
 
-    def remove_snap_item(self, block_index, container, order):
-        return self.layout_manager.remove_snap_item(block_index, container, order)
+    def remove_snap_item(self, snapkey): 
+        return self.layout_manager.remove_snap_item(snapkey)
 
     def set_snap_item_settings(self, snapkey, left_order, right_order, pos_band_alt, neg_band_alt):
         return self.layout_manager.set_snap_item_settings(
                 snapkey, left_order, right_order, pos_band_alt, neg_band_alt)
-
 
 #     def get_snap_item(self, block_index, container, order):
 #         return self.layout_manager.get_snap_item(block_index, container, order)

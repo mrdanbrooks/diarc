@@ -17,6 +17,13 @@ class RosAdapter(Adapter):
         self._topology.hide_disconnected_snaps = False
         self._master = rosgraph.Master('/RosSystemGraph')
 
+        # These are caching lists so I can remember what I had last time I drew.
+        # That way, if something becomes outdated, I have a thing to compare against.
+        # These lists are updated at the end of _update_view()
+        self._cached_block_item_indexes = list()
+        self._cached_band_item_altitudes = list()
+        self._cached_snap_item_snapkeys = list()
+
 
     def reorder_blocks(self,srcIdx,lowerIdx,upperIdx):
         """ reorders the index values of blocks and triggers the view to redraw.
@@ -34,8 +41,6 @@ class RosAdapter(Adapter):
             while isinstance(currIdx,int) and currIdx < (upperIdx or lowerIdx+1): # In case upperIdx is None, use lower+1
                 nextIdx = blocks[currIdx].rightBlock.index if blocks[currIdx].rightBlock else None
                 blocks[currIdx].index = lastIdx
-                item = self._view.get_block_item(currIdx)
-                item.block_index = lastIdx
                 print "%s -> %s"%(str(currIdx),str(lastIdx))
                 lastIdx = currIdx
                 currIdx = nextIdx
@@ -47,7 +52,6 @@ class RosAdapter(Adapter):
             while isinstance(currIdx,int) and currIdx > lowerIdx:
                 nextIdx = blocks[currIdx].leftBlock.index if blocks[currIdx].leftBlock else None
                 blocks[currIdx].index = lastIdx
-                self._view.get_block_item(currIdx).block_index = lastIdx
                 print "%s -> %s"%(str(currIdx),str(lastIdx))
                 lastIdx = currIdx
                 currIdx = nextIdx
@@ -62,8 +66,6 @@ class RosAdapter(Adapter):
         # Finally give the moved object its desired destination. Then make 
         # the TopologyWidget relink all the objects again.
         blocks[srcIdx].index = lastIdx
-        #TODO: This is now wrong
-        self._view.get_block_item(srcIdx).block_index = lastIdx
         self._update_view()
 
 
@@ -82,7 +84,6 @@ class RosAdapter(Adapter):
                 tband = bands[currAlt].topBand
                 nextAlt = tband.altitude if isinstance(tband,Band) else None
                 bands[currAlt].altitude = lastAlt
-                self._view.get_band_item(currAlt).altitude = lastAlt
                 lastAlt = currAlt
                 currAlt = nextAlt
             # Assertion check
@@ -95,7 +96,6 @@ class RosAdapter(Adapter):
                 lband = bands[currAlt].bottomBand
                 nextAlt = lband.altitude if isinstance(lband,Band) else None
                 bands[currAlt].altitude = lastAlt
-                self._view.get_band_item(currAlt).altitude = lastAlt
                 lastAlt = currAlt
                 currAlt = nextAlt
             # Assertion check
@@ -108,8 +108,6 @@ class RosAdapter(Adapter):
         # Finally, give the moved object its desired destination. Then make
         # the TopologyWidget relink all the objects again
         bands[srcAlt].altitude = lastAlt
-        #TODO: This is now wrong
-        self._view.get_band_item(srcAlt).altitude = lastAlt
         self._update_view()
 
     def reorder_snaps(self, blockIdx, container, srcIdx, lowerIdx, upperIdx):
@@ -129,7 +127,6 @@ class RosAdapter(Adapter):
             while isinstance(currIdx,int) and currIdx < (upperIdx or lowerIdx+1):
                 nextIdx = snaps[currIdx].rightSnap.order if snaps[currIdx].rightSnap else None
                 snaps[currIdx].order = lastIdx
-                self._view.get_snap_item(blockIdx, container, currIdx).snap_order = lastIdx
                 print "%s -> %s"%(str(currIdx),str(lastIdx))
                 lastIdx = currIdx
                 currIdx = nextIdx
@@ -143,7 +140,6 @@ class RosAdapter(Adapter):
             while isinstance(currIdx,int) and currIdx > lowerIdx:
                 nextIdx = snaps[currIdx].leftSnap.order if snaps[currIdx].leftSnap else None
                 snaps[currIdx].order = lastIdx
-                self._view.get_snap_item(blockIdx, container, currIdx).snap_order = lastIdx
                 print "%s -> %s"%(str(currIdx),str(lastIdx))
                 lastIdx = currIdx
                 currIdx = nextIdx
@@ -160,8 +156,6 @@ class RosAdapter(Adapter):
         # Finally give the moved object its desired destination. Then
         # make the TopologyWidget relink all the objects again.
         snaps[srcIdx].order = lastIdx
-        #TODO: This is now wrong
-        self._view.get_snap_item(blockIdx, container, srcIdx).snap_order = lastIdx
         self._update_view()
 
 
@@ -241,18 +235,38 @@ class RosAdapter(Adapter):
 
         self._update_view()
 
+
+
+
+
     def _update_view(self):
         """ updates the view - compute each items neigbors and then calls linking. """
 
-        # Determine what items to create
+        # Determine what items are in the model
         blocks = self._topology.blocks
         bands = self._topology.bands
         snaps = self._topology.snaps
+        
+        # Delete outdated BlockItems still in the view but no longer in the topology
+        old_block_item_indexes = list(set(self._cached_block_item_indexes) - set(blocks.keys()))
+        for index in old_block_item_indexes:
+            self._view.remove_block_item(index)
 
+        # Add new BlockItems for blocks in model that are not in view
         for index in blocks:
             if not self._view.has_block_item(index):
                 self._view.add_block_item(index)
 
+        # Update the BlockItem cache list
+        self._cached_block_item_indexes = blocks.keys()
+
+        # Delete outdated BandItems still in the view but not in the topology
+        old_band_item_altitudes = list(set(self._cached_band_item_altitudes) - set(bands.keys()))
+        for altitude in old_band_item_altitudes:
+            self._view.remove_band_item(altitude)
+
+        # Delete BandItems that exist, but are not being used, and add BandItems
+        # that are being used, but are not yet in the view
         for altitude in bands:
             band = bands[altitude]
             isUsed = band.isUsed()
@@ -261,6 +275,16 @@ class RosAdapter(Adapter):
             elif not isUsed and self._view.has_band_item(altitude):
                 self._view.remove_band_item(altitude)
 
+        # Update the BandItem cache list
+        self._cached_band_item_altitudes = bands.keys()
+
+        # Delete outdated SnapItems still in the view but no longer in the topology
+        old_snap_item_snapkeys = list(set(self._cached_snap_item_snapkeys) - set(snaps.keys()))
+        for snapkey in old_snap_item_snapkeys:
+            self._view.remove_snap_item(snapkey)
+
+        # Delete SnapItems that exist, but are not being used, and add SnapItems
+        # that are being used, but are not yet in the view
         for snapkey in snaps:
             snap = snaps[snapkey]
             isUsed = snap.isUsed()
@@ -268,6 +292,9 @@ class RosAdapter(Adapter):
                 self._view.add_snap_item(snapkey)
             elif not isUsed and self._view.has_snap_item(snapkey):
                 self._view.remove_snap_item(snapkey)
+
+        # Update the SnapItem cache list
+        self._cached_snap_item_snapkeys = snaps.keys()
 
         # Compute left and right blocks
         for index in blocks:

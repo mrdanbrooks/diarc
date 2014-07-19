@@ -147,6 +147,15 @@ class BandItem(SpacerContainer.Item):
         self.setMinimumHeight(15)
         self.setZValue(rank)
 
+    def release(self):
+        self.top_band = None
+        self.bot_band = None
+        self.left_most_snap = None
+        self.right_most_snap = None
+        self.setParent(None)
+        self.setVisible(False)
+        super(BandItem, self)._release()
+
     def itemA(self):
         """ Set itemA to be the topBand """
         # This is computed and assigned by the adapter prior to linking
@@ -172,6 +181,10 @@ class BandItem(SpacerContainer.Item):
         l = self.parent.layout()
         l.addAnchor(self, Qt.AnchorLeft, self.left_most_snap, Qt.AnchorLeft)
         l.addAnchor(self, Qt.AnchorRight, self.right_most_snap, Qt.AnchorRight)
+
+    def mousePressEvent(self, event):
+        """ This is necessary to capture the mouse clicking event to drag"""
+        pass
 
     def mouseMoveEvent(self, event):
         if event.buttons() != Qt.LeftButton:
@@ -280,8 +293,8 @@ class BlockSpacer(SpacerContainer.Spacer):
             raise Exception("Wrong drag data type!")
         srcIdx = data['block']
         # Left Index
-        lowerIdx = self.leftBlock.block.index if self.leftBlock else None
-        upperIdx = self.rightBlock.block.index if self.rightBlock else None
+        lowerIdx = self.leftBlock.block_index if self.leftBlock else None
+        upperIdx = self.rightBlock.block_index if self.rightBlock else None
         self._adapter.reorder_blocks(srcIdx, lowerIdx, upperIdx)
 
     def paint(self, painter, option, widget):
@@ -329,19 +342,11 @@ class BlockItem(SpacerContainer.Item):
     def itemA(self):
         """ We use itemA for the BlockItem to the left. """
         # Get the index to our left, and return the BlockItem with that value
-#         left_index = self._adapter.get_left_block_index(self.block_index)
-#         if isinstance(left_index, types.NoneType):
-#             return None
-#         return self._layout_manager.get_block_item(left_index)  
         return self.left_block
 
     def itemB(self):
         """ We use itemB for the BlockItem to the right. """
         # Get the index to our right, and return the BlockItem with that value
-#         right_index = self._adapter.get_right_block_index(self.block_index)
-#         if isinstance(right_index, types.NoneType):
-#             return None
-#         return self._layout_manager.get_block_item(right_index)
         return self.right_block
 
     def isUsed(self):
@@ -380,6 +385,9 @@ class BlockItem(SpacerContainer.Item):
         l.addAnchor(self.myCollector, Qt.AnchorRight, self._middleSpacer, Qt.AnchorLeft)
         l.addAnchor(self._middleSpacer, Qt.AnchorRight, self.myEmitter, Qt.AnchorLeft)
 
+    def mousePressEvent(self, event):
+        pass
+
     def mouseMoveEvent(self, event):
         """ Creates a drag event with the block information """
         if event.buttons() != Qt.LeftButton:
@@ -410,6 +418,8 @@ class BlockItem(SpacerContainer.Item):
         def paint(self,painter,option,widget):
             painter.setPen(Qt.NoPen)
             painter.drawRect(self.rect())
+            painter.setPen(Qt.red)
+            painter.drawText(2,self.blockItem.rect().height()/2,str(self.blockItem.block_index))
 
     class HorizontalSpacer(QGraphicsWidget):
         def __init__(self,parent):
@@ -429,6 +439,10 @@ class SnapContainer(SpacerContainer):
         self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Preferred))
         self.setMinimumWidth(15)
     
+    def release(self):
+        super(SnapContainer, self)._release()
+        self.parentBlock = None
+
     def strType(self):
         """ prints the container type as a string """
         return "emitter" if isinstance(self,MyEmitter) else "collector" if isinstance(self,MyCollector) else "unknown"
@@ -532,6 +546,7 @@ class SnapSpacer(SpacerContainer.Spacer):
 class SnapItem(SpacerContainer.Item):
     def __init__(self, parent, snapkey):
         block_index, container_name, snap_order = parse_snapkey(snapkey)
+        self._snapkey = snapkey
         self._layout_manager = typecheck(parent, LayoutManagerWidget, "parent")
         self._view = parent.view()
         self._adapter = parent.adapter()
@@ -560,6 +575,15 @@ class SnapItem(SpacerContainer.Item):
         self.upLink = SnapBandLink(None)
         self.downLink = SnapBandLink(None)
  
+    def release(self):
+        self.upLink.setParent(None)
+        self.downLink.setParent(None)
+        self.upLink = None
+        self.downLink = None
+        self.setVisible(False)
+        super(SnapItem, self)._release()
+
+
     def itemA(self):
         """ We use itemA for the SnapItem to the left """
         return self.left_snap
@@ -624,6 +648,8 @@ class SnapItem(SpacerContainer.Item):
             painter.drawText(6,12,str(self.posBandItem.altitude))
         if self.negBandItem:
             painter.drawText(3,rect.height()-3,str(self.negBandItem.altitude))
+        painter.setPen(Qt.black)
+        painter.drawText(2,rect.height()/2+4,str(self._snapkey))
 
 
 class SnapBandLink(QGraphicsWidget):
@@ -687,6 +713,12 @@ class LayoutManagerWidget(QGraphicsWidget):
         item.left_block = self._block_items[left_index] if left_index is not None else None
         item.right_block = self._block_items[right_index] if right_index is not None else None
 
+    def remove_block_item(self, index):
+        # TODO: Hmmmm not sure what to do here yet. I'm sure it's something important.
+        print "Removing BlockItem %d"%index
+        self._block_items[index].release()
+        self._block_items.pop(index)
+
     def get_block_item(self, index):
         """ Returns a BlockItem with specified index """
         return self._block_items[index]
@@ -705,7 +737,9 @@ class LayoutManagerWidget(QGraphicsWidget):
 
     def remove_band_item(self, altitude):
         """ Remove the drawable object to correspond to a band """ 
-        raise NotImplementedError()
+        print "Removing BandItem altitude %d"%altitude
+        self._band_items[altitude].release()
+        self._band_items.pop(altitude)
 
     def get_band_item(self, altitude):
         return self._band_items[altitude]
@@ -721,12 +755,17 @@ class LayoutManagerWidget(QGraphicsWidget):
 
 
     def add_snap_item(self, snapkey):
-        print "Adding SnapItem with snapkey %s"%snapkey
+        print "Adding SnapItem %s"%snapkey
         if snapkey in self._snap_items:
             raise DuplicateItemExistsError("SnapItem with snapkey %s already exists"%(snapkey))
         item = SnapItem(self, snapkey)
         self._snap_items[snapkey] = item
         return item
+
+    def remove_snap_item(self, snapkey):
+        print "Removing SnapItem %s"%snapkey
+        self._snap_items[snapkey].release()
+        self._snap_items.pop(snapkey)
 
     def has_snap_item(self, snapkey):
         return True if snapkey in self._snap_items else False
