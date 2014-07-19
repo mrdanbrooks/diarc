@@ -465,6 +465,10 @@ class MyCollector(SnapContainer):
 class SnapSpacer(SpacerContainer.Spacer):
     def __init__(self,parent):
         super(SnapSpacer,self).__init__(parent)
+        self._layout_manager = parent.parent
+        self._view = parent.parent.view()
+        self._adapter = parent.parent.adapter()
+
         self.dragOver = False
         
         # Qt Properties
@@ -535,8 +539,8 @@ class SnapSpacer(SpacerContainer.Spacer):
         assert(data['container'] == self.parent.strType())
 
         srcIdx = data['snap']
-        lowerIdx = self.left_snap.snap_order if self.left_snap else None
-        upperIdx = self.right_snap.snap_order if self.right_snap else None
+        lowerIdx = self.leftSnap.snap_order if self.leftSnap else None
+        upperIdx = self.rightSnap.snap_order if self.rightSnap else None
         self._adapter.reorder_snaps(data['block'], data['container'], srcIdx, lowerIdx, upperIdx)
 
     def paint(self, painter, option, widget):
@@ -576,6 +580,8 @@ class SnapItem(SpacerContainer.Item):
         self.downLink = SnapBandLink(None)
  
     def release(self):
+        self.left_snap = None
+        self.right_snap = None
         self.upLink.setParent(None)
         self.downLink.setParent(None)
         self.upLink = None
@@ -629,6 +635,10 @@ class SnapItem(SpacerContainer.Item):
         else:
             self.downLink.setVisible(False)
             self.downLink.setParent(None)
+
+    def mousePressEvent(self, event):
+        """ Captures the mouse press event for dragging """
+        pass
 
     def mouseMoveEvent(self, event):
         if event.buttons() != Qt.LeftButton:
