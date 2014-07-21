@@ -1,4 +1,5 @@
 from adapter import Adapter
+from topology import *
 
 class BaseAdapter(Adapter):
     """ Basic implementation of the adapter interface.
