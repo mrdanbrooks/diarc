@@ -339,6 +339,26 @@ class BlockItem(SpacerContainer.Item):
         self.myEmitter = MyEmitter(self)
         self.myCollector = MyCollector(self)
 
+    def release(self):
+        super(BlockItem, self)._release()
+        self.left_block = None
+        self.right_block = None
+        self._topMargin.release()
+        self._botMargin.release()
+        self._middleSpacer.release()
+        self._topMargin = None
+        self._botMargin = None
+        self._middleSpacer = None
+        self.myEmitter.release()
+        self.myCollector.release()
+        self.myEmitter = None
+        self.myCollector = None
+        self._layout_manager = None
+        self._view = None
+        self._adapter = None
+
+        
+
     def itemA(self):
         """ We use itemA for the BlockItem to the left. """
         # Get the index to our left, and return the BlockItem with that value
@@ -415,6 +435,10 @@ class BlockItem(SpacerContainer.Item):
             self.setPreferredWidth(20)
             self.setMinimumWidth(20)
 
+        def release(self):
+            self.setParent(None)
+            self.blockItem = None
+    
         def paint(self,painter,option,widget):
             painter.setPen(Qt.NoPen)
             painter.drawRect(self.rect())
@@ -429,6 +453,9 @@ class BlockItem(SpacerContainer.Item):
             self.setMinimumHeight(5)
             self.setMaximumHeight(5)
             self.setMinimumWidth(5)
+
+        def release(self):
+            self.setParent(None)
 
 class SnapContainer(SpacerContainer):
     def __init__(self,parent):
@@ -818,6 +845,14 @@ class LayoutManagerWidget(QGraphicsWidget):
         # Link Snap Items
         for item in self._snap_items.values():
             item.link()
+
+    def mousePressEvent(self, event):
+        print "updating model"
+        self.adapter().update_model()
+
+    def paint(self, painter, option, widget):
+        painter.setPen(Qt.blue)
+        painter.drawRect(self.rect())
 
 
 class QtView(QGraphicsView, View):
