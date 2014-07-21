@@ -5,63 +5,6 @@
 import sys
 import inspect
 
-def ros_plot(args):
-    """ Test drawing a ROS xml specification """
-    import ros_parser
-    import asciiplot
-    ros = ros_parser.parseFile(args[0])
-    asciiplot.draw(ros)
-
-def asciidraw(args):
-    import parser
-    import asciidraw
-
-    topology = parser.parseFile(args[0])
-    print ""
-    asciidraw.draw(topology)
-
-def asciiplot(args):
-    """ draw an xml topology in ascii art """
-    import parser
-    import asciiplot
-    print "Opening file",args[0]
-
-    topology = parser.parseFile(args[0])
-    print ""
-    asciiplot.draw(topology)
-
-def qtplot(args):
-    import PyQt4.QtGui
-    import parser
-    import qtview
-    topology = parser.parseFile(args[0])
-    app = PyQt4.QtGui.QApplication(sys.argv)
-    graphView = qtview.GraphView(topology)
-    # Create Visual Objects
-    for altitude,band in topology.bands.items():
-        print "adding band",altitude
-        visualBand = qtview.BandItem(graphView.topologyWidget,band)
-    for index,block in topology.blocks.items():
-        print "adding block",index
-        vertexBlock = qtview.BlockItem(graphView.topologyWidget,block)
-        for snap in block.emitter.values()+block.collector.values():
-            print "adding snap",snap.order
-            mySnap = qtview.SnapItem(graphView.topologyWidget,snap)
-    graphView.topologyWidget.link()
-
-    graphView.activateWindow()
-    graphView.raise_()
-    sys.exit(app.exec_())
-
-def rostest():
-    import PyQt4.QtGui
-    import ros_diarc
-    app = PyQt4.QtGui.QApplication([])
-    graphView = ros_diarc.RosDiarcWidget()
-    graphView.activateWindow()
-    graphView.raise_()
-    sys.exit(app.exec_())
-
 def asciiview(args):
     import parser
     import ascii_view
