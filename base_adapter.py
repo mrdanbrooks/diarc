@@ -161,19 +161,24 @@ class BaseAdapter(Adapter):
         old_block_item_indexes = list(set(self._cached_block_item_indexes) - set(blocks.keys()))
         for index in old_block_item_indexes:
             self._view.remove_block_item(index)
+            self._cached_block_item_indexes.remove(index)
 
         # Add new BlockItems for blocks in model that are not in view
         for index in blocks:
             if not self._view.has_block_item(index):
                 self._view.add_block_item(index)
+                self._cached_block_item_indexes.append(index)
 
         # Update the BlockItem cache list
-        self._cached_block_item_indexes = blocks.keys()
+#         self._cached_block_item_indexes = blocks.keys()
+
+
 
         # Delete outdated BandItems still in the view but not in the topology
         old_band_item_altitudes = list(set(self._cached_band_item_altitudes) - set(bands.keys()))
         for altitude in old_band_item_altitudes:
             self._view.remove_band_item(altitude)
+            self._cached_band_item_altitudes.remove(altitude)
 
         # Delete BandItems that exist, but are not being used, and add BandItems
         # that are being used, but are not yet in the view
@@ -182,16 +187,19 @@ class BaseAdapter(Adapter):
             isUsed = band.isUsed()
             if isUsed and not self._view.has_band_item(altitude):
                 self._view.add_band_item(altitude,band.rank)
+                self._cached_band_item_altitudes.append(altitude)
             elif not isUsed and self._view.has_band_item(altitude):
                 self._view.remove_band_item(altitude)
+                self._cached_band_item_altitudes.remove(altitude)
 
         # Update the BandItem cache list
-        self._cached_band_item_altitudes = bands.keys()
+#         self._cached_band_item_altitudes = bands.keys()
 
         # Delete outdated SnapItems still in the view but no longer in the topology
         old_snap_item_snapkeys = list(set(self._cached_snap_item_snapkeys) - set(snaps.keys()))
         for snapkey in old_snap_item_snapkeys:
             self._view.remove_snap_item(snapkey)
+            self._cached_snap_item_snapkeys.remove(snapkey)
 
         # Delete SnapItems that exist, but are not being used, and add SnapItems
         # that are being used, but are not yet in the view
@@ -200,11 +208,13 @@ class BaseAdapter(Adapter):
             isUsed = snap.isUsed()
             if isUsed and not self._view.has_snap_item(snapkey):
                 self._view.add_snap_item(snapkey)
+                self._cached_snap_item_snapkeys.append(snapkey)
             elif not isUsed and self._view.has_snap_item(snapkey):
                 self._view.remove_snap_item(snapkey)
+                self._cached_snap_item_snapkeys.remove(snapkey)
 
         # Update the SnapItem cache list
-        self._cached_snap_item_snapkeys = snaps.keys()
+#         self._cached_snap_item_snapkeys = snaps.keys()
 
         # Compute left and right blocks
         for index in blocks:
