@@ -62,7 +62,30 @@ def rostest():
     graphView.raise_()
     sys.exit(app.exec_())
 
-def rostest2():
+def asciiview(args):
+    import parser
+    import ascii_view
+    import base_adapter
+    topology = parser.parseFile(args[0])
+    view = ascii_view.AsciiView()
+    adapter = base_adapter.BaseAdapter(topology, view)
+    adapter._update_view()
+
+def qtview(args):
+    import PyQt4.QtGui
+    import parser
+    import qt_view
+    import base_adapter
+    topology = parser.parseFile(args[0])
+    app = PyQt4.QtGui.QApplication(sys.argv)
+    view = qt_view.QtView()
+    adapter = base_adapter.BaseAdapter(topology, view)
+    adapter._update_view()
+    view.activateWindow()
+    view.raise_()
+    sys.exit(app.exec_())
+
+def rosview():
     import PyQt4.QtGui
     import qt_view
     import ros_adapter
@@ -73,6 +96,9 @@ def rostest2():
     view.activateWindow()
     view.raise_()
     sys.exit(app.exec_())
+
+
+
 
 if __name__=="__main__":
     available_tests = dict(inspect.getmembers(sys.modules[__name__],inspect.isfunction))
