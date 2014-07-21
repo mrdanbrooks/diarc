@@ -64,10 +64,10 @@ def rostest():
 
 def rostest2():
     import PyQt4.QtGui
-    import ros_qt_view
+    import qt_view
     import ros_adapter
     app = PyQt4.QtGui.QApplication([])
-    view = ros_qt_view.RosView()
+    view = qt_view.QtView()
     adapter = ros_adapter.RosAdapter(view)
     adapter.update_model()
     view.activateWindow()

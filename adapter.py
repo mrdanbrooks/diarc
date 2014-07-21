@@ -35,3 +35,8 @@ class Adapter(object):
         """
         raise NotImplementedError()
 
+#     def update_model(self):
+#         raise NotImplementedError()
+# 
+#     def update_view(self):
+#         raise NotImplementedError()
