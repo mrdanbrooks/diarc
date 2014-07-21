@@ -234,8 +234,11 @@ class BaseAdapter(Adapter):
         for altitude in bands:
             # Skip bands that don't have an item 
             if not bands[altitude].isUsed():
-                item_alts = [a for a in self._view.layout_manager._band_items]
-                assert(altitude not in item_alts)
+                # The assertion below must be true for qt objects, however this 
+                # code should remain view implementation agnostic and the so
+                # the asserition is commented out.
+#                 item_alts = [a for a in self._view.layout_manager._band_items]
+#                 assert(altitude not in item_alts)
                 continue
             band = bands[altitude]
             top_alt = band.topBand.altitude if band.topBand else None
