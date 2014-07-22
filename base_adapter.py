@@ -27,7 +27,7 @@ class BaseAdapter(Adapter):
         # Clear the dragged block's index, then shift all effected block
         # indices left.
         # NOTE: See issue #12
-        if lowerIdx > srcIdx:
+        if lowerIdx is not None and lowerIdx > srcIdx:
             while isinstance(currIdx,int) and currIdx < (upperIdx or lowerIdx+1): # In case upperIdx is None, use lower+1
                 nextIdx = blocks[currIdx].rightBlock.index if blocks[currIdx].rightBlock else None
                 blocks[currIdx].index = lastIdx
@@ -38,7 +38,7 @@ class BaseAdapter(Adapter):
 
         # If we are moving to the left, upperIdx is the target index.
         # Clear the dragged blocks index, then shift all effected blocks right
-        elif upperIdx < srcIdx:
+        elif upperIdx is not None and upperIdx < srcIdx:
             while isinstance(currIdx,int) and currIdx > lowerIdx:
                 nextIdx = blocks[currIdx].leftBlock.index if blocks[currIdx].leftBlock else None
                 blocks[currIdx].index = lastIdx
