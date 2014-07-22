@@ -239,7 +239,7 @@ class BaseAdapter(Adapter):
                 pos_alt = snap.posBandLink.altitude if snap.posBandLink else None
                 neg_alt = snap.negBandLink.altitude if snap.negBandLink else None
                 self._view.set_snap_item_settings(snap.snapkey(), left_order, right_order, pos_alt, neg_alt)
-# 
+
         # Compute top and bottom bands, rank, leftmost, and rightmost snaps
         for altitude in bands:
             # Skip bands that don't have an item 
@@ -257,7 +257,6 @@ class BaseAdapter(Adapter):
             collectors = band.collectors
             emitters.sort(lambda x,y: x.block.index - y.block.index)
             collectors.sort(lambda x,y: x.block.index - y.block.index)
-#TODO: query for the corresponding SnapItem and assign it to the BandItem
             left_snap = None
             right_snap = None
             if band.isPositive:
