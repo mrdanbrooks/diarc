@@ -113,7 +113,7 @@ class BaseAdapter(Adapter):
         # Clear the dragged snaps's order, then shift all effected snap
         # indices left.
         # NOTE: see #12
-        if lowerIdx > srcIdx:
+        if lowerIdx is not None and lowerIdx > srcIdx:
             while isinstance(currIdx,int) and currIdx < (upperIdx or lowerIdx+1):
                 nextIdx = snaps[currIdx].rightSnap.order if snaps[currIdx].rightSnap else None
                 snaps[currIdx].order = lastIdx
@@ -126,7 +126,7 @@ class BaseAdapter(Adapter):
         # If we are moving to the left, upperIdx is the target index.
         # Clear the dragged snaps order, then shift all effected snaps
         # indices right
-        elif upperIdx < srcIdx:
+        elif upperIdx is not None and upperIdx < srcIdx:
             while isinstance(currIdx,int) and currIdx > lowerIdx:
                 nextIdx = snaps[currIdx].leftSnap.order if snaps[currIdx].leftSnap else None
                 snaps[currIdx].order = lastIdx
@@ -266,7 +266,9 @@ class BaseAdapter(Adapter):
             else:
                 left_snap = collectors[0]
                 right_snap = emitters[-1]
-            self._view.set_band_item_settings(altitude, band.rank, top_alt, bot_alt, left_snap.snapkey(), right_snap.snapkey() )
+            left_snapkey = left_snap.snapkey() if left_snap is not None else None
+            right_snapkey = right_snap.snapkey() if right_snap is not None else None
+            self._view.set_band_item_settings(altitude, band.rank, top_alt, bot_alt, left_snapkey, right_snapkey )
 
         self._view.update_view()
 
