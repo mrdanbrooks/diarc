@@ -868,6 +868,9 @@ class QtView(QGraphicsView, View):
         # Qt properties - Enable click-n-drag paning and initialize Scene
         self.setDragMode(QGraphicsView.ScrollHandDrag)
         self.setScene(QGraphicsScene(self))
+
+        # Enable for debuging
+        self.setViewportUpdateMode(QGraphicsView.FullViewportUpdate)
         
         # Add the LayoutManagerWidget to the scene
         self.layout_manager = LayoutManagerWidget(self)
