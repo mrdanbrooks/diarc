@@ -1,3 +1,5 @@
+from view_attributes import *
+from view import *
 from adapter import Adapter
 from topology import *
 
@@ -13,6 +15,37 @@ class BaseAdapter(Adapter):
         self._cached_block_item_indexes = list()
         self._cached_band_item_altitudes = list()
         self._cached_snap_item_snapkeys = list()
+
+    def get_block_item_attributes(self, block_index):
+        """ Default method for providing some stock settings for blocks """
+        attrs = BlockItemViewAttributes()
+        attrs.bgcolor = None
+        attrs.border_color = "red"
+        attrs.label = str(block_index)
+        attrs.label_rotation = 0
+        attrs.label_color = "red"
+        attrs.spacerwidth = 20
+        return attrs
+
+    def get_band_item_attributes(self, band_altitude):
+        """ Default method for providing some stock settings for bands """
+        attrs = BandItemViewAttributes()
+        attrs.bgcolor = "white"
+        attrs.border_color = "red"
+        attrs.label = str(band_altitude)
+        attrs.label_color = "red"
+        attrs.width = 15
+        return attrs
+
+    def get_snap_item_attributes(self, snapkey):
+        """ Default method for providing some stock settings for snaps """
+        attrs = SnapItemViewAttributes()
+        attrs.bgcolor = None
+        attrs.border_color = "red"
+        attrs.label = snapkey
+        attrs.label_color = "black"
+        attrs.width = 20
+        return attrs
 
 
     def reorder_blocks(self,srcIdx,lowerIdx,upperIdx):
@@ -268,6 +301,21 @@ class BaseAdapter(Adapter):
             left_snapkey = left_snap.snapkey() if left_snap is not None else None
             right_snapkey = right_snap.snapkey() if right_snap is not None else None
             self._view.set_band_item_settings(altitude, band.rank, top_alt, bot_alt, left_snapkey, right_snapkey )
+
+        # Update block visual attribtutes
+        for index in self._cached_block_item_indexes:
+            attributes = self.get_block_item_attributes(index)
+            self._view.set_block_item_attributes(index,attributes)
+
+        # Update band visual attributes
+        for altitude in self._cached_band_item_altitudes:
+            attributes = self.get_band_item_attributes(altitude)
+            self._view.set_band_item_attributes(altitude, attributes)
+
+        # Update snap visual attribtutes
+        for snapkey in self._cached_snap_item_snapkeys:
+            attributes = self.get_snap_item_attributes(snapkey)
+            self._view.set_snap_item_attributes(snapkey, attributes)
 
         self._view.update_view()
 

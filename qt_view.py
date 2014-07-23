@@ -1,3 +1,4 @@
+from view_attributes import *
 from snapkey import *
 from util import *
 from SpacerContainer import *
@@ -124,14 +125,13 @@ class BandSpacer(SpacerContainer.Spacer):
             painter.setPen(Qt.NoPen)
         painter.drawRect(self.rect())
 
-
-
-class BandItem(SpacerContainer.Item):
+class BandItem(SpacerContainer.Item, BandItemViewAttributes):
     def __init__(self, parent, altitude, rank):
         self._layout_manager = typecheck(parent, LayoutManagerWidget, "parent")
         self._view = parent.view()
         self._adapter = parent.adapter()
         super(BandItem,self).__init__(parent,parent.bandStack)
+        BandItemViewAttributes.__init__(self)
 
         # Band properties - these must be kept up to date with topology
         self.altitude = altitude
@@ -144,8 +144,7 @@ class BandItem(SpacerContainer.Item):
         # Set Qt properties
         self.setContentsMargins(5,5,5,5)
         self.setSizePolicy(QSizePolicy(QSizePolicy.Preferred, QSizePolicy.MinimumExpanding))
-        self.setPreferredHeight(15)
-        self.setMinimumHeight(15)
+        self.set_width(15)
         self.setZValue(rank)
 
     def release(self):
@@ -170,6 +169,24 @@ class BandItem(SpacerContainer.Item):
     def isUsed(self):
         """ Deprecated """
         return True
+
+    def set_attributes(self, attrs):
+        """ Applies a set of BandItemViewAttributes to this object. Transforms 
+        some values such as color into qt specific values. """
+        typecheck(attrs, BandItemViewAttributes, "attrs")
+        self._copy_attributes(attrs)
+        self.bgcolor = QColor(attrs.bgcolor)
+        self.border_color = QColor(attrs.border_color)
+        self.label_color = QColor(attrs.label_color)
+        self.set_width(self.width)
+        self.update(self.rect())
+
+    def set_width(self, width):
+        """ Sets the 'width' of the band. 
+        This is actually setting the height, but is referred to as the width.
+        """
+        self.setPreferredHeight(width)
+        self.setMinimumHeight(width)
 
     def isPositive(self):
         return True if self.altitude > 0 else False
@@ -200,12 +217,13 @@ class BandItem(SpacerContainer.Item):
     def paint(self,painter,option,widget):
         brush = QBrush()
         brush.setStyle(Qt.SolidPattern)
-        brush.setColor(Qt.white)
+        brush.setColor(self.bgcolor)
         painter.fillRect(self.rect(),brush)
-        painter.setPen(Qt.red)
+        painter.setPen(self.border_color)
         painter.drawRect(self.rect())
         rect = self.geometry()
-        painter.drawText(0,rect.height(),str(self.altitude))
+        painter.setPen(self.label_color)
+        painter.drawText(0,rect.height()-2,self.label)
 
 
 
@@ -308,14 +326,14 @@ class BlockSpacer(SpacerContainer.Spacer):
             painter.setPen(Qt.NoPen)
         painter.drawRect(self.rect())
 
-
-class BlockItem(SpacerContainer.Item):
+class BlockItem(SpacerContainer.Item, BlockItemViewAttributes):
     """ This is a QGraphicsWidget for a Diarc Block. """
     def __init__(self, parent, block_index):
         self._layout_manager = typecheck(parent, LayoutManagerWidget, "parent")
         self._view = parent.view()
         self._adapter = parent.adapter()
         super(BlockItem, self).__init__(parent, parent.block_container)
+        BlockItemViewAttributes.__init__(self)
 
         # Qt Settings
         self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding))
@@ -338,6 +356,15 @@ class BlockItem(SpacerContainer.Item):
         # block margins
         self.myEmitter = MyEmitter(self)
         self.myCollector = MyCollector(self)
+
+    def set_attributes(self, attrs):
+        typecheck(attrs, BlockItemViewAttributes, "attrs")
+        self._copy_attributes(attrs)
+        self.bgcolor = QColor(attrs.bgcolor)
+        self.border_color = QColor(attrs.border_color)
+        self.label_color = QColor(attrs.label_color)
+        self._middleSpacer.set_width(self.spacerwidth)
+        self.update(self.rect())
 
     def release(self):
         super(BlockItem, self)._release()
@@ -420,7 +447,7 @@ class BlockItem(SpacerContainer.Item):
             drag.start()
 
     def paint(self,painter,option,widget):
-        painter.setPen(Qt.red)
+        painter.setPen(self.border_color)
         painter.drawRect(self.rect())
 
     class MiddleSpacer(QGraphicsWidget):
@@ -432,8 +459,12 @@ class BlockItem(SpacerContainer.Item):
             # it height policy information.
             self.blockItem = parent
             self.setSizePolicy(QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred))
-            self.setPreferredWidth(20)
-            self.setMinimumWidth(20)
+            # The width of the block
+            self.set_width(20)
+
+        def set_width(self, width):
+            self.setPreferredWidth(width)
+            self.setMinimumWidth(width)
 
         def release(self):
             self.setParent(None)
@@ -442,8 +473,10 @@ class BlockItem(SpacerContainer.Item):
         def paint(self,painter,option,widget):
             painter.setPen(Qt.NoPen)
             painter.drawRect(self.rect())
-            painter.setPen(Qt.red)
-            painter.drawText(2,self.blockItem.rect().height()/2,str(self.blockItem.block_index))
+            painter.setPen(self.blockItem.label_color)
+            painter.rotate(self.blockItem.label_rotation)
+            rect = self.rect()
+            painter.drawText(-rect.height(),rect.width()-2,self.blockItem.label)
 
     class HorizontalSpacer(QGraphicsWidget):
         def __init__(self,parent):
@@ -574,8 +607,9 @@ class SnapSpacer(SpacerContainer.Spacer):
         painter.setPen(Qt.NoPen)
         painter.drawRect(self.rect())
 
-class SnapItem(SpacerContainer.Item):
+class SnapItem(SpacerContainer.Item, SnapItemViewAttributes):
     def __init__(self, parent, snapkey):
+        SnapItemViewAttributes.__init__(self)
         block_index, container_name, snap_order = parse_snapkey(snapkey)
         self._snapkey = snapkey
         self._layout_manager = typecheck(parent, LayoutManagerWidget, "parent")
@@ -598,7 +632,7 @@ class SnapItem(SpacerContainer.Item):
 
         # Qt Properties
         self.setSizePolicy(QSizePolicy(QSizePolicy.Preferred,QSizePolicy.Preferred))
-        self.setPreferredWidth(20)
+        self.set_width(20)
         self.setPreferredHeight(40)
         self.setMaximumHeight(40)
 
@@ -630,6 +664,19 @@ class SnapItem(SpacerContainer.Item):
     def isUsed(self):
         """ Deprecated """
         return True
+
+    def set_attributes(self, attrs):
+        typecheck(attrs, SnapItemViewAttributes, "attrs")
+        self._copy_attributes(attrs)
+        self.bgcolor = QColor(attrs.bgcolor)
+        self.border_color = QColor(attrs.border_color)
+        self.label_color = QColor(attrs.label_color)
+        self.set_width(attrs.width)
+        self.update(self.rect())
+
+    def set_width(self, width):
+        self.width = width
+        self.setPreferredWidth(width)
 
     def link(self):
         super(SnapItem, self).link()
@@ -675,15 +722,15 @@ class SnapItem(SpacerContainer.Item):
             drag.start()
 
     def paint(self, painter, option, widget):
-        painter.setPen(Qt.red)
+        painter.setPen(self.border_color)
         painter.drawRect(self.rect())
         rect = self.geometry()
         if self.posBandItem:
             painter.drawText(6,12,str(self.posBandItem.altitude))
         if self.negBandItem:
             painter.drawText(3,rect.height()-3,str(self.negBandItem.altitude))
-        painter.setPen(Qt.black)
-        painter.drawText(2,rect.height()/2+4,str(self._snapkey))
+        painter.setPen(self.label_color)
+        painter.drawText(2,rect.height()/2+4,self.label)
 
 
 class SnapBandLink(QGraphicsWidget):
@@ -741,6 +788,9 @@ class LayoutManagerWidget(QGraphicsWidget):
         item.left_block = self._block_items[left_index] if left_index is not None else None
         item.right_block = self._block_items[right_index] if right_index is not None else None
 
+    def set_block_item_attributes(self, index, attributes):
+        self._block_items[index].set_attributes(attributes)
+
     def remove_block_item(self, index):
         print "Removing BlockItem %d"%index
         self._block_items[index].release()
@@ -780,6 +830,8 @@ class LayoutManagerWidget(QGraphicsWidget):
         item.left_most_snap = self._snap_items[leftmost_snapkey]
         item.right_most_snap = self._snap_items[rightmost_snapkey]
 
+    def set_band_item_attributes(self, altitude, attrs):
+        self._band_items[altitude].set_attributes(attrs)
 
     def add_snap_item(self, snapkey):
         print "Adding SnapItem %s"%snapkey
@@ -814,6 +866,9 @@ class LayoutManagerWidget(QGraphicsWidget):
             item.right_snap = None
         item.posBandItem = self._band_items[pos_band_alt] if pos_band_alt is not None else None
         item.negBandItem = self._band_items[neg_band_alt] if neg_band_alt is not None else None
+
+    def set_snap_item_attributes(self, snapkey, attributes):
+        self._snap_items[snapkey].set_attributes(attributes)
 
     def view(self):
         return self._view
@@ -895,6 +950,9 @@ class QtView(QGraphicsView, View):
     def set_block_item_settings(self, index, left_index, right_index):
         return self.layout_manager.set_block_item_settings(index, left_index, right_index)
 
+    def set_block_item_attributes(self, index, attributes):
+        return self.layout_manager.set_block_item_attributes(index, attributes)
+
     def add_band_item(self, altitude, rank):
         """ Create a new drawable object to correspond to a Band. """
         return self.layout_manager.add_band_item(altitude, rank)
@@ -913,6 +971,9 @@ class QtView(QGraphicsView, View):
                     altitude, rank, top_band_alt, bot_band_alt, 
                     leftmost_snapkey, rightmost_snapkey)
 
+    def set_band_item_attributes(self, altitude, attributes):
+        return self.layout_manager.set_band_item_attributes(altitude, attributes)
+
     def add_snap_item(self, snapkey):
         return self.layout_manager.add_snap_item(snapkey)
 
@@ -925,6 +986,9 @@ class QtView(QGraphicsView, View):
     def set_snap_item_settings(self, snapkey, left_order, right_order, pos_band_alt, neg_band_alt):
         return self.layout_manager.set_snap_item_settings(
                 snapkey, left_order, right_order, pos_band_alt, neg_band_alt)
+
+    def set_snap_item_attributes(self, snapkey, attributes):
+        return self.layout_manager.set_snap_item_attributes(snapkey, attributes)
 
     def wheelEvent(self,event):
         """ Implements scrollwheel zooming """
