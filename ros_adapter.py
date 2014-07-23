@@ -4,6 +4,7 @@ QUIET_NAMES = ['/rosout','/tf']
 
 from base_adapter import *
 from ros_topology import *
+from view_attributes import *
 
 
 class RosAdapter(BaseAdapter):
@@ -15,6 +16,39 @@ class RosAdapter(BaseAdapter):
         super(RosAdapter,self).__init__(RosSystemGraph(),view)
         self._topology.hide_disconnected_snaps = True
         self._master = rosgraph.Master('/RosSystemGraph')
+
+    def get_block_item_attributes(self, block_index):
+        """ Overloads the BaseAdapters stock implementation of this method """
+        block = self._topology.blocks[block_index]
+        attrs = BlockItemViewAttributes()
+        attrs.bgcolor = None
+        attrs.border_color = "red"
+        attrs.label = block.vertex.name
+        attrs.label_rotation = -90
+        attrs.label_color = "red"
+        attrs.spacerwidth = 20
+        return attrs
+
+    def get_band_item_attributes(self, band_altitude):
+        """ Overloads the BaseAdapters stock implementation of this method """
+        band = self._topology.bands[band_altitude]
+        attrs = BandItemViewAttributes()
+        attrs.bgcolor = "white"
+        attrs.border_color = "red"
+        attrs.label = band.edge.name
+        attrs.label_color = "red"
+        attrs.width = 15
+        return attrs
+
+    def get_snap_item_attributes(self, snapkey):
+        """ Default method for providing some stock settings for snaps """
+        attrs = SnapItemViewAttributes()
+        attrs.bgcolor = None
+        attrs.border_color = "red"
+        attrs.label = ""
+        attrs.label_color = "red"
+        attrs.width = 20
+        return attrs
 
     def update_model(self):
         """ query the ros master for information about the state of the system """
