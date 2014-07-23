@@ -29,6 +29,10 @@ class View(object):
     def set_block_item_settings(self, index, left_index, right_index):
         raise NotImplementedError()
 
+    def set_block_item_attributes(self, index, attributes):
+        """ Copy settings from a BlockItemViewAttributes object to a BlockItem """ 
+        raise NotImplementedError()
+
     def add_band_item(self, altitude, rank):
         """ Create a new drawable object to correspond to a Band. """
         raise NotImplementedError()
@@ -45,6 +49,11 @@ class View(object):
         """ Sets all the settings for a BandItem. """
         raise NotImplementedError()
 
+    def set_band_item_attributes(self, index, attributes):
+        """ Copy settings from a BandItemViewAttributes object to a BandItem """ 
+        raise NotImplementedError()
+
+
     def add_snap_item(self, snapkey):
         raise NotImplementedError()
 
@@ -56,4 +65,9 @@ class View(object):
 
     def set_snap_item_settings(self, snapkey, left_order, right_order, pos_band_alt, neg_band_alt):
         raise NotImplementedError()
+
+    def set_block_item_attributes(self, snapkey, attributes):
+        """ Copy settings from a SnapItemViewAttributes object to a SnapItem """ 
+        raise NotImplementedError()
+
 
