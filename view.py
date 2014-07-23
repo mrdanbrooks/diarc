@@ -55,12 +55,15 @@ class View(object):
 
 
     def add_snap_item(self, snapkey):
+        """ Creates a new SnapItem in the view referenced by the given snapkey """
         raise NotImplementedError()
 
     def has_snap_item(self, snapkey):
+        """ Checks to see if a SnapItem corresponding to the snapkey exists in the view """
         raise NotImplementedError()
 
     def remove_snap_item(self, snapkey):
+        """ Removes a SnapItem from the view referenced by the given snapkey """
         raise NotImplementedError()
 
     def set_snap_item_settings(self, snapkey, left_order, right_order, pos_band_alt, neg_band_alt):
