@@ -363,6 +363,10 @@ class AsciiView(View):
         item.left_block = self._block_items[left_index] if left_index is not None else None
         item.right_block = self._block_items[right_index] if right_index is not None else None
 
+    def set_block_item_attributes(self, index, attributes):
+        """ Not yet implemented """
+        pass
+
     def remove_block_item(self, index):
         print "Removing BlockItem %d"%index
         self._block_items[index].release()
@@ -397,6 +401,10 @@ class AsciiView(View):
         item.bot_band = self._band_items[bot_band_alt] if bot_band_alt is not None else None
         item.left_most_snap = self._snap_items[leftmost_snapkey]
         item.right_most_snap = self._snap_items[rightmost_snapkey]
+
+    def set_band_item_attributes(self, index, attributes):
+        """ not yet implemented for this style view """
+        pass
 
 
     def add_snap_item(self, snapkey):
@@ -437,6 +445,10 @@ class AsciiView(View):
             item.right_snap = None
         item.posBandItem = self._band_items[pos_band_alt] if pos_band_alt is not None else None
         item.negBandItem = self._band_items[neg_band_alt] if neg_band_alt is not None else None
+
+    def set_snap_item_attributes(self, snapkey, attributes):
+        """ not yet implemented for this style view """
+        pass
 
     def update_view(self):
         
