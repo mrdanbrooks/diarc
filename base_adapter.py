@@ -2,6 +2,7 @@ from view_attributes import *
 from view import *
 from adapter import Adapter
 from topology import *
+import sys
 
 class BaseAdapter(Adapter):
     """ Basic implementation of the adapter interface.
@@ -22,7 +23,7 @@ class BaseAdapter(Adapter):
         attrs.bgcolor = None
         attrs.border_color = "red"
         attrs.label = str(block_index)
-        attrs.label_rotation = 0
+        attrs.label_rotation = -90
         attrs.label_color = "red"
         attrs.spacerwidth = 20
         return attrs
@@ -249,6 +250,10 @@ class BaseAdapter(Adapter):
         # Update the SnapItem cache list
 #         self._cached_snap_item_snapkeys = snaps.keys()
 
+        print "*** Computing neighbors ***"
+        sys.stdout.flush()
+        print "Blocks and snaps"
+        sys.stdout.flush()
         # Compute left and right blocks
         for index in blocks:
             block = blocks[index]
@@ -272,7 +277,8 @@ class BaseAdapter(Adapter):
                 pos_alt = snap.posBandLink.altitude if snap.posBandLink else None
                 neg_alt = snap.negBandLink.altitude if snap.negBandLink else None
                 self._view.set_snap_item_settings(snap.snapkey(), left_order, right_order, pos_alt, neg_alt)
-
+        print "bands"
+        sys.stdout.flush()
         # Compute top and bottom bands, rank, leftmost, and rightmost snaps
         for altitude in bands:
             # Skip bands that don't have an item 
@@ -302,6 +308,10 @@ class BaseAdapter(Adapter):
             right_snapkey = right_snap.snapkey() if right_snap is not None else None
             self._view.set_band_item_settings(altitude, band.rank, top_alt, bot_alt, left_snapkey, right_snapkey )
 
+        print "*** Finished Computing neighbors ***"
+        print "*** Assigning Attributes ***"
+        sys.stdout.flush()
+
         # Update block visual attribtutes
         for index in self._cached_block_item_indexes:
             attributes = self.get_block_item_attributes(index)
@@ -316,6 +326,9 @@ class BaseAdapter(Adapter):
         for snapkey in self._cached_snap_item_snapkeys:
             attributes = self.get_snap_item_attributes(snapkey)
             self._view.set_snap_item_attributes(snapkey, attributes)
+        print "*** Finished Assigning Attributes ***"
+        sys.stdout.flush()
+
 
         self._view.update_view()
 

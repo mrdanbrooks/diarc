@@ -877,6 +877,8 @@ class LayoutManagerWidget(QGraphicsWidget):
         return self._view.adapter
 
     def link(self):
+        print "*** Begining Linking ***" 
+        sys.stdout.flush()
         # Create a new anchored layout. Until I can figure out how to remove
         # objects from the layout, I need to make a new one each time
         l = QGraphicsAnchorLayout()
@@ -900,6 +902,9 @@ class LayoutManagerWidget(QGraphicsWidget):
         # Link Snap Items
         for item in self._snap_items.values():
             item.link()
+
+        print "*** Finished Linking ***"
+        sys.stdout.flush()
 
     def mousePressEvent(self, event):
         print "updating model"
