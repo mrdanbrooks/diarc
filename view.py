@@ -69,7 +69,7 @@ class View(object):
     def set_snap_item_settings(self, snapkey, left_order, right_order, pos_band_alt, neg_band_alt):
         raise NotImplementedError()
 
-    def set_block_item_attributes(self, snapkey, attributes):
+    def set_snap_item_attributes(self, snapkey, attributes):
         """ Copy settings from a SnapItemViewAttributes object to a SnapItem """ 
         raise NotImplementedError()
 
