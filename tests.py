@@ -87,12 +87,12 @@ class Test_v5_a(unittest.TestCase):
     def test_snaps_to_bands_connectivity(self):
         """ Test to make sure that snaps are connected to the correct bands """
         t = self.t
-        assert(t.blocks[0].emitter[0].posBand.altitude == 1)
-        assert(t.blocks[0].emitter[0].negBand is None)
-        assert(t.blocks[1].collector[0].posBand.altitude == 1)
-        assert(t.blocks[1].collector[0].negBand.altitude == -1)
-        assert(t.blocks[2].emitter[0].posBand is None)
-        assert(t.blocks[2].emitter[0].negBand.altitude == -1)
+        assert(t.blocks[0].emitter[0].posBandLink.altitude == 1)
+        assert(t.blocks[0].emitter[0].negBandLink is None)
+        assert(t.blocks[1].collector[0].posBandLink.altitude == 1)
+        assert(t.blocks[1].collector[0].negBandLink.altitude == -1)
+        assert(t.blocks[2].emitter[0].posBandLink is None)
+        assert(t.blocks[2].emitter[0].negBandLink.altitude == -1)
 
 
 
@@ -126,12 +126,12 @@ class Test_v5_b(unittest.TestCase):
     def test_snaps_to_bands_connectivity(self):
         """ Test to make sure that snaps are connected to the correct bands """
         t = self.t
-        assert(t.blocks[0].collector[0].posBand is None)
-        assert(t.blocks[0].collector[0].negBand.altitude == -1)
-        assert(t.blocks[1].emitter[0].posBand.altitude == 1)
-        assert(t.blocks[1].emitter[0].negBand.altitude == -1)
-        assert(t.blocks[2].collector[0].posBand.altitude == 1)
-        assert(t.blocks[2].collector[0].negBand is None)
+        assert(t.blocks[0].collector[0].posBandLink is None)
+        assert(t.blocks[0].collector[0].negBandLink.altitude == -1)
+        assert(t.blocks[1].emitter[0].posBandLink.altitude == 1)
+        assert(t.blocks[1].emitter[0].negBandLink.altitude == -1)
+        assert(t.blocks[2].collector[0].posBandLink.altitude == 1)
+        assert(t.blocks[2].collector[0].negBandLink is None)
 
 
 
@@ -164,12 +164,12 @@ class Test_v5_c(unittest.TestCase):
     def test_snaps_to_bands_connectivity(self):
         """ Test to make sure that snaps are connected to the correct bands """
         t = self.t
-        assert(t.blocks[0].emitter[0].posBand.altitude == 1)
-        assert(t.blocks[0].emitter[0].negBand is None)
-        assert(t.blocks[1].collector[0].posBand.altitude == 1)
-        assert(t.blocks[1].collector[0].negBand is None)
-        assert(t.blocks[2].collector[0].posBand.altitude == 1)
-        assert(t.blocks[2].collector[0].negBand is None)
+        assert(t.blocks[0].emitter[0].posBandLink.altitude == 1)
+        assert(t.blocks[0].emitter[0].negBandLink is None)
+        assert(t.blocks[1].collector[0].posBandLink.altitude == 1)
+        assert(t.blocks[1].collector[0].negBandLink is None)
+        assert(t.blocks[2].collector[0].posBandLink.altitude == 1)
+        assert(t.blocks[2].collector[0].negBandLink is None)
 
 class Test_v5_d(unittest.TestCase):
     def setUp(self):
@@ -202,12 +202,12 @@ class Test_v5_d(unittest.TestCase):
     def test_snaps_connectivity(self):
         """ Test to make sure that snaps are connected to the correct bands """
         t = self.t
-        assert(t.blocks[0].collector[0].posBand is None)
-        assert(t.blocks[0].collector[0].negBand.altitude == -1)
-        assert(t.blocks[1].emitter[0].posBand is None)
-        assert(t.blocks[1].emitter[0].negBand.altitude == -1)
-        assert(t.blocks[2].emitter[0].posBand is None)
-        assert(t.blocks[2].emitter[0].negBand.altitude == -1)
+        assert(t.blocks[0].collector[0].posBandLink is None)
+        assert(t.blocks[0].collector[0].negBandLink.altitude == -1)
+        assert(t.blocks[1].emitter[0].posBandLink is None)
+        assert(t.blocks[1].emitter[0].negBandLink.altitude == -1)
+        assert(t.blocks[2].emitter[0].posBandLink is None)
+        assert(t.blocks[2].emitter[0].negBandLink.altitude == -1)
 
 class Test_v5_e(unittest.TestCase):
     def setUp(self):
@@ -241,14 +241,14 @@ class Test_v5_e(unittest.TestCase):
     def test_snaps_connectivity(self):
         """ Test to make sure that snaps are connected to the correct bands """
         t = self.t
-        assert(t.blocks[0].emitter[0].posBand.altitude == 1)
-        assert(t.blocks[0].emitter[0].negBand is None)
-        assert(t.blocks[1].collector[0].posBand.altitude == 1)
-        assert(t.blocks[1].collector[0].negBand.altitude == -1)
-        assert(t.blocks[2].emitter[0].posBand.altitude == 1)
-        assert(t.blocks[2].emitter[0].negBand.altitude == -1)
-        assert(t.blocks[3].collector[0].posBand.altitude == 1)
-        assert(t.blocks[3].collector[0].negBand is None)
+        assert(t.blocks[0].emitter[0].posBandLink.altitude == 1)
+        assert(t.blocks[0].emitter[0].negBandLink is None)
+        assert(t.blocks[1].collector[0].posBandLink.altitude == 1)
+        assert(t.blocks[1].collector[0].negBandLink.altitude == -1)
+        assert(t.blocks[2].emitter[0].posBandLink.altitude == 1)
+        assert(t.blocks[2].emitter[0].negBandLink.altitude == -1)
+        assert(t.blocks[3].collector[0].posBandLink.altitude == 1)
+        assert(t.blocks[3].collector[0].negBandLink is None)
 
 
 class Test_v5_f(unittest.TestCase):
@@ -284,14 +284,14 @@ class Test_v5_f(unittest.TestCase):
     def test_snaps_connectivity(self):
         """ Test to make sure that snaps are connected to the correct bands """
         t = self.t
-        assert(t.blocks[0].collector[0].negBand.altitude == -1)
-        assert(t.blocks[0].collector[0].posBand is None)
-        assert(t.blocks[1].emitter[0].negBand.altitude == -1)
-        assert(t.blocks[1].emitter[0].posBand.altitude == 1)
-        assert(t.blocks[2].collector[0].negBand.altitude == -1)
-        assert(t.blocks[2].collector[0].posBand.altitude == 1)
-        assert(t.blocks[3].emitter[0].negBand.altitude == -1)
-        assert(t.blocks[3].emitter[0].posBand is None)
+        assert(t.blocks[0].collector[0].negBandLink.altitude == -1)
+        assert(t.blocks[0].collector[0].posBandLink is None)
+        assert(t.blocks[1].emitter[0].negBandLink.altitude == -1)
+        assert(t.blocks[1].emitter[0].posBandLink.altitude == 1)
+        assert(t.blocks[2].collector[0].negBandLink.altitude == -1)
+        assert(t.blocks[2].collector[0].posBandLink.altitude == 1)
+        assert(t.blocks[3].emitter[0].negBandLink.altitude == -1)
+        assert(t.blocks[3].emitter[0].posBandLink is None)
 
 
 
