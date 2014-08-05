@@ -311,19 +311,12 @@ class Block(object):
         # blocks to left and right
 #         self._leftBlock = None
 #         self._rightBlock = None
-        # Visual object
-        self.visual = None
 
     def _release(self):
         """ releases this block from the topology.
         This should only be called by Vertex.release()
         """
         print "removing block %r"%self
-        # Remove references of your visual component
-        print "... releasing visual"
-        if not isinstance(self.visual,types.NoneType):
-            self.visual._release()
-            self.visual = None
         print "... removing references to left and right blocks"
         #This needs to recalculate the left and right blocks on either side
         #NOTE: This does not collapse index values, so there becomes a "hole"
@@ -487,16 +480,10 @@ class Band(object):
         self._isPositive = isPositive
         self._altitude = None
         self._rank = None
-        # Visual Connections 
-        self.visual = None
 
     def _release(self):
         """ Release all dependent references this object holds """
         print "removing band %r"%self
-        print "... removing visual"
-        if not isinstance(self.visual,types.NoneType):
-            self.visual._release()
-            self.visual = None
         print "... removing edge reference"
         self._edge = None
         print "... removing reference to topology"
@@ -657,7 +644,6 @@ class Snap(object):
     def __init__(self,connection):
         self._connection = typecheck(connection,Connection,"connection")
         self._order = None
-        self.visual = None
 
     def snapkey(self):
         """ generates the snapkey for this snap """
@@ -666,10 +652,6 @@ class Snap(object):
     def _release(self):
         """ This should only be called by a Connection.release() """
         print "releasing snap %r"%self
-        print "... releasing visual"
-        if not isinstance(self.visual,types.NoneType):
-            self.visual._release()
-            self.visual = None
         # the connection should 
         print "... removing reference to connection"
         self._connection = None
