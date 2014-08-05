@@ -28,6 +28,12 @@ class BandSpacer(SpacerContainer.Spacer):
         self.setMinimumHeight(15)
         self.setAcceptDrops(True)
 
+    def _release(self):
+        topAltitude = self.topBand.altitude if self.topBand else None
+        bottomAltitude = self.bottomBand.altitude if self.bottomBand else None
+        print "... Releasing BandSpacer between topBand %r and botBand %r"%(topAltitude, bottomAltitude)
+        super(BandSpacer, self)._release()
+
     @property
     def topBand(self):
         return self.itemA
@@ -81,15 +87,16 @@ class BandSpacer(SpacerContainer.Spacer):
             event.setAccepted(True)
             self.dragOver = True
             self.update()
-            print "Drag Positive ENTER"
+            print "Drag Positive ENTER between topBand %r and botBand %r"%(topAltitude, bottomAltitude)
         # Accept a negative altitude band
         elif data['band'] < 0 and (topAltitude < 0 or bottomAltitude < 0):
             event.setAccepted(True)
             self.dragOver = True
             self.update()
-            print "Drag Negative ENTER"
+            print "Drag Negative ENTER between topBand %r and botBand %r"%(topAltitude, bottomAltitude)
         else:
             event.setAccepted(False)
+            return
         self.setZValue(max([self.topBand.altitude if self.topBand else None,
                             self.bottomBand.altitude if self.bottomBand else None]))
 
@@ -113,6 +120,7 @@ class BandSpacer(SpacerContainer.Spacer):
         # Get the altitudes of the bands displayed above and below this spacer.
         topAltitude = self.topBand.altitude if self.topBand else None
         bottomAltitude = self.bottomBand.altitude if self.bottomBand else None
+        print "Moving Band %d between topBand %r and botBand %r"%(srcAlt, topAltitude, bottomAltitude)
         self._adapter.reorder_bands(srcAlt,bottomAltitude,topAltitude)
 
     def paint(self,painter,option,widget):
@@ -772,7 +780,7 @@ class LayoutManagerWidget(QGraphicsWidget):
         self._snap_items = TypedDict(str,SnapItem)  # snapkey  #TypedList(SnapItem)
 
     def add_block_item(self, index):
-        print "Adding BlockItem %d"%index
+        print "... Adding BlockItem %d"%index
         """ create a new BlockItem """
         if index in self._block_items:
             raise DuplicateItemExistsError("Block Item with index %d already exists"%(index))
@@ -792,7 +800,7 @@ class LayoutManagerWidget(QGraphicsWidget):
         self._block_items[index].set_attributes(attributes)
 
     def remove_block_item(self, index):
-        print "Removing BlockItem %d"%index
+        print "... Removing BlockItem %d"%index
         self._block_items[index].release()
         self._block_items.pop(index)
 
@@ -802,7 +810,7 @@ class LayoutManagerWidget(QGraphicsWidget):
 
     def add_band_item(self, altitude, rank):
         """ Create a new drawable object to correspond to a Band. """
-        print "Adding BandItem with altitude %d"%altitude
+        print "... Adding BandItem with altitude %d"%altitude
         if altitude in self._band_items:
             raise DuplicateItemExistsError("BandItem with altitude %d already exists"%(altitude))
         item = BandItem(self, altitude, rank)
@@ -814,7 +822,7 @@ class LayoutManagerWidget(QGraphicsWidget):
 
     def remove_band_item(self, altitude):
         """ Remove the drawable object to correspond to a band """ 
-        print "Removing BandItem altitude %d"%altitude
+        print "... Removing BandItem altitude %d"%altitude
         self._band_items[altitude].release()
         self._band_items.pop(altitude)
 
@@ -834,7 +842,7 @@ class LayoutManagerWidget(QGraphicsWidget):
         self._band_items[altitude].set_attributes(attrs)
 
     def add_snap_item(self, snapkey):
-        print "Adding SnapItem %s"%snapkey
+        print "... Adding SnapItem %s"%snapkey
         if snapkey in self._snap_items:
             raise DuplicateItemExistsError("SnapItem with snapkey %s already exists"%(snapkey))
         item = SnapItem(self, snapkey)
@@ -842,7 +850,7 @@ class LayoutManagerWidget(QGraphicsWidget):
         return item
 
     def remove_snap_item(self, snapkey):
-        print "Removing SnapItem %s"%snapkey
+        print "... Removing SnapItem %s"%snapkey
         self._snap_items[snapkey].release()
         self._snap_items.pop(snapkey)
 
