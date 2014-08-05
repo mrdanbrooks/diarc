@@ -47,6 +47,20 @@ class SpacerContainer(QGraphicsWidget):
             self._spacers.remove(spacer)
 
 
+    def removeItemSpacers(self,item):
+        """ Removes spacers that touch a particular item. Used by SpacerContainter.Item
+        when it is being released.
+        """
+        removalList = list()
+        for spacer in self._spacers:
+            if spacer.itemA is not None and spacer.itemA == item:
+                removalList.append(spacer)
+            if spacer.itemB is not None and spacer.itemB == item:
+                removalList.append(spacer)
+        print "... removing %d spacers linked to item"%len(removalList)
+        for spacer in removalList:
+            spacer._release()
+            self._spacers.remove(spacer)
 
 
     def getSpacerA(self,item):
@@ -64,6 +78,7 @@ class SpacerContainer(QGraphicsWidget):
         for spacer in ret:
             if (not spacer.itemA == item.itemA()) or (not isUsed):
                 spacer.setParent(None)
+                spacer._release()
                 self._spacers.remove(spacer)
         ret = filter(lambda x: x.itemB == item, self._spacers)
         # Once we have deleted old spacers, make sure we are using the band.
@@ -94,6 +109,7 @@ class SpacerContainer(QGraphicsWidget):
         for spacer in ret:
             if (not spacer.itemB == item.itemB()) or (not isUsed):
                 spacer.setParent(None)
+                spacer._release()
                 self._spacers.remove(spacer)
         # TODO: This next line may not be needed
         ret = filter(lambda x: x.itemA == item, self._spacers)
@@ -170,6 +186,7 @@ class SpacerContainer(QGraphicsWidget):
             self.setVisible(False)
             self.setParent(None)
             self.parent = None
+            self.container.removeItemSpacers(self)
             self.container = None
             # TODO: This may need to delete former spacers too!
 
