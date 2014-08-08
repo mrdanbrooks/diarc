@@ -35,6 +35,7 @@ class SnapItemViewAttributes(object):
     def __init__(self):
         self.bgcolor = None
         self.border_color = None
+        self.border_width = None
         self.label = None
         self.label_color = None
         self.width = None
