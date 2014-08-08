@@ -257,8 +257,8 @@ class BlockSpacer(SpacerContainer.Spacer):
         self._adapter = parent.parent.adapter()
         self.dragOver = False
         self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.Preferred))
-        self.setPreferredWidth(15)
-        self.setMinimumWidth(15)
+        self.setPreferredWidth(50)
+        self.setMinimumWidth(50)
         self.setAcceptDrops(True)
 
     @property
@@ -629,7 +629,7 @@ class SnapSpacer(SpacerContainer.Spacer):
     def paint(self, painter, option, widget):
         if self.dragOver:
             brush = QBrush()
-            brush.setStyle(Qt.SolidPattern)
+            brush.setStyle(Qt.Dense4Pattern)
             brush.setColor(Qt.yellow)
             painter.fillRect(self.rect(),brush)
             pen = QPen()
