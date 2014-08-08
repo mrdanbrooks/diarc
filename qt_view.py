@@ -593,6 +593,12 @@ class SnapSpacer(SpacerContainer.Spacer):
         if not self.parent.strType() == data['container']:
             event.setAccepted(False)
             return
+        if self.leftSnap and data['snap'] == self.leftSnap.snap_order:
+            event.setAccepted(False)
+            return
+        if self.rightSnap and data['snap'] == self.rightSnap.snap_order:
+            event.setAccepted(False)
+            return
         event.setAccepted(True)
         self.expandWidth()
         self.dragOver = True
