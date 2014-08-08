@@ -35,6 +35,12 @@ class Adapter(object):
         """
         raise NotImplementedError()
 
+    def bring_band_to_front(self, altitude):
+        """ change a bands rank to bring it to the front. This should not affect
+        the relative order of the other bands, but may change their actual rank value. 
+        """
+        raise NotImplementedError()
+
 #     def update_model(self):
 #         raise NotImplementedError()
 # 
