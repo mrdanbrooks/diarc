@@ -20,8 +20,9 @@ class BaseAdapter(Adapter):
     def get_block_item_attributes(self, block_index):
         """ Default method for providing some stock settings for blocks """
         attrs = BlockItemViewAttributes()
-        attrs.bgcolor = None
+        attrs.bgcolor = "white"
         attrs.border_color = "red"
+        attrs.border_width = 0
         attrs.label = str(block_index)
         attrs.label_rotation = -90
         attrs.label_color = "red"
@@ -41,8 +42,9 @@ class BaseAdapter(Adapter):
     def get_snap_item_attributes(self, snapkey):
         """ Default method for providing some stock settings for snaps """
         attrs = SnapItemViewAttributes()
-        attrs.bgcolor = None
-        attrs.border_color = "red"
+        attrs.bgcolor = "white"
+        attrs.border_color = "blue" if "e" in snapkey else "green"
+        attrs.border_width = 0
         attrs.label = snapkey
         attrs.label_color = "black"
         attrs.width = 20

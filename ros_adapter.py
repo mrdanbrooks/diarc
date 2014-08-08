@@ -21,8 +21,9 @@ class RosAdapter(BaseAdapter):
         """ Overloads the BaseAdapters stock implementation of this method """
         block = self._topology.blocks[block_index]
         attrs = BlockItemViewAttributes()
-        attrs.bgcolor = None
+        attrs.bgcolor = "white"
         attrs.border_color = "red"
+        attrs.border_width = 0
         attrs.label = block.vertex.name
         attrs.label_rotation = -90
         attrs.label_color = "red"
@@ -43,8 +44,9 @@ class RosAdapter(BaseAdapter):
     def get_snap_item_attributes(self, snapkey):
         """ Default method for providing some stock settings for snaps """
         attrs = SnapItemViewAttributes()
-        attrs.bgcolor = None
+        attrs.bgcolor = "white"
         attrs.border_color = "red"
+        attrs.border_width = 0
         attrs.label = ""
         attrs.label_color = "red"
         attrs.width = 20
