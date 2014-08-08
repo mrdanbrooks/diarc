@@ -455,7 +455,11 @@ class BlockItem(SpacerContainer.Item, BlockItemViewAttributes):
             drag.start()
 
     def paint(self,painter,option,widget):
-        painter.setPen(self.border_color)
+        border_pen = QPen()
+        border_pen.setBrush(self.border_color)
+        border_pen.setStyle(Qt.SolidLine)
+        border_pen.setWidth(self.border_width)
+        painter.setPen(border_pen)
         painter.drawRect(self.rect())
 
     class MiddleSpacer(QGraphicsWidget):
@@ -490,9 +494,9 @@ class BlockItem(SpacerContainer.Item, BlockItemViewAttributes):
         def __init__(self,parent):
             super(BlockItem.HorizontalSpacer,self).__init__(parent=parent)
             self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.Preferred))
-            self.setPreferredHeight(5)
-            self.setMinimumHeight(5)
-            self.setMaximumHeight(5)
+            self.setPreferredHeight(0)
+            self.setMinimumHeight(0)
+            self.setMaximumHeight(0)
             self.setMinimumWidth(5)
 
         def release(self):
