@@ -11,6 +11,7 @@ class BlockItemViewAttributes(object):
     def __init__(self):
         self.bgcolor = None
         self.border_color = None
+        self.border_width = None
         self.label = None
         self.label_color = None
         self.label_rotation = 0
