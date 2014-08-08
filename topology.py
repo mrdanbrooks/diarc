@@ -608,6 +608,10 @@ class Band(object):
         typecheck(val,int,"val")
         if val < 0:
             raise Exception("Rank must be >= 0, received %d"%val)
+        # Make sure the rank is unique among all bands of the same altitude
+        allBands = [edge.posBand if self.isPositive else edge.negBand for edge in self._topology._edges]
+        if val in [b._rank for b in allBands]:
+            raise Exception("%s Band with rank %d already exists!"%("Positive" if self._isPositive else "Negative",val))
         self._rank = val
     
     def __get_altitude(self):
