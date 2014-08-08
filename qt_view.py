@@ -505,7 +505,8 @@ class SnapContainer(SpacerContainer):
 
         self.spacerType = SnapSpacer
         self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Preferred))
-        self.setMinimumWidth(15)
+        self.setMinimumWidth(1)
+        self.setPreferredWidth(1)
     
     def release(self):
         super(SnapContainer, self)._release()
@@ -518,15 +519,16 @@ class SnapContainer(SpacerContainer):
     def paint(self,painter,option,widget):
         painter.setPen(Qt.green)
         painter.drawRect(self.rect())
+    
 
 class MyEmitter(SnapContainer):
     def paint(self, painter, option, widget):
-        painter.setPen(Qt.blue)
+        painter.setPen(Qt.green)
         painter.drawRect(self.rect())
    
 class MyCollector(SnapContainer):
     def paint(self, painter, option, widget):
-        painter.setPen(Qt.green)
+        painter.setPen(Qt.blue)
         painter.drawRect(self.rect())
  
 
@@ -541,8 +543,7 @@ class SnapSpacer(SpacerContainer.Spacer):
         
         # Qt Properties
         self.setSizePolicy(QSizePolicy(QSizePolicy.MinimumExpanding,QSizePolicy.Preferred))
-        self.setPreferredWidth(15)
-        self.setMinimumWidth(15)
+        self.collapseWidth()
         self.setAcceptDrops(True)
 
     @property
@@ -593,15 +594,19 @@ class SnapSpacer(SpacerContainer.Spacer):
             event.setAccepted(False)
             return
         event.setAccepted(True)
+        self.expandWidth()
         self.dragOver = True
         self.update()
 
     def dragLeaveEvent(self, event):
         self.dragOver = False
+        self.collapseWidth()
         self.update()
 
     def dropEvent(self,event):
         """ Relocates a MySnap to this position """
+        self.collapseWidth()
+        self.dragOver = False
         data = json.loads(str(event.mimeData().text()))
         assert(data['block'] == self.parent.parentBlock.block_index)
         assert(data['container'] == self.parent.strType())
@@ -612,8 +617,36 @@ class SnapSpacer(SpacerContainer.Spacer):
         self._adapter.reorder_snaps(data['block'], data['container'], srcIdx, lowerIdx, upperIdx)
 
     def paint(self, painter, option, widget):
-        painter.setPen(Qt.NoPen)
-        painter.drawRect(self.rect())
+        if self.dragOver:
+            brush = QBrush()
+            brush.setStyle(Qt.SolidPattern)
+            brush.setColor(Qt.yellow)
+            painter.fillRect(self.rect(),brush)
+            pen = QPen()
+            pen.setBrush(Qt.darkGray)
+            pen.setStyle(Qt.DotLine)
+            pen.setWidth(1)
+            painter.setPen(pen)
+            painter.drawRect(self.rect())
+            rect = self.geometry()
+        else:
+            painter.setPen(Qt.NoPen)
+#             painter.setPen(Qt.magenta)
+            painter.drawRect(self.rect())
+
+    def collapseWidth(self):
+        """ Make the width very small """
+        self.setMinimumWidth(0.1)
+        self.setMaximumWidth(0.1)
+        self.setPreferredWidth(0.1)
+
+    def expandWidth(self):
+        """ Widen the spacer to afford seperation """
+        self.setMinimumWidth(10)
+        self.setMaximumWidth(10)
+        self.setPreferredWidth(10)
+
+
 
 class SnapItem(SpacerContainer.Item, SnapItemViewAttributes):
     def __init__(self, parent, snapkey):
@@ -730,14 +763,25 @@ class SnapItem(SpacerContainer.Item, SnapItemViewAttributes):
             drag.start()
 
     def paint(self, painter, option, widget):
-        painter.setPen(self.border_color)
+        # Paint background
+        brush = QBrush()
+        brush.setStyle(Qt.SolidPattern)
+        brush.setColor(self.bgcolor)
+        painter.fillRect(self.rect(),brush)
+        # Paint border
+        border_pen = QPen()
+        border_pen.setBrush(self.border_color)
+        border_pen.setStyle(Qt.SolidLine)
+        border_pen.setWidth(self.border_width)
+        painter.setPen(border_pen)
         painter.drawRect(self.rect())
         rect = self.geometry()
+        painter.setPen(self.label_color)
+
         if self.posBandItem:
             painter.drawText(6,12,str(self.posBandItem.altitude))
         if self.negBandItem:
             painter.drawText(3,rect.height()-3,str(self.negBandItem.altitude))
-        painter.setPen(self.label_color)
         painter.drawText(2,rect.height()/2+4,self.label)
 
 
