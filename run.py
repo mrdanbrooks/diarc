@@ -3,6 +3,7 @@
 # ./run.py topology_plot data/v5.xml
 
 import sys
+sys.dont_write_bytecode = True
 import inspect
 
 def asciiview(args):
