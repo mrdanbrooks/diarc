@@ -45,6 +45,10 @@ def rosview():
 
 if __name__=="__main__":
     available_tests = dict(inspect.getmembers(sys.modules[__name__],inspect.isfunction))
+    
+    # Enable the next to rows to perform profiling
+#     rosview()
+#     exit()
 
     if len(sys.argv) < 2 or sys.argv[1] not in available_tests:
         print "Usage:\n ./test.py <test> [parameters]\n"
