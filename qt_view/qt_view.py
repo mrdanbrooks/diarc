@@ -19,6 +19,7 @@ class QtBlockItemAttributes(BlockItemAttributes):
         self.__bgcolor = "black"
         self.__border_color = "black"
         self.__label_color = "black"
+        self.border_width = 1
     @property
     def bgcolor(self):
         return QColor(self.__bgcolor)
