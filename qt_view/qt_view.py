@@ -1,8 +1,8 @@
-from PyQt4.QtCore import Qt, QMimeData, QPoint, QEvent
-from PyQt4.QtGui import QPen, QColor, QSizePolicy, QDrag, QBrush, QGraphicsWidget
-from PyQt4.QtGui import QGraphicsView, QGraphicsAnchorLayout, QGraphicsScene
-from PyQt4.QtGui import QFontMetrics, QToolTip
-from PyQt4.QtCore import pyqtSignal as Signal
+from python_qt_binding.QtCore import Qt, QMimeData, QPoint, QEvent
+from python_qt_binding.QtGui import QPen, QColor, QSizePolicy, QDrag, QBrush, QGraphicsWidget
+from python_qt_binding.QtGui import QGraphicsView, QGraphicsAnchorLayout, QGraphicsScene
+from python_qt_binding.QtGui import QFontMetrics, QToolTip
+from python_qt_binding.QtCore import pyqtSignal as Signal
 
 from diarc.snapkey import gen_snapkey, parse_snapkey
 from diarc.util import typecheck, TypedDict

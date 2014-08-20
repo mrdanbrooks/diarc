@@ -16,12 +16,12 @@ def asciiview(args):
     adapter._update_view()
 
 def qtview(args):
-    import PyQt4.QtGui
+    import python_qt_binding.QtGui
     from diarc import parser
     from qt_view import qt_view
     from diarc import base_adapter
     topology = parser.parseFile(args[0])
-    app = PyQt4.QtGui.QApplication(sys.argv)
+    app = python_qt_binding.QtGui.QApplication(sys.argv)
     view = qt_view.QtView()
     adapter = base_adapter.BaseAdapter(topology, view)
     adapter._update_view()
@@ -30,10 +30,10 @@ def qtview(args):
     sys.exit(app.exec_())
 
 def rosview():
-    import PyQt4.QtGui
+    import python_qt_binding.QtGui
     import qt_view
     import ros.ros_adapter
-    app = PyQt4.QtGui.QApplication([])
+    app = python_qt_binding.QtGui.QApplication([])
     view = qt_view.QtView()
     adapter = ros.ros_adapter.RosAdapter(view)
     adapter.update_model()

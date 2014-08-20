@@ -1,5 +1,5 @@
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from python_qt_binding.QtCore import *
+from python_qt_binding.QtGui import *
 from diarc.util import *
 import sys
 
