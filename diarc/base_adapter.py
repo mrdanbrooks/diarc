@@ -5,6 +5,9 @@ from view import SnapItemAttributes
 from adapter import Adapter
 from topology import *
 import sys
+import logging
+
+log = logging.getLogger('diarc.base_adapter')
 
 class BaseAdapter(Adapter):
     """ Basic implementation of the adapter interface.
@@ -69,7 +72,7 @@ class BaseAdapter(Adapter):
             while isinstance(currIdx,int) and currIdx < (upperIdx or lowerIdx+1): # In case upperIdx is None, use lower+1
                 nextIdx = blocks[currIdx].rightBlock.index if blocks[currIdx].rightBlock else None
                 blocks[currIdx].index = lastIdx
-                print "%s -> %s"%(str(currIdx),str(lastIdx))
+                log.debug("%s -> %s"%(str(currIdx),str(lastIdx)))
                 lastIdx = currIdx
                 currIdx = nextIdx
             assert lastIdx == lowerIdx, "%r %r"%(lastIdx,upperIdx)
@@ -80,7 +83,7 @@ class BaseAdapter(Adapter):
             while isinstance(currIdx,int) and currIdx > lowerIdx:
                 nextIdx = blocks[currIdx].leftBlock.index if blocks[currIdx].leftBlock else None
                 blocks[currIdx].index = lastIdx
-                print "%s -> %s"%(str(currIdx),str(lastIdx))
+                log.debug("%s -> %s"%(str(currIdx),str(lastIdx)))
                 lastIdx = currIdx
                 currIdx = nextIdx
             assert lastIdx == upperIdx, "%r %r"%(lastIdx,upperIdx)
@@ -142,8 +145,8 @@ class BaseAdapter(Adapter):
         assert(container in ["emitter","collector"])
         block = self._topology.blocks[blockIdx]
         snaps = block.emitter if container == "emitter" else block.collector
-        print snaps.keys()
-        print "move snap",srcIdx,"between",lowerIdx,"and",upperIdx
+        log.debug("%s"%snaps.keys())
+        log.debug("move snap %s between %s and %s"%(srcIdx,lowerIdx,upperIdx))
 
         lastIdx = None
         currIdx = srcIdx
@@ -155,7 +158,7 @@ class BaseAdapter(Adapter):
             while isinstance(currIdx,int) and currIdx < (upperIdx or lowerIdx+1):
                 nextIdx = snaps[currIdx].rightSnap.order if snaps[currIdx].rightSnap else None
                 snaps[currIdx].order = lastIdx
-                print "%s -> %s"%(str(currIdx),str(lastIdx))
+                log.debug("%s -> %s"%(str(currIdx),str(lastIdx)))
                 lastIdx = currIdx
                 currIdx = nextIdx
             # Assertion check. TODO: Remove
@@ -168,7 +171,7 @@ class BaseAdapter(Adapter):
             while isinstance(currIdx,int) and currIdx > lowerIdx:
                 nextIdx = snaps[currIdx].leftSnap.order if snaps[currIdx].leftSnap else None
                 snaps[currIdx].order = lastIdx
-                print "%s -> %s"%(str(currIdx),str(lastIdx))
+                log.debug("%s -> %s"%(str(currIdx),str(lastIdx)))
                 lastIdx = currIdx
                 currIdx = nextIdx
             # Assertion check. TODO remove
@@ -282,9 +285,9 @@ class BaseAdapter(Adapter):
         # Update the SnapItem cache list
 #         self._cached_snap_item_snapkeys = snaps.keys()
 
-        print "*** Computing neighbors ***"
+        log.debug("*** Computing neighbors ***")
         sys.stdout.flush()
-        print "Blocks and snaps"
+        log.debug("Blocks and snaps")
         sys.stdout.flush()
         # Compute left and right blocks
         for index in blocks:
@@ -310,7 +313,7 @@ class BaseAdapter(Adapter):
                 pos_alt = snap.posBandLink.altitude if snap.posBandLink else None
                 neg_alt = snap.negBandLink.altitude if snap.negBandLink else None
                 self._view.set_snap_item_settings(snap.snapkey(), left_order, right_order, pos_alt, neg_alt)
-        print "bands"
+        log.debug("bands")
         sys.stdout.flush()
         # Compute top and bottom bands, rank, leftmost, and rightmost snaps
         for altitude in bands:
@@ -341,9 +344,8 @@ class BaseAdapter(Adapter):
             right_snapkey = right_snap.snapkey() if right_snap is not None else None
             self._view.set_band_item_settings(altitude, band.rank, top_alt, bot_alt, left_snapkey, right_snapkey )
 
-        print "*** Finished Computing neighbors ***"
-        print "*** Assigning Attributes ***"
-        sys.stdout.flush()
+        log.debug("*** Finished Computing neighbors ***")
+        log.debug("*** Assigning Attributes ***")
 
         # Update block visual attribtutes
         for index in self._cached_block_item_indexes:
@@ -359,9 +361,7 @@ class BaseAdapter(Adapter):
         for snapkey in self._cached_snap_item_snapkeys:
             attributes = self.get_snap_item_attributes(snapkey)
             self._view.set_snap_item_attributes(snapkey, attributes)
-        print "*** Finished Assigning Attributes ***"
-        sys.stdout.flush()
-
+        log.debug("*** Finished Assigning Attributes ***")
 
         self._view.update_view()
 

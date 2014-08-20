@@ -13,6 +13,9 @@ from diarc.view import SnapItemAttributes
 from .SpacerContainer import SpacerContainer
 import json
 import sys
+import logging
+
+log = logging.getLogger('diarc.qt_view')
 
 class QtBlockItemAttributes(BlockItemAttributes):
     def __init__(self):
@@ -114,7 +117,7 @@ class BandSpacer(SpacerContainer.Spacer):
     def _release(self):
         topAltitude = self.topBand.altitude if self.topBand else None
         bottomAltitude = self.bottomBand.altitude if self.bottomBand else None
-        print "... Releasing BandSpacer between topBand %r and botBand %r"%(topAltitude, bottomAltitude)
+        log.debug("... Releasing BandSpacer between topBand %r and botBand %r"%(topAltitude, bottomAltitude))
         super(BandSpacer, self)._release()
 
     @property
@@ -170,13 +173,13 @@ class BandSpacer(SpacerContainer.Spacer):
             event.setAccepted(True)
             self.dragOver = True
             self.update()
-            print "Drag Positive ENTER between topBand %r and botBand %r"%(topAltitude, bottomAltitude)
+            log.debug("Drag Positive ENTER between topBand %r and botBand %r"%(topAltitude, bottomAltitude))
         # Accept a negative altitude band
         elif data['band'] < 0 and (topAltitude < 0 or bottomAltitude < 0):
             event.setAccepted(True)
             self.dragOver = True
             self.update()
-            print "Drag Negative ENTER between topBand %r and botBand %r"%(topAltitude, bottomAltitude)
+            log.debug("Drag Negative ENTER between topBand %r and botBand %r"%(topAltitude, bottomAltitude))
         else:
             event.setAccepted(False)
             return
@@ -203,7 +206,7 @@ class BandSpacer(SpacerContainer.Spacer):
         # Get the altitudes of the bands displayed above and below this spacer.
         topAltitude = self.topBand.altitude if self.topBand else None
         bottomAltitude = self.bottomBand.altitude if self.bottomBand else None
-        print "Moving Band %d between topBand %r and botBand %r"%(srcAlt, topAltitude, bottomAltitude)
+        log.debug("Moving Band %d between topBand %r and botBand %r"%(srcAlt, topAltitude, bottomAltitude))
         self._adapter.reorder_bands(srcAlt,bottomAltitude,topAltitude)
 
     def paint(self,painter,option,widget):
@@ -302,7 +305,7 @@ class BandItem(SpacerContainer.Item, QtBandItemAttributes):
         pass
 
     def mouseReleaseEvent(self, event):
-        print "Bringing band %d to front" % self.altitude
+        log.debug("Bringing band %d to front" % self.altitude)
         self._adapter.bring_band_to_front(self.altitude)
 
     def hoverEnterEvent(self, event):
@@ -405,7 +408,7 @@ class BlockSpacer(SpacerContainer.Spacer):
         if 'block' in data:
             event.setAccepted(True)
             self.dragOver = True
-            print "Drag ENTER"
+            log.debug("Drag ENTER")
             self.update()
         else:
             event.setAccepted(False)
@@ -971,7 +974,7 @@ class LayoutManagerWidget(QGraphicsWidget):
         self._snap_items = TypedDict(str,SnapItem)  # snapkey  #TypedList(SnapItem)
 
     def add_block_item(self, index):
-        print "... Adding BlockItem %d"%index
+        log.debug("... Adding BlockItem %d"%index)
         """ create a new BlockItem """
         if index in self._block_items:
             raise DuplicateItemExistsError("Block Item with index %d already exists"%(index))
@@ -991,7 +994,7 @@ class LayoutManagerWidget(QGraphicsWidget):
         self._block_items[index].set_attributes(attributes)
 
     def remove_block_item(self, index):
-        print "... Removing BlockItem %d"%index
+        log.debug("... Removing BlockItem %d"%index)
         self._block_items[index].release()
         self._block_items.pop(index)
 
@@ -1001,7 +1004,7 @@ class LayoutManagerWidget(QGraphicsWidget):
 
     def add_band_item(self, altitude, rank):
         """ Create a new drawable object to correspond to a Band. """
-        print "... Adding BandItem with altitude %d"%altitude
+        log.debug("... Adding BandItem with altitude %d"%altitude)
         if altitude in self._band_items:
             raise DuplicateItemExistsError("BandItem with altitude %d already exists"%(altitude))
         item = BandItem(self, altitude, rank)
@@ -1013,7 +1016,7 @@ class LayoutManagerWidget(QGraphicsWidget):
 
     def remove_band_item(self, altitude):
         """ Remove the drawable object to correspond to a band """ 
-        print "... Removing BandItem altitude %d"%altitude
+        log.debug("... Removing BandItem altitude %d"%altitude)
         self._band_items[altitude].release()
         self._band_items.pop(altitude)
 
@@ -1037,7 +1040,7 @@ class LayoutManagerWidget(QGraphicsWidget):
         # snapkey gets passed as a QString automatically since it goes across
         # a signal/slot interface
         snapkey = str(snapkey)
-        print "... Adding SnapItem %s"%snapkey
+        log.debug("... Adding SnapItem %s"%snapkey)
         if snapkey in self._snap_items:
             raise DuplicateItemExistsError("SnapItem with snapkey %s already exists"%(snapkey))
         item = SnapItem(self, snapkey)
@@ -1048,7 +1051,7 @@ class LayoutManagerWidget(QGraphicsWidget):
         # snapkey gets passed as a QString automatically since it goes across
         # a signal/slot interface
         snapkey = str(snapkey)
-        print "... Removing SnapItem %s"%snapkey
+        log.debug("... Removing SnapItem %s"%snapkey)
         self._snap_items[snapkey].release()
         self._snap_items.pop(snapkey)
 
@@ -1092,7 +1095,7 @@ class LayoutManagerWidget(QGraphicsWidget):
         return self._view.adapter
 
     def link(self):
-        print "*** Begining Linking ***" 
+        log.debug("*** Begining Linking ***")
         sys.stdout.flush()
         # Create a new anchored layout. Until I can figure out how to remove
         # objects from the layout, I need to make a new one each time
@@ -1118,7 +1121,7 @@ class LayoutManagerWidget(QGraphicsWidget):
         for item in self._snap_items.values():
             item.link()
 
-        print "*** Finished Linking ***\n"
+        log.debug("*** Finished Linking ***\n")
         sys.stdout.flush()
 
 #     def mousePressEvent(self, event):

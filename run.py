@@ -5,6 +5,7 @@
 import sys
 sys.dont_write_bytecode = True
 import inspect
+import logging
 
 def asciiview(args):
     from diarc import parser
@@ -60,6 +61,8 @@ if __name__=="__main__":
     # Enable the next to rows to perform profiling
 #     rosview()
 #     exit()
+    logging.basicConfig(level=logging.DEBUG)
+    log = logging.getLogger('main')
 
     if len(sys.argv) < 2 or sys.argv[1] not in available_tests:
         print "Usage:\n ./test.py <test> [parameters]\n"
