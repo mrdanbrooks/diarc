@@ -1,7 +1,7 @@
-from PyQt4.QtCore import Qt, QMimeData
+from PyQt4.QtCore import Qt, QMimeData, QPoint, QEvent
 from PyQt4.QtGui import QPen, QColor, QSizePolicy, QDrag, QBrush, QGraphicsWidget
 from PyQt4.QtGui import QGraphicsView, QGraphicsAnchorLayout, QGraphicsScene
-from PyQt4.QtGui import QFontMetrics
+from PyQt4.QtGui import QFontMetrics, QToolTip
 from PyQt4.QtCore import pyqtSignal as Signal
 
 from diarc.snapkey import gen_snapkey, parse_snapkey
@@ -236,6 +236,7 @@ class BandItem(SpacerContainer.Item, QtBandItemAttributes):
         self.setContentsMargins(5,5,5,5)
         self.setSizePolicy(QSizePolicy(QSizePolicy.Preferred, QSizePolicy.MinimumExpanding))
         self.set_width(15)
+        self.setAcceptHoverEvents(True)
 #         self.setZValue(rank)
 
     def release(self):
@@ -298,12 +299,19 @@ class BandItem(SpacerContainer.Item, QtBandItemAttributes):
 
     def mousePressEvent(self, event):
         """ This is necessary to capture the mouse clicking event to drag"""
-#         print "Bringing band %d to front" % self.altitude
-#         self._adapter.bring_band_to_front(self.altitude)
+        pass
 
     def mouseReleaseEvent(self, event):
         print "Bringing band %d to front" % self.altitude
         self._adapter.bring_band_to_front(self.altitude)
+
+    def hoverEnterEvent(self, event):
+        if self.tooltip_text:
+            QToolTip.showText(event.screenPos(),self.tooltip_text)
+
+    def hoverLeaveEvent(self, event):
+        QToolTip.hideText()
+
 
     def mouseMoveEvent(self, event):
         if event.buttons() != Qt.LeftButton:
@@ -566,6 +574,7 @@ class BlockItem(SpacerContainer.Item, QtBlockItemAttributes):
             self.setSizePolicy(QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred))
             # The width of the block
             self.set_width(20)
+            self.setAcceptHoverEvents(True)
 
         def set_width(self, width):
             self.setPreferredWidth(width)
@@ -574,7 +583,22 @@ class BlockItem(SpacerContainer.Item, QtBlockItemAttributes):
         def release(self):
             self.setParent(None)
             self.blockItem = None
-    
+
+        def hoverEnterEvent(self, event):
+            if self.blockItem.tooltip_text:
+                QToolTip.showText(event.screenPos(),self.blockItem.tooltip_text)
+
+        def hoverLeaveEvent(self, event):
+            QToolTip.hideText()
+
+#         def event(self, event):
+#             if event.type() == QEvent.ToolTip:
+#             QToolTip.showText(event.screenPos(),self.label+" ToolTip!")
+#         else:
+#             QToolTip.hideText()
+#             event.ignore()
+#         return super(BlockItem, self).event(event)
+
         def paint(self,painter,option,widget):
             painter.setPen(Qt.NoPen)
             painter.drawRect(self.rect())
