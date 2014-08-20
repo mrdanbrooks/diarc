@@ -1094,7 +1094,7 @@ class LayoutManagerWidget(QGraphicsWidget):
         for item in self._snap_items.values():
             item.link()
 
-        print "*** Finished Linking ***"
+        print "*** Finished Linking ***\n"
         sys.stdout.flush()
 
 #     def mousePressEvent(self, event):

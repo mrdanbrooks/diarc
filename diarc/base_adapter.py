@@ -194,14 +194,14 @@ class BaseAdapter(Adapter):
                 if (src_band.isPositive and band.altitude > 0 and band.rank >= src_band.rank) or 
                 (not src_band.isPositive and band.altitude < 0 and band.rank >= src_band.rank)]
         if len(sibling_alts) <= 1:
-            print "Band is already on top!"
+#             print "Band is already on top!"
             return
         # Order sibling altitudes by rank from lowest to highest
         sibling_alts.sort(lambda x,y: x[1] - y[1])
-        print "Bringing band with altitude %d to front of %s" % (src_band.altitude, sibling_alts)
+#         print "Bringing band with altitude %d to front of %s" % (src_band.altitude, sibling_alts)
         # Get the highest rank value (what we want this band to have)
         target_rank = max([x[1] for x in sibling_alts])
-        print "target rank value is %d" % target_rank
+#         print "target rank value is %d" % target_rank
         # Strip rank information so we just have altitudes ordered by rank
         sibling_alts = [x[0] for x in sibling_alts]
         last_rank = src_band.rank
