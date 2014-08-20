@@ -16,7 +16,12 @@ def asciiview(args):
     adapter._update_view()
 
 def qtview(args):
-    import python_qt_binding.QtGui
+    try:
+        import python_qt_binding.QtGui
+    except:
+        print "Error: python_qt_binding not installed."
+        print "Please install using `sudo pip install python_qt_binding`"
+        exit(-1)
     from diarc import parser
     from qt_view import qt_view
     from diarc import base_adapter
@@ -30,7 +35,12 @@ def qtview(args):
     sys.exit(app.exec_())
 
 def rosview():
-    import python_qt_binding.QtGui
+    try:
+        import python_qt_binding.QtGui
+    except:
+        print "Error: python_qt_binding not installed."
+        print "Please install using `sudo pip install python_qt_binding`"
+        exit(-1)
     import qt_view
     import ros.ros_adapter
     app = python_qt_binding.QtGui.QApplication([])
