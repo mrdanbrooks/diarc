@@ -298,6 +298,10 @@ class BandItem(SpacerContainer.Item, QtBandItemAttributes):
 
     def mousePressEvent(self, event):
         """ This is necessary to capture the mouse clicking event to drag"""
+#         print "Bringing band %d to front" % self.altitude
+#         self._adapter.bring_band_to_front(self.altitude)
+
+    def mouseReleaseEvent(self, event):
         print "Bringing band %d to front" % self.altitude
         self._adapter.bring_band_to_front(self.altitude)
 
@@ -856,6 +860,12 @@ class SnapItem(SpacerContainer.Item, QtSnapItemAttributes):
     def mousePressEvent(self, event):
         """ Captures the mouse press event for dragging """
         pass
+
+    def mouseReleaseEvent(self, event):
+        if self.posBandItem:
+            self._adapter.bring_band_to_front(self.posBandItem.altitude)
+        if self.negBandItem:
+            self._adapter.bring_band_to_front(self.negBandItem.altitude)
 
     def mouseMoveEvent(self, event):
         if event.buttons() != Qt.LeftButton:
