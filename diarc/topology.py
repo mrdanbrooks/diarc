@@ -605,6 +605,11 @@ class Band(object):
     def __get_rank(self):
         return self._rank
     def __set_rank(self,val):
+        if self._rank == val: return
+        # Allow "unsetting" rank
+        if val is None:
+            self._rank = val
+            return
         typecheck(val,int,"val")
         if val < 0:
             raise Exception("Rank must be >= 0, received %d"%val)

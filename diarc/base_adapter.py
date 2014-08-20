@@ -186,6 +186,34 @@ class BaseAdapter(Adapter):
         self._update_view()
         return True
 
+    def bring_band_to_front(self, altitude):
+        bands = self._topology.bands
+
+        src_band = bands[altitude]
+        sibling_alts = [(alt, band.rank) for alt, band in bands.items() 
+                if (src_band.isPositive and band.altitude > 0 and band.rank >= src_band.rank) or 
+                (not src_band.isPositive and band.altitude < 0 and band.rank >= src_band.rank)]
+        if len(sibling_alts) <= 1:
+            print "Band is already on top!"
+            return
+        # Order sibling altitudes by rank from lowest to highest
+        sibling_alts.sort(lambda x,y: x[1] - y[1])
+        print "Bringing band with altitude %d to front of %s" % (src_band.altitude, sibling_alts)
+        # Get the highest rank value (what we want this band to have)
+        target_rank = max([x[1] for x in sibling_alts])
+        print "target rank value is %d" % target_rank
+        # Strip rank information so we just have altitudes ordered by rank
+        sibling_alts = [x[0] for x in sibling_alts]
+        last_rank = src_band.rank
+        src_band.rank = None
+        for idx in range(1,len(sibling_alts)):
+            band = bands[sibling_alts[idx]]
+            next_rank = band.rank
+            band.rank = last_rank
+            last_rank = next_rank
+        src_band.rank = target_rank
+
+        self._update_view()
 
     def _update_view(self):
         """ updates the view - compute each items neigbors and then calls linking. """

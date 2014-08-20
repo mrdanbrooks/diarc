@@ -226,7 +226,7 @@ class BandItem(SpacerContainer.Item, QtBandItemAttributes):
 
         # Band properties - these must be kept up to date with topology
         self.altitude = altitude
-        self.rank = rank
+        self._rank = rank
         self.top_band = None
         self.bot_band = None
         self.left_most_snap = None
@@ -236,7 +236,7 @@ class BandItem(SpacerContainer.Item, QtBandItemAttributes):
         self.setContentsMargins(5,5,5,5)
         self.setSizePolicy(QSizePolicy(QSizePolicy.Preferred, QSizePolicy.MinimumExpanding))
         self.set_width(15)
-        self.setZValue(rank)
+#         self.setZValue(rank)
 
     def release(self):
         self.top_band = None
@@ -260,6 +260,14 @@ class BandItem(SpacerContainer.Item, QtBandItemAttributes):
     def isUsed(self):
         """ Deprecated """
         return True
+
+    @property 
+    def rank(self):
+        return self._rank
+    @rank.setter
+    def rank(self, value):
+        self._rank = value
+        self.setZValue(self._rank)
 
     def set_attributes(self, attrs):
         """ Applies a set of BandItemViewAttributes to this object. Transforms 
@@ -290,7 +298,8 @@ class BandItem(SpacerContainer.Item, QtBandItemAttributes):
 
     def mousePressEvent(self, event):
         """ This is necessary to capture the mouse clicking event to drag"""
-        pass
+        print "Bringing band %d to front" % self.altitude
+        self._adapter.bring_band_to_front(self.altitude)
 
     def mouseMoveEvent(self, event):
         if event.buttons() != Qt.LeftButton:
@@ -981,6 +990,7 @@ class LayoutManagerWidget(QGraphicsWidget):
                                 top_band_alt, bot_band_alt,
                                 leftmost_snapkey, rightmost_snapkey):
         item = self._band_items[altitude]
+        item.rank = rank
         item.top_band = self._band_items[top_band_alt] if top_band_alt is not None else None
         item.bot_band = self._band_items[bot_band_alt] if bot_band_alt is not None else None
         item.left_most_snap = self._snap_items[str(leftmost_snapkey)]
