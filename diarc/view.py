@@ -190,7 +190,7 @@ class ViewItemAttributes(object):
         self.border_width = 0
         self.label = None
         self.label_color = None
-        self.label_rotation = 0
+        self.draw_debug = False
 
     def copy_attributes(self, attrs):
         """ Copies attributes from attrs to this object """

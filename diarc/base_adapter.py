@@ -26,7 +26,7 @@ class BaseAdapter(Adapter):
         attrs.border_color = "red"
         attrs.border_width = 0
         attrs.label = str(block_index)
-        attrs.label_rotation = -90
+#         attrs.label_rotation = -90
         attrs.label_color = "red"
         attrs.spacerwidth = 20
         return attrs

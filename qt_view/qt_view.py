@@ -1,6 +1,7 @@
 from PyQt4.QtCore import Qt, QMimeData
 from PyQt4.QtGui import QPen, QColor, QSizePolicy, QDrag, QBrush, QGraphicsWidget
 from PyQt4.QtGui import QGraphicsView, QGraphicsAnchorLayout, QGraphicsScene
+from PyQt4.QtGui import QFontMetrics
 from PyQt4.QtCore import pyqtSignal as Signal
 
 from diarc.snapkey import gen_snapkey, parse_snapkey
@@ -310,7 +311,10 @@ class BandItem(SpacerContainer.Item, QtBandItemAttributes):
         painter.drawRect(self.rect())
         rect = self.geometry()
         painter.setPen(self.label_color)
-        painter.drawText(0,rect.height()-2,self.label)
+        fm = painter.fontMetrics()
+        elided = fm.elidedText(self.label, Qt.ElideRight, rect.width())
+        twidth = fm.width(elided)
+        painter.drawText((rect.width()-twidth)/2,rect.height()-2,elided)
 
 
 
@@ -562,9 +566,12 @@ class BlockItem(SpacerContainer.Item, QtBlockItemAttributes):
             painter.setPen(Qt.NoPen)
             painter.drawRect(self.rect())
             painter.setPen(self.blockItem.label_color)
-            painter.rotate(self.blockItem.label_rotation)
+            painter.rotate(-90)
             rect = self.rect()
-            painter.drawText(-rect.height(),rect.width()-2,self.blockItem.label)
+            fm = painter.fontMetrics()
+            elided = fm.elidedText(self.blockItem.label, Qt.ElideRight, rect.height()-2)
+            twidth = fm.width(elided)
+            painter.drawText(-twidth-(rect.height()-twidth)/2,rect.width()-2,elided)
 
     class HorizontalSpacer(QGraphicsWidget):
         def __init__(self,parent):
@@ -603,13 +610,15 @@ class SnapContainer(SpacerContainer):
 
 class MyEmitter(SnapContainer):
     def paint(self, painter, option, widget):
-        painter.setPen(Qt.green)
-        painter.drawRect(self.rect())
+        if self.parentBlock.draw_debug:
+            painter.setPen(Qt.green)
+            painter.drawRect(self.rect())
    
 class MyCollector(SnapContainer):
     def paint(self, painter, option, widget):
-        painter.setPen(Qt.blue)
-        painter.drawRect(self.rect())
+        if self.parentBlock.draw_debug:
+            painter.setPen(Qt.blue)
+            painter.drawRect(self.rect())
  
 
 class SnapSpacer(SpacerContainer.Spacer):
@@ -864,12 +873,17 @@ class SnapItem(SpacerContainer.Item, QtSnapItemAttributes):
         painter.drawRect(self.rect())
         rect = self.geometry()
         painter.setPen(self.label_color)
-
-        if self.posBandItem:
-            painter.drawText(6,12,str(self.posBandItem.altitude))
-        if self.negBandItem:
-            painter.drawText(3,rect.height()-3,str(self.negBandItem.altitude))
-        painter.drawText(2,rect.height()/2+4,self.label)
+        if self.draw_debug:
+            if self.posBandItem:
+                painter.drawText(6,12,str(self.posBandItem.altitude))
+            if self.negBandItem:
+                painter.drawText(3,rect.height()-3,str(self.negBandItem.altitude))
+#         painter.drawText(2,rect.height()/2+4,self.label)
+        painter.rotate(-90)
+        fm = painter.fontMetrics()
+        elided = fm.elidedText(self.label, Qt.ElideRight, rect.height())
+        twidth = fm.width(elided)
+        painter.drawText(-twidth-(rect.height()-twidth)/2,rect.width()-2,elided)
 
 
 class SnapBandLink(QGraphicsWidget, QtBandItemAttributes):
@@ -1063,13 +1077,13 @@ class LayoutManagerWidget(QGraphicsWidget):
         print "*** Finished Linking ***"
         sys.stdout.flush()
 
-    def mousePressEvent(self, event):
-        print "updating model"
-        self.adapter().update_model()
-
-    def paint(self, painter, option, widget):
-        painter.setPen(Qt.blue)
-        painter.drawRect(self.rect())
+#     def mousePressEvent(self, event):
+#         print "updating model"
+#         self.adapter().update_model()
+# 
+#     def paint(self, painter, option, widget):
+#         painter.setPen(Qt.blue)
+#         painter.drawRect(self.rect())
 
 
 class QtView(QGraphicsView, View):
