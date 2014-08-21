@@ -10,7 +10,9 @@ DiArc Documentation!
    :hidden:
 
    terminology  
+   topology
 ..   :maxdepth: 2
+
 
 Building
 --------

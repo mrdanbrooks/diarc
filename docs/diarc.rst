@@ -1,28 +1,36 @@
-import diarc
+.. code-block:: python
 
-# Define a graph with 3 vertices (v1, v2, and v3), and two edges. Edge e1 has a
-# single input from v1 and two outputs to v2 and v3. Edge e2 has two inputs from
-# v1 and v2 and a single output to v3.
-t = diarc.Topology()
-v1 = diarc.Vertex(t)
-v2 = diarc.Vertex(t)
-v3 = diarc.Vertex(t)
-e1 = diarc.Edge(t)
-src1 = diarc.Source(t,v1,e1)
-sink1 = diarc.Sink(t,v2,e1)
-sink2 = diarc.Sink(t,v3,e1)
-e2 = diarc.Edge(t)
-src2 = diarc.Source(t,v1,e2)
-src3 = diarc.Source(t,v2,e2)
-sink3 = diarc.Sink(t,v3,e2)
+ import diarc
+
+ Define a graph with 3 vertices (v1, v2, and v3), and two edges. Edge e1 has a
+ single input from v1 and two outputs to v2 and v3. Edge e2 has two inputs from
+ v1 and v2 and a single output to v3.
+
+.. code-block:: python
+
+ t = diarc.Topology()
+ v1 = diarc.Vertex(t)
+ v2 = diarc.Vertex(t)
+ v3 = diarc.Vertex(t)
+ e1 = diarc.Edge(t)
+ src1 = diarc.Source(t,v1,e1)
+ sink1 = diarc.Sink(t,v2,e1)
+ sink2 = diarc.Sink(t,v3,e1)
+ e2 = diarc.Edge(t)
+ src2 = diarc.Source(t,v1,e2)
+ src3 = diarc.Source(t,v2,e2)
+ sink3 = diarc.Sink(t,v3,e2)
 
 # Define visual characteristics describing how to draw graph. 
 # Assign the order in which Vertices are displayed. Vertices are represented by
 # visual objects called blocks. Values must be unique and lower values will be 
 # displayed to the left.
-v1.block.index = 1
-v2.block.index = 2
-v3.block.index = 3
+
+.. code-block:: python
+
+ v1.block.index = 1
+ v2.block.index = 2
+ v3.block.index = 3
 
 # Edges are represented at visual objets called bands. Since edges must point 
 # from left to right above the vertices and right to left below them, each edge
