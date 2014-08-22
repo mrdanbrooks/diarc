@@ -405,6 +405,12 @@ class BlockSpacer(SpacerContainer.Spacer):
             event.setAccepted(False)
             return
         data = json.loads(str(event.mimeData().text()))
+        if self.leftBlock and data['block'] == self.leftBlock.block_index:
+            event.setAccepted(False)
+            return
+        if self.rightBlock and data['block'] == self.rightBlock.block_index:
+            event.setAccepted(False)
+            return
         if 'block' in data:
             event.setAccepted(True)
             self.dragOver = True
