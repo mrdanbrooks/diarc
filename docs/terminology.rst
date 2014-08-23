@@ -22,7 +22,7 @@ Logical (Connection) Objects
 Logical objects are used to define the graph, without specifing how it should be drawn.
 
 
-.. _Vertex:
+.. _Vertex: :py:class:`diarc.topology.Vertex`
 Vertex_
  A vertex in the graph, connected to other vertices through edges.
 

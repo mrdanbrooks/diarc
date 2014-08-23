@@ -1,3 +1,5 @@
+:mod:`diarc`  
+============
 .. code-block:: python
 
  import diarc
